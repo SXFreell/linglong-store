@@ -5,8 +5,10 @@
       <a class="title" :title="`Node版本：${versions.node}&#10;Electron版本：${versions.electron}&#10;Chrome版本：${versions.chrome}`">玲珑信息</a>
     </li>
     <div class="item">玲珑官网：<a class="link" href="https://linglong.space/" target="_blank">https://linglong.space/</a></div>
-    <div class="item">玲珑网页版商店：<a class="link" href="https://store.linglong.space/"
-        target="_blank">https://store.linglong.space/</a></div>
+    <!-- <div class="item">玲珑网页版商店：<a class="link" href="https://store.linglong.space/"
+        target="_blank">https://store.linglong.space/</a></div> -->
+    <div class="item">玲珑网页版商店：<a class="link" href="https://store.linyaps.org.cn/"
+          target="_blank">https://store.linyaps.org.cn/</a></div>
     <div class="item">当前共收录玲珑程序数: {{ systemConfigStore.linglongCount }} 个</div>
     <br>
     <li>
@@ -33,13 +35,13 @@
         target="_blank">https://github.com/GershonWang/linglong-store</a>
     </div>
     <br>
-    <li>
+    <!-- <li>
       <a class="title">赞助支持</a>
     </li>
     <div class="item" style="padding-top: 10px;">
       <img class="image" src="@/assets/aliPay.png" alt="Image"/>
       <img class="image" src="@/assets/wePay.jpg" alt="Image"/>
-    </div>
+    </div> -->
   </div>
   <div class="progress" v-show="downloadModule">
     <el-progress type="dashboard" :percentage="downloadPercent" :color="colors" :stroke-width="15" />
