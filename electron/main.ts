@@ -62,9 +62,9 @@ function createWindow() {
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
   createWindow(); // 创建商店主窗口
-  createFloatingBallWindow();  // 创建悬浮按钮
-  installList();      // 加载弹出层
-  TrayMenu(win); // 加载托盘
+  // createFloatingBallWindow();  // 创建悬浮按钮
+  // installList();      // 加载弹出层
+  // TrayMenu(win); // 加载托盘
   IPCHandler(win); // 加载IPC服务
   updateHandle(win); // 自动更新
   
