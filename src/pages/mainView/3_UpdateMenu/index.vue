@@ -26,7 +26,7 @@ import { ipcRenderer } from "electron";
 import { CardFace,InstalledEntity } from "@/interface";
 import updateCard from "@/components/updateCard.vue";
 import string2card from "@/util/string2card";
-import hasUpdateVersion, { compareVersions } from "@/util/checkVersion";
+import { compareVersions } from "@/util/checkVersion";
 import defaultImage from '@/assets/logo.svg';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useUpdateItemsStore } from "@/store/updateItems";
@@ -47,9 +47,8 @@ const disableClick = ref(false);
 // 嵌套循环获取所有已安装的玲珑程序是否有更新版本
 const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
     if (currentIndex < uniqueInstalledSet.length) {
-        const item = uniqueInstalledSet[currentIndex];
-        const { appId, version } = item;
-        if (hasUpdateVersion('1.3.99', systemConfig.llVersion) == 1) {
+        const { appId, version, module } = uniqueInstalledSet[currentIndex];
+        if (compareVersions(systemConfig.llVersion, '1.3.99') > 0) {
             ipcRenderer.send("command", { command: `ll-cli search ${appId} --json`, appId: appId, version: version });
         } else {
             ipcRenderer.send("command", { command: `ll-cli query ${appId}`, appId: appId, version: version });
@@ -72,7 +71,7 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
                     if (apps.length > 2) {
                         for (let index = 2; index < apps.length - 1; index++) {
                             const card: CardFace | null = string2card(apps[index]);
-                            if (card && appId == card.appId && item.module != 'devel') {
+                            if (card && appId == card.appId && module != 'devel') {
                                 searchVersionItemList.push(card as InstalledEntity);
                             }
                         }
@@ -83,15 +82,15 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
                     searchVersionItemList = result.trim() ? JSON.parse(result.trim()) : [];
                     if (searchVersionItemList.length > 0) {
                         // 过滤不同appId和时devel的数据
-                        searchVersionItemList = searchVersionItemList.filter(item => item && item.appId == appId && item.module != 'devel');
+                        searchVersionItemList = searchVersionItemList.filter(item => item && item.module != 'devel' && item.id == appId);
                     }
                 }
                 // 当版本数组数量大于2时才进行比较
                 if (searchVersionItemList.length > 1) {
                     // 版本号从大到小排序
-                    searchVersionItemList = searchVersionItemList.sort((a, b) => hasUpdateVersion(a.version, b.version));
+                    searchVersionItemList = searchVersionItemList.sort((a, b) => compareVersions(b.version, a.version));
                     const entity: InstalledEntity = searchVersionItemList[0];
-                    if (hasUpdateVersion(res.param.version, entity.version) == 1) {
+                    if (compareVersions(entity.version, res.param.version) > 0) {
                         updateItemsStore.addItem(entity);
                     }
                 }
@@ -111,41 +110,41 @@ const updateAll = () => {
     disableClick.value = true;
     // 执行一键更新
     const updateItemList = updateItemsStore.updateItemList;
-    if (updateItemList && updateItemList.length > 0) {
-        updateItemList.forEach((item) => {
-            item.loading = false;
-            item.command = `ll-cli install ${item.appId}/${item.version}`;
-            ipcRenderer.send("command", { ...item });
-            // 新增到加载中列表
-            installingItemsStore.addItem(item as InstalledEntity);
-        })
-    }
+    updateItemList.forEach((item) => {
+        item.loading = false;
+        item.command = `ll-cli install ${item.appId}/${item.version}`;
+        ipcRenderer.send("command", { ...item });
+        // 新增到加载中列表
+        installingItemsStore.addItem(item as InstalledEntity);
+    })
 }
 // 页面打开时执行
-onMounted(() => {
+onMounted(async () => {
     // 清空页面列表数据
     updateItemsStore.clearItems();
     elertTip(); // 检测网络
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-    // let getInstalledItemsCommand = "ll-cli list --json";
-    // if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
-    //     getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    // } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
-    //     getInstalledItemsCommand = "ll-cli list --json --type=all";
-    // }
-    // ipcRenderer.send('command', { command: getInstalledItemsCommand});
+    let getInstalledItemsCommand = "ll-cli list --json";
+    if (compareVersions(systemConfig.llVersion, "1.3.99") < 0) {
+        getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
+    } else if (compareVersions(systemConfig.linglongBinVersion, "1.5.0") >= 0 && systemConfig.isShowBaseService) {
+        getInstalledItemsCommand = "ll-cli list --json --type=all";
+    }
+    ipcRenderer.send('command', { command: getInstalledItemsCommand});
+
+    // 延时1000毫秒进入
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     const installedItemList: InstalledEntity[] = installedItemsStore.installedItemList;
     // 初始化一个数组用于存储去重后当前已安装程序列表
     const uniqueInstalledSet: InstalledEntity[] = [];
-    installedItemList.forEach((installedItem) => {
-        const { appId, version } = installedItem;
-        if (appId != 'org.deepin.Runtime' && appId != 'org.deepin.basics' 
-            && appId != 'org.deepin.Wine' && appId != 'org.deepin.base' && appId != 'org.deepin.Bootstrap') {
-            const item = uniqueInstalledSet.find((item) => item.appId == appId);
+    installedItemList.forEach(installedItem => {
+        const { appId, version, categoryName } = installedItem;
+        if (categoryName != '玲珑组件') {
+            const item = uniqueInstalledSet.find(item => item.appId == appId);
             if (item) {
                 // 当循环的版本号大于去重数组中的检测到的版本号时，剔除去重数组中的元素，并将当前循环的元素添加到去重数组中
-                if (hasUpdateVersion(item.version, version) == 1) {
+                if (compareVersions(version, item.version) > 0) {
                     const index = uniqueInstalledSet.findIndex((item) => item.appId == appId);
                     uniqueInstalledSet.splice(index, 1);
                     uniqueInstalledSet.push(installedItem);

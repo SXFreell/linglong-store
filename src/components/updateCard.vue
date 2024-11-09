@@ -6,10 +6,9 @@
         <span class="card-name" :title="name">{{ name }}</span>
         <span class="card-zh-name">{{ defaultName }}</span>
         <span class="card-version">{{ version }}</span>
-        <div class="card-bottom" v-loading="loading" :element-loading-svg="svg" element-loading-svg-view-box="-10, -10, 50, 50"
-            element-loading-background="rgba(122, 122, 122, 0.8)">
-            <div class="card-arch">{{ arch }}</div>
-            <el-button class="install-btn" @click="openDetails">升级</el-button>
+        <div class="card-bottom" v-loading="loading" :element-loading-svg="svg" 
+            element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+            <el-button class="uninstall-btn" @click="openDetails">升级</el-button>
         </div>
     </el-card>
 </template>
@@ -35,7 +34,7 @@ const props = withDefaults(defineProps<CardFace>(), {
 })
 // 计算属性
 const desc = computed(() => {
-    return props.description.replace(/(.{20})/g, '$1\n');
+    return props.description ? props.description.replace(/(.{20})/g, '$1\n') : '';
 });
 const defaultName = computed(() => {
     return props.zhName ? props.zhName : props.name;
@@ -56,5 +55,14 @@ const openDetails = () => {
 :deep(.el-card__body) {
     padding-top: 15px;
     padding-bottom: 5px;
+}
+
+.card-bottom {
+    justify-content: center;
+}
+
+.uninstall-btn {
+    padding: 6px;
+    width: 75%;
 }
 </style>
