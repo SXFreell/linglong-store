@@ -48,6 +48,7 @@ const appsContainer = ref<HTMLDivElement>()
 const params = ref({ 
     categoryId: '',
     repoName: systemConfigStore.defaultRepoName,
+    arch: systemConfigStore.arch, 
     pageNo: 1, 
     pageSize: 50
 })

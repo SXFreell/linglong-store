@@ -6,12 +6,14 @@
         <h1>玲珑应用商店</h1>
         <h3>{{ message }}</h3>
         <h3>{{ downloadPercentMsg }}</h3>
-        <div style="text-align: left;">
-            <h3 style="color: chocolate;">注意：</h3>
-            <p>1.刚程序运行时，会检测当前系统是否满足玲珑环境;如果环境不满足则弹出提示，程序不会进入到后续界面;这里需要您手动安装玲珑环境方可使用。</p>
-            <p>2.点击安装时，受网速和程序包大小(本体+依赖)的影响，程序安装比较缓慢甚至可能会没反应，此时请耐心等待一下下。</p>
-            <p>3.执行操作时，若出现长时间卡住无反应，或者报错提示时，请使用官方命令行方式进行操作，尝试玲珑基础环境组件是否异常，如无异常，请重启商店重试。</p>
-            <p>4.如出现特殊现象，请在商店内-关于程序-意见反馈，进行反馈，或者进入作者gitee仓库提交issue。</p>
+        <div class="tips">
+            <div style="text-align: left;">
+                <h3 style="color: chocolate;">注意：</h3>
+                <p>1.刚程序运行时，会检测当前系统是否满足玲珑环境;如果环境不满足则弹出提示，程序不会进入到后续界面;这里需要您手动安装玲珑环境方可使用。</p>
+                <p>2.点击安装时，受网速和程序包大小(本体+依赖)的影响，程序安装比较缓慢甚至可能会没反应，此时请耐心等待一下下。</p>
+                <p>3.执行操作时，若出现长时间卡住无反应，或者报错提示时，请使用官方命令行方式进行操作，尝试玲珑基础环境组件是否异常，如无异常，请重启商店重试。</p>
+                <p>4.如出现特殊现象，请在商店内-关于程序-意见反馈，进行反馈，或者进入作者gitee仓库提交issue。</p>
+            </div>
         </div>
     </div>
     <div class="footer" v-if="downloadPercent > 0">
@@ -31,9 +33,9 @@
         </span>
         <template #footer>
             <div class="dialog-footer">
-                <el-button @click="exitBtnClick">退出商店</el-button>
+                <el-button type="info" @click="exitBtnClick">退出商店</el-button>
+                <el-button type="info" @click="autoInstallBtnClick">自动安装</el-button>
                 <el-button type="primary" @click="manualInstallBtnClick">手动安装</el-button>
-                <!-- <el-button type="primary" @click="autoInstallBtnClick">自动安装</el-button> -->
             </div>
         </template>
     </el-dialog>
@@ -274,8 +276,9 @@ const manualInstallBtnClick = () => {
 }
 // 自动安装点击事件
 const autoInstallBtnClick = () => {
+    const baseURL = import.meta.env.VITE_SERVER_URL as string;
     centerDialogVisible.value = false
-    ipcRenderer.send('to_install_linglong',systemConfigStore.osVersion); // 执行脚本文件
+    ipcRenderer.send('to_install_linglong',baseURL); // 执行脚本文件
 }
 
 // 加载前执行
@@ -348,13 +351,19 @@ onBeforeUnmount(() => {
     filter: drop-shadow(0 0 2em #646cffaa);
 }
 
-.dialog-footer button:first-child {
-    margin-right: 10px;
+.tips {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .footer {
     position: fixed;
     bottom: 0;
     width: 100%;
+}
+
+.dialog-footer button:first-child {
+    margin-right: 150px;
 }
 </style>

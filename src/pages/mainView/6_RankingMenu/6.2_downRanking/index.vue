@@ -31,6 +31,7 @@ const systemConfigStore = useSystemConfigStore();
 
 let params = ref<AppListParams>({ 
     repoName: systemConfigStore.defaultRepoName,
+    arch: systemConfigStore.arch, 
     pageNo: 1, 
     pageSize: 100 
 })

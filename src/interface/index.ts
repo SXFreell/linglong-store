@@ -83,6 +83,7 @@ export interface AppListParams {
     kind?: string,
     module?: string,
     repoName?: string,
+    arch?: string,
     pageNo: number,
     pageSize: number,
 }

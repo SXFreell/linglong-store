@@ -48,12 +48,13 @@ const result = ref<CardFace[][]>([]);
 
 let params = ref<AppListParams>({
     repoName: systemConfigStore.defaultRepoName,
+    arch: systemConfigStore.arch, 
     pageNo: 1, 
     pageSize: 10 
 })
 // 轮播图推荐程序
 const carouselChart = async () => {
-    let res = await getWelcomeCarouselList({ repoName: systemConfigStore.defaultRepoName });
+    let res = await getWelcomeCarouselList({ repoName: systemConfigStore.defaultRepoName, arch: systemConfigStore.arch });
     welcomeItemList.value = res.data as unknown as CardFace[];
 }
 // 分类推荐程序

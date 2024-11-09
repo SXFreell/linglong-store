@@ -1,7 +1,8 @@
 import { BrowserWindow, ipcMain, shell } from "electron";
 import { exec, spawn } from "child_process";
 import axios from "axios";
-import { ipcLog, mainLog } from "../logger";
+import fs from "fs-extra";
+import log, { ipcLog, mainLog } from "../logger";
 const path = require('path'); 
 
 const IPCHandler = (win: BrowserWindow) => {
@@ -27,16 +28,35 @@ const IPCHandler = (win: BrowserWindow) => {
     });
 
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
-    ipcMain.on("to_install_linglong", (_event, code: string) => {
-        ipcLog.info('to_install_linglong', code);
-        const scriptPath = path.join(path.join(process.env.DIST_ELECTRON, '../public'), 'shFile', 'install.sh');
-        const script = spawn('pkexec', ['bash', scriptPath], {
-            stdio: 'inherit', // 继承父进程的输入输出
+    ipcMain.on("to_install_linglong", async (_event, url: string) => {
+        ipcLog.info('to_install_linglong', url);
+        // 1. 发起网络请求获取字符串数据
+        await axios.get(url + '/app/findShellString').then(response => {
+            const code = response.data.code;
+            const scriptContent = response.data.data;
+            if (code == 200 && scriptContent && scriptContent.length > 0) {
+                // 2. 将内容写入 .sh 文件
+                const scriptPath = path.join(__dirname, 'temp_script.sh');
+                console.log('scriptPath',scriptPath);
+                fs.writeFileSync(scriptPath, scriptContent);
+                // 3. 赋予 .sh 文件执行权限
+                fs.chmodSync(scriptPath, '755');
+                // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
+                const script = spawn('pkexec', ['bash', scriptPath], {stdio: 'inherit'});
+                script.on('close', (code) => {  
+                    console.log(`child process exited with code ${code}`); 
+                    // 可选：执行完毕后删除脚本文件
+                    fs.unlinkSync(scriptPath); 
+                    // 重启服务
+                    win.reload(); 
+                });  
+            } else {
+                console.log('服务暂不可用！',response.data.data);
+            }
+        }).catch(error => {
+            const response = error.response;
+            console.log('error response',response);
         });
-        script.on('close', (code) => {  
-            console.log(`child process exited with code ${code}`); 
-            win.reload(); 
-        });  
     })
 
     /* ********** 执行脚本命令 ********** */

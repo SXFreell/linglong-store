@@ -54,14 +54,20 @@ const installedItemsStore = useInstalledItemsStore();
 const appsContainer = ref<HTMLDivElement>()
 const categoryList = ref<any[]>([{ "categoryId": "", "categoryName": "全部程序" }]);
 const isLoading = ref<boolean>(false);
-const params = ref({ name: '', categoryId: '', repoName: systemConfigStore.defaultRepoName, pageNo: 1, pageSize: 50 })
+// 初始化入参
+const params = ref({ 
+    name: '', 
+    categoryId: '', 
+    repoName: systemConfigStore.defaultRepoName,
+    arch: systemConfigStore.arch, 
+    pageNo: 1, 
+    pageSize: 50 
+})
 
 // 方法：加载更多内容
 const loadMore = async () => {
   if (isLoading.value) return; // 防止重复请求
-
   isLoading.value = true;
-
   try {
     const res = await getSearchAppList(params.value);
     if (res.code == 200) {
