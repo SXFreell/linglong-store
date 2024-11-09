@@ -35,13 +35,13 @@
         target="_blank">https://github.com/GershonWang/linglong-store</a>
     </div>
     <br>
-    <!-- <li>
+    <li>
       <a class="title">赞助支持</a>
     </li>
     <div class="item" style="padding-top: 10px;">
       <img class="image" src="@/assets/aliPay.png" alt="Image"/>
       <img class="image" src="@/assets/wePay.jpg" alt="Image"/>
-    </div> -->
+    </div>
   </div>
   <div class="progress" v-show="downloadModule">
     <el-progress type="dashboard" :percentage="downloadPercent" :color="colors" :stroke-width="15" />

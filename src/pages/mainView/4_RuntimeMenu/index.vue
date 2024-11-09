@@ -109,7 +109,7 @@ const commandResult = (_event: any, res: any) => {
 }
 
 // 强制退出程序
-const killAppResult = (_event: any, res: any) => {
+const killAppResult = async (_event: any, res: any) => {
     const code: string = res.code;  // 执行返回状态码
     const result: string = res.result;  // 执行命令返回的结果
     const linglongBinVersion = systemConfigStore.linglongBinVersion;
@@ -120,6 +120,8 @@ const killAppResult = (_event: any, res: any) => {
         }
         ElNotification({ title:'提示', message:"操作成功", type:'info', duration:500 });
         runtimeList.value.splice(0, runtimeList.value.length);
+        // 延时1000毫秒进入
+        await new Promise(resolve => setTimeout(resolve, 200));
         if (linglongBinVersion && compareVersions(linglongBinVersion,'1.5.0') < 0) {
             ipcRenderer.send('command', { command: "ll-cli ps" });
         } else {
