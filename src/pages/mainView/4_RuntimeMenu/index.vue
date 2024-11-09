@@ -1,15 +1,15 @@
 <template>
     <div class="apps-container" >
-        <el-table :data="runtimeList" height="100%" style="width: 100%;border-radius: 5px;">
-            <el-table-column prop="app" label="包名" width="240" header-align="center" align="center"/>
-            <el-table-column prop="version" label="版本号" width="120" header-align="center" align="center"/>
-            <el-table-column prop="arch" label="架构" width="120" header-align="center" align="center"/>
-            <el-table-column prop="channel" label="渠道" width="120" header-align="center" align="center"/>
-            <el-table-column prop="repo" label="来源" width="120" header-align="center" align="center"/>
-            <el-table-column prop="pid" label="进程ID" width="120" header-align="center" align="center"/>
-            <el-table-column prop="containerId" label="容器ID" width="500" header-align="center" align="center"/>
-            <el-table-column prop="Path" min-width="500" label="玲珑目录" header-align="center" align="center"/>
-            <el-table-column fixed="right" label="操作" width="120" header-align="center" align="center">
+        <el-table :data="runtimeList" border stripe height="100%" style="width: 100%;border-radius: 5px;">
+            <el-table-column prop="app" label="包名" width="180" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="version" label="版本号" width="120" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="arch" label="架构" width="80" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="channel" label="渠道" width="80" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="repo" label="来源" width="80" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="pid" label="进程ID" width="100" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="containerId" label="容器ID" width="500" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="Path" min-width="300" label="玲珑目录" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column fixed="right" label="操作" width="100" header-align="center" align="center">
                 <template #default="scope">
                     <el-button class="un_install_btn" @click="stopPross(scope.row)">停止</el-button>
                 </template>
