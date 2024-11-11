@@ -1,5 +1,8 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 
+import floating from "@/pages/floating/index.vue";
+
+
 const router = createRouter({
     // 4. 内部提供了 history 模式的实现。为了简单起见，我们在这里使用 hash 模式。
     history: createWebHashHistory(),
@@ -7,6 +10,10 @@ const router = createRouter({
         {
             path: '/',
             component: () => import("../pages/index.vue")
+        },
+        {
+            path: '/floating',
+            component: floating
         },
         {
             path: '/main_view',
@@ -109,10 +116,6 @@ const router = createRouter({
                     },
                 },
             ],
-        },
-        {
-            path: '/floating',
-            component: () => import("../plugins/Floating/index.vue")
         },
     ], // `routes: routes` 的缩写
 })

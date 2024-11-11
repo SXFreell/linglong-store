@@ -5,9 +5,9 @@
       <el-checkbox v-model="autoCheckUpdate" size="large" @change="systemConfigStore.changeAutoCheckUpdate(autoCheckUpdate)">
         启动App自动检测商店版本
       </el-checkbox>
-      <!-- <el-checkbox size="large" @change="isFloat">
+      <el-checkbox size="large" @change="isFloat">
         启用悬浮球
-      </el-checkbox> -->
+      </el-checkbox>
       <!-- <em style="font-size: 14px;margin-left: 30px;">更换玲珑仓库：</em>
       <el-select v-model="defaultRepo" style="width: 120px;" @change="changeDefaultRepo" disabled>
         <el-option v-for="item in options" :key="item.value" :label="item.label" :value="item.value"/>
@@ -24,12 +24,12 @@
       </el-checkbox>
     </div>
     <hr>
-    <!-- <li><a class="title">测试环节</a></li>
+    <li><a class="title">测试环节</a></li>
     <div style="margin-left: 30px;">
       <label style="font-size: 14px;">测试命令行：</label>
       <el-input v-model="msg" style="width: 300px;" @keyup.enter="reback"></el-input>
     </div>
-    <div>{{ result }}</div> -->
+    <div>{{ result }}</div>
   </div>
 </template>
 <script setup lang="ts">

@@ -20,7 +20,11 @@
   },
   "include": [
     "src",
-    "types/auto-imports.d.ts"
+    "types/auto-imports.d.ts",
+    "src/**/*.vue"
+  ],
+  "exclude": [
+    "node_modules"
   ],
   "references": [
     { "path": "./tsconfig.node.json" }
