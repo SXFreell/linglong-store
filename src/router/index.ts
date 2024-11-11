@@ -110,6 +110,10 @@ const router = createRouter({
                 },
             ],
         },
+        {
+            path: '/floating',
+            component: () => import("../plugins/Floating/index.vue")
+        },
     ], // `routes: routes` 的缩写
 })
 
