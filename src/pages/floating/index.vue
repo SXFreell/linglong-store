@@ -7,7 +7,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ipcRenderer } from 'electron';
 
 function openBusinessPage() {
@@ -15,7 +15,7 @@ function openBusinessPage() {
 }
 </script>
 
-<style>
+<style scoped>
 /* .floating-widget {
   width: 100%;
   height: 100%; */
