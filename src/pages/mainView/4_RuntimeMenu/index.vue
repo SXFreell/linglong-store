@@ -66,7 +66,7 @@ const commandResult = (_event: any, res: any) => {
         runtimeList.value = [...runtimeList.value];
     }
     // 玲珑1.5.0-1版本使用命令
-    if (command == 'll-cli ps --json') {
+    if (command == 'll-cli --json ps') {
         if ('stdout' != code) {
             ElNotification({ title:'提示', message:result, type:'error', duration:500 });
             return;
@@ -125,7 +125,7 @@ const killAppResult = async (_event: any, res: any) => {
         if (linglongBinVersion && compareVersions(linglongBinVersion,'1.5.0') < 0) {
             ipcRenderer.send('command', { command: "ll-cli ps" });
         } else {
-            ipcRenderer.send('command', { command: "ll-cli ps --json" });
+            ipcRenderer.send('command', { command: "ll-cli --json ps" });
         }
     }
 }
@@ -148,7 +148,7 @@ onMounted(() => {
     if (linglongBinVersion && compareVersions(linglongBinVersion,'1.5.0') < 0) {
         ipcRenderer.send('command', { command: "ll-cli ps" });
     } else {
-        ipcRenderer.send('command', { command: "ll-cli ps --json" });
+        ipcRenderer.send('command', { command: "ll-cli --json ps" });
     }
     // 开启页面监听器
     ipcRenderer.on('command-result', commandResult);

@@ -60,11 +60,14 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
             // 1.获取服务器端数据
             let result: InstalledEntity[] = [];
             let appId = query.appId as string;
-            let response = await getSearchAppVersionList({ appId, repoName: systemConfigStore.defaultRepoName});
+            let response = await getSearchAppVersionList({ 
+                appId: appId, arch: systemConfigStore.arch,
+                repoName: systemConfigStore.defaultRepoName
+            });
             if (response.code == 200) {
                 result = response.data as unknown as InstalledEntity[];
             }
-            // 过滤不同appId和不是runtime的数据
+            // 2.过滤不同appId和不是runtime的数据
             for (const item of searchVersionItemList) {
                 // 处理主键id标识
                 item.appId = item.id ? item.id : item.appid ? item.appid : item.appId;

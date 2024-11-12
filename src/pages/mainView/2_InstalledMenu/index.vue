@@ -55,20 +55,14 @@ const commandResult = async (_event: any, res: any) => {
         ipcRenderer.send('logger', 'error', "\"" + command + "\"命令执行异常::" + result);
         loading.value = false; // 关闭loading加载动画
         // 弹出提示框
-        ElNotification({
-            title: '错误',
-            message: result,
-            type: 'error',
-            duration: 500,
-        });
+        ElNotification({ title: '错误', message: result, type: 'error', duration: 500 });
         return;
     }
-    if (command.startsWith('ll-cli list') && params.type && params.type == 'installedPage') {
+    if (params.type && params.type == 'installedPage') {
         if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
             await installedItemsStore.initInstalledItemsOld(result);
             displayedItems.value = installedItemsStore.installedItemList;
-        }
-        if (command == 'll-cli list --json' || command == 'll-cli list --json --type=all') {
+        } else if (command == 'll-cli --json list' || command == 'll-cli --json list --type=all') {
             await installedItemsStore.initInstalledItems(result);
             const datas = installedItemsStore.installedItemList;
             if (systemConfigStore.isShowMergeApp && datas.length > 0) {
@@ -135,11 +129,11 @@ watchEffect(() => {
 onMounted(() => {
     elertTip(); // 检测网络
     // 根据版本环境获取安装程序列表发送命令
-    let getInstalledItemsCommand = "ll-cli list --json";
+    let getInstalledItemsCommand = "ll-cli --json list";
     if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
         getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
     } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
-        getInstalledItemsCommand = "ll-cli list --json --type=all";
+        getInstalledItemsCommand = "ll-cli --json list --type=all";
     }
     ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'installedPage' });
     ipcRenderer.once('command-result', commandResult);

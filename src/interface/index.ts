@@ -123,6 +123,7 @@ export interface AppMain {
 export interface GetAppListByAppIdParam {
     appId: string,
     repoName: string,
+    arch?: string
 }
 
 /**

@@ -211,13 +211,10 @@ onMounted(async () => {
         const code: string = res.code;
         const result: any = res.result;
         if (code == 'stdout') {
-            if (command.startsWith('ll-cli query') || command.startsWith('ll-cli --json search')) {
-                if (command.startsWith("ll-cli query")) {
-                    difVersionItemsStore.initDifVersionItemsOld(result, query);
-                }
-                if (command.startsWith("ll-cli --json search")) {
-                    difVersionItemsStore.initDifVersionItems(result, query);
-                }
+            if (command.startsWith("ll-cli query")) {
+                difVersionItemsStore.initDifVersionItemsOld(result, query);
+            } else if (command.startsWith("ll-cli --json search")) {
+                difVersionItemsStore.initDifVersionItems(result, query);
             }
         }
     });

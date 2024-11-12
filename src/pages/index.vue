@@ -71,6 +71,12 @@ const commandResult = async (_event: any, res: any) => {
     const code: string = res.code;
     const result: any = res.result;
     const command: string = res.param.command;
+    if (command == 'dpkg -l | grep linglong') {
+        systemConfigStore.changeDetailMsg(res.result);
+    }
+    if (command == 'uname -a') {
+        systemConfigStore.changeOsVersion(res.result);
+    }
     if (command == 'uname -m') {
         if (code == 'stdout') {
             systemConfigStore.changeArch(result.trim());
@@ -90,7 +96,7 @@ const commandResult = async (_event: any, res: any) => {
             ipcRenderer.send('logger', 'info', "玲珑环境存在...");
             message.value = "检测玲珑环境版本...";
             ipcRenderer.send('logger', 'info', "检测玲珑环境版本...");
-            ipcRenderer.send('command', { command: 'll-cli --version' });
+            ipcRenderer.send('command', { command: 'll-cli --json --version' });
             // 获取玲珑包程序(linglong-bin)的版本号
             ipcRenderer.send("command",{ command: 'apt-cache policy linglong-bin' })
             // 获取玲珑包当前使用的仓库名
@@ -101,18 +107,29 @@ const commandResult = async (_event: any, res: any) => {
             centerDialogVisible.value = true; // 显示弹窗
         }
     }
-    if (command == 'll-cli --version') {
-        if(code == 'stdout' && result.trim()) {
-            const items: RegExpMatchArray | null = result.trim().match(/'[^']+'|\S+/g);
-            if (items) {
-                if (items.length == 3) {
-                    systemConfigStore.changeLlVersion(items[2]);
-                } else if (items.length == 2) {
-                    systemConfigStore.changeLlVersion(items[1]);
+    if (command == 'll-cli --json --version') {
+        if(code == 'stdout') {
+            const tempVersion = result.trim();
+            // 判断是否为对象并且具有 version 字段
+            if (typeof tempVersion === 'object' && tempVersion !== null && 'version' in tempVersion) {
+                const obj = tempVersion as { version: unknown }; // 类型断言
+                // 判断 version 字段是否为字符串
+                if (typeof obj.version === 'string') {
+                    systemConfigStore.changeLlVersion(obj.version);
+                } else {
+                    systemConfigStore.changeLlVersion('1.3.8');
+                    ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
                 }
             } else {
-                systemConfigStore.changeLlVersion('1.3.8');
-                ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
+                const items: RegExpMatchArray | null = tempVersion.match(/'[^']+'|\S+/g);
+                if (items) {
+                    if (items.length == 3) {
+                        systemConfigStore.changeLlVersion(items[2]);
+                    }
+                } else {
+                    systemConfigStore.changeLlVersion('1.3.8');
+                    ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
+                }
             }
         } else {
             systemConfigStore.changeLlVersion('1.3.8');
@@ -133,7 +150,7 @@ const commandResult = async (_event: any, res: any) => {
             if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
                 installedItemsStore.initInstalledItemsOld(result);
             }
-            if (command == 'll-cli list --json') {
+            if (command == 'll-cli --json list') {
                 installedItemsStore.initInstalledItems(result);
             }
             message.value = "已安装的玲珑程序检测完成...";
@@ -147,9 +164,9 @@ const commandResult = async (_event: any, res: any) => {
         message.value = "正在获取网络源玲珑程序列表...";
         ipcRenderer.send('logger', 'info', "正在获取网络源玲珑程序列表...");
         let response = await getSearchAppList({
-            repoName: systemConfigStore.defaultRepoName, 
-            pageNo: 1, 
-            pageSize: 1 
+            repoName: systemConfigStore.defaultRepoName,
+            arch: systemConfigStore.arch, 
+            pageNo: 1, pageSize: 1 
         });
         if (response.code == 200) {
             systemConfigStore.changeLinglongCount((response.data as unknown as pageResult).total);
@@ -160,8 +177,8 @@ const commandResult = async (_event: any, res: any) => {
             ipcRenderer.send('logger', 'error', "网络源玲珑程序列表获取失败...");
         }
         message.value = "加载完成...";
-        ipcRenderer.send('logger', 'info', "加载完成...");
         downloadPercentMsg.value = "";
+        ipcRenderer.send('logger', 'info', "加载完成...");
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
         if (import.meta.env.MODE != "development") {
@@ -191,14 +208,8 @@ const commandResult = async (_event: any, res: any) => {
                 installedVersion = line.split('Installed:')[1].trim();
             }
         });
-        console.log('已安装版本：', installedVersion);
+        ipcRenderer.send('logger', 'info', '已安装版本：' + installedVersion);
         systemConfigStore.changeLinglongBinVersion(installedVersion);
-    }
-    if (command == 'dpkg -l | grep linglong') {
-        systemConfigStore.changeDetailMsg(res.result);
-    }
-    if (command == 'uname -a') {
-        systemConfigStore.changeOsVersion(res.result);
     }
     if(command == 'll-cli repo show') {
         const lines = result.split('\n');
@@ -208,7 +219,7 @@ const commandResult = async (_event: any, res: any) => {
                 defaultRepoName = line.split('Default:')[1].trim();
             }
         });
-        console.log('默认仓库名：', defaultRepoName);
+        ipcRenderer.send('logger', 'info', '默认仓库名：' + defaultRepoName);
         systemConfigStore.changeDefaultRepoName(defaultRepoName);
     }
 }
@@ -322,9 +333,8 @@ onMounted(async () => {
         ipcRenderer.send('logger', 'info', "检测当前系统架构...");
         ipcRenderer.send('command', { command: 'uname -m' });
     }
-    // 监听命令行执行结果
+    // 监听命令行执行结果  /  监听更新事件
     ipcRenderer.on('command-result', commandResult);
-    // 监听更新事件
     ipcRenderer.on('update-message', updateMessage);
 });
 // 销毁前执行
