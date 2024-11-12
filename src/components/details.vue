@@ -199,11 +199,11 @@ onMounted(async () => {
     difVersionItemsStore.clearItems(); // 清除表单数据
     elertTip(); // 检测网络
     // 发送命令到主线程获取版本列表结果
-    let itemsCommand = "ll-cli search " + query.appId + " --json"
+    let itemsCommand = "ll-cli --json search " + query.appId
     if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
         itemsCommand = "ll-cli query " + query.appId;
     } else if (compareVersions(systemConfigStore.linglongBinVersion,'1.5.0') >= 0 && systemConfigStore.isShowBaseService) {
-        itemsCommand = "ll-cli search " + query.appId + " --json --type=all";
+        itemsCommand = "ll-cli --json search " + query.appId + " --type=all";
     }
     ipcRenderer.send("command", { 'command': itemsCommand });
     ipcRenderer.once('command-result', (_event: any, res: any) => {
@@ -211,11 +211,11 @@ onMounted(async () => {
         const code: string = res.code;
         const result: any = res.result;
         if (code == 'stdout') {
-            if (command.startsWith('ll-cli query') || command.startsWith('ll-cli search')) {
+            if (command.startsWith('ll-cli query') || command.startsWith('ll-cli --json search')) {
                 if (command.startsWith("ll-cli query")) {
                     difVersionItemsStore.initDifVersionItemsOld(result, query);
                 }
-                if (command.startsWith("ll-cli search")) {
+                if (command.startsWith("ll-cli --json search")) {
                     difVersionItemsStore.initDifVersionItems(result, query);
                 }
             }

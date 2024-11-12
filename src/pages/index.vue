@@ -104,8 +104,12 @@ const commandResult = async (_event: any, res: any) => {
     if (command == 'll-cli --version') {
         if(code == 'stdout' && result.trim()) {
             const items: RegExpMatchArray | null = result.trim().match(/'[^']+'|\S+/g);
-            if (items && items.length == 3) {
-                systemConfigStore.changeLlVersion(items[2]);
+            if (items) {
+                if (items.length == 3) {
+                    systemConfigStore.changeLlVersion(items[2]);
+                } else if (items.length == 2) {
+                    systemConfigStore.changeLlVersion(items[1]);
+                }
             } else {
                 systemConfigStore.changeLlVersion('1.3.8');
                 ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
@@ -121,10 +125,10 @@ const commandResult = async (_event: any, res: any) => {
         if (compareVersions(systemConfigStore.llVersion, '1.4.0') < 0) {
             ipcRenderer.send("command", { command: "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'" });
         } else {
-            ipcRenderer.send("command", { command: "ll-cli list --json" });
+            ipcRenderer.send("command", { command: "ll-cli --json list" });
         }
     }
-    if (command =='ll-cli list --json' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
+    if (command =='ll-cli --json list' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
         if (code == 'stdout') {
             if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
                 installedItemsStore.initInstalledItemsOld(result);
