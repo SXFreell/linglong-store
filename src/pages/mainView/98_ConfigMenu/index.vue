@@ -22,6 +22,7 @@
       <el-checkbox v-model="isMergeApp" size="large" @change="systemConfigStore.changeIsShowMergeApp(isMergeApp)">
         同appId程序合并
       </el-checkbox>
+      <el-button type="warning" @click="pruneLinyaps" style="margin-left: 50px;height: 18px;">清除废弃基础服务</el-button>
     </div>
     <hr>
     <!-- <li><a class="title">测试环节</a></li>
@@ -89,6 +90,11 @@ const reback = () => {
   ipcRenderer.once('command_only_stdout_result',(_event,res) => {
     result.value = res;
   })
+}
+
+// 清除无用组件
+const pruneLinyaps = () => {
+  ipcRenderer.send('command', { command: "ll-cli prune" });
 }
 
 // 页面启动时加载

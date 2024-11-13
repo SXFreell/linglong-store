@@ -40,7 +40,7 @@ function createWindow() {
   Menu.setApplicationMenu(null);
   // 根据是否存在开发服务地址判断加载模式
   if (process.env.VITE_DEV_SERVER_URL) {
-    // win.webContents.openDevTools({ mode: "detach" });
+    win.webContents.openDevTools({ mode: "detach" });
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
     win.loadFile(indexHtml);
