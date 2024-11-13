@@ -123,9 +123,9 @@ const commandResult = async (_event: any, res: any) => {
             } else {
                 const items: RegExpMatchArray | null = tempVersion.match(/'[^']+'|\S+/g);
                 if (items) {
-                    if (items.length == 3) {
-                        systemConfigStore.changeLlVersion(items[2]);
-                    }
+                    if (items.length == 3 || items.length == 2) {
+                        systemConfigStore.changeLlVersion(items[items.length -1]);
+                    } 
                 } else {
                     systemConfigStore.changeLlVersion('1.3.8');
                     ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
