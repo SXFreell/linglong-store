@@ -107,6 +107,8 @@ function floatingBall() {
 
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
+  // 注册自定义协议
+  app.setAsDefaultProtocolClient('linglong_store');
   createWindow(); // 创建商店主窗口
   // floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
@@ -124,6 +126,28 @@ app.whenReady().then(() => {
       createWindow()
     }
   })
+});
+
+app.on('open-url', (event, url) => {
+  event.preventDefault();
+  mainLog.info('自定义协议打开的地址：', url);
+  // const parsedUrl = new URL(url);
+  // const fileUrl = parsedUrl.searchParams.get('url');
+  // const fileName = 'downloaded_file.zip';
+
+  // 执行下载
+  // https.get(fileUrl, (response) => {
+  //     const fileStream = fs.createWriteStream(fileName);
+  //     response.pipe(fileStream);
+  //     fileStream.on('finish', () => {
+  //         fileStream.close();
+  //         dialog.showMessageBox({
+  //             type: 'info',
+  //             title: '下载完成',
+  //             message: `文件已下载到: ${fileName}`
+  //         });
+  //     });
+  // });
 });
 
 // 应用监听所有关闭事件，退出程序
