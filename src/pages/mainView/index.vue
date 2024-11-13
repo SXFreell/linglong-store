@@ -111,10 +111,13 @@
 import { ipcRenderer } from 'electron';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import si from 'systeminformation';
 import { compareVersions } from '@/util/checkVersion';
 import { ElNotification } from 'element-plus'
 import { CardFace,InstalledEntity } from '@/interface';
+// 引入网络组件 获取网络接口信息 获取实时网速
+import { useNetworkSpeed } from '@/util/network'; 
+const { uploadSpeed, downloadSpeed } = useNetworkSpeed();
+
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
@@ -135,10 +138,6 @@ const defaultActive = ref('1');
 const router = useRouter();
 // 路由跳转
 const toPage = (url: string) => router.push(url);
-// 实时上传速度
-const uploadSpeed = ref("0");
-// 实时下载速度
-const downloadSpeed = ref("0");
 // 显示下载队列框
 const showQueueBox = ref(false);
 // 下载过程中状态标识
@@ -260,10 +259,8 @@ const linglongResult = (_event: any, res: any) => {
             // 安装成功后，弹出通知
             const msg = command.startsWith('ll-cli install') ? '安装' : '卸载';
             ElNotification({
-                title: msg + '成功!',
+                title: msg + '成功!', type: 'success', duration: 500,
                 message: params.name + '(' + params.version + ')被成功' + msg + '!',
-                type: 'success',
-                duration: 500,
             });
             // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
             let getInstalledItemsCommand = "ll-cli --json list";
@@ -298,53 +295,12 @@ const cancelInstall = (row: any) => {
     difVersionItemsStore.updateItemLoadingStatus(row, false);
     allAppItemsStore.updateItemLoadingStatus(row, false);
 }
-// 网卡网速检测函数
-function initNetStatus() {
-    si.networkStats().then((data: { [x: string]: any; }) => {
-        // 假设我们使用的是第一个网络接口
-        const iface = Object.keys(data)[0];
-        const networkData = data[iface];
-        // 设置两个变量来跟踪之前的接收和发送的字节数
-        let prevInBytes = networkData.tx_bytes;
-        let prevOutBytes = networkData.rx_bytes;
-        // 每隔一定时间计算网速
-        setInterval(() => {
-            si.networkStats().then((data: { [x: string]: any; }) => {
-                const networkData = data[iface];
-                const inBytes = networkData.tx_bytes;
-                const outBytes = networkData.rx_bytes;
-                // 计算两次间隔的字节数差异
-                const inDiff = inBytes - prevInBytes;
-                const outDiff = outBytes - prevOutBytes;
-                // 更新之前的字节数
-                prevInBytes = inBytes;
-                prevOutBytes = outBytes;
-                // 转换为KB/s
-                const inSpeed = (inDiff / 1024);
-                const outSpeed = (outDiff / 1024);
-                //当速度超过1024时，则以MB/s为单位
-                if (inSpeed > 1024) {
-                    uploadSpeed.value = (inSpeed / 1024).toFixed(2) + ' MB/s';
-                } else {
-                    uploadSpeed.value = inSpeed.toFixed(2) + ' KB/s';
-                }
-                if (outSpeed > 1024) {
-                    downloadSpeed.value = (outSpeed / 1024).toFixed(2) + ' MB/s';
-                } else {
-                    downloadSpeed.value = outSpeed.toFixed(2) + ' KB/s';
-                }
-            });
-        }, 1000); // 每1000毫秒计算一次网速
-    });
-}
 
 // 页面初始化时执行
 onMounted(() => {
     // 监听命令执行结果
     ipcRenderer.on('command-result', commandResult);
     ipcRenderer.on('linglong-result', linglongResult);
-    // 获取网络接口信息 获取实时网速
-    initNetStatus();
 });
 // 页面销毁前执行
 onBeforeUnmount(() => {
