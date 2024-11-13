@@ -48,8 +48,9 @@
             <!-- <el-table-column prop="description" label="描述" min-width="800"/> -->
             <el-table-column fixed="right" label="操作" header-align="center" align="center" width="160">
                 <template #default="scope">
+                    <el-button class="uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app'" disabled>已安装</el-button>
                     <!-- 卸载按钮 -->
-                    <el-button class="uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading"
+                    <el-button class="uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
                         @click="changeStatus(scope.row, 'uninstall')">卸载</el-button>
                     <el-button v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
                     <!-- 运行按钮 -->

@@ -158,11 +158,11 @@ const commandResult = (_event: any, res: any) => {
         return;
     }
     // 监听获取玲珑列表的命令
-    if (command.startsWith('ll-cli list') && params.type && params.type == 'refreshInstalledApps') {
+    if (params.type && params.type == 'refreshInstalledApps') {
         if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
           installedItemsStore.initInstalledItemsOld(result);
         }
-        if (command == 'll-cli list --json') {
+        if (command == 'll-cli --json list') {
           installedItemsStore.initInstalledItems(result);
         }
     }
@@ -209,11 +209,11 @@ const commandResult = (_event: any, res: any) => {
             duration: 500,
         });
         // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-        let getInstalledItemsCommand = "ll-cli list --json";
+        let getInstalledItemsCommand = "ll-cli --json list";
         if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
             getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
         } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
-            getInstalledItemsCommand = "ll-cli list --json --type=all";
+            getInstalledItemsCommand = "ll-cli --json list --type=all";
         }
         ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
     }
@@ -266,21 +266,15 @@ const linglongResult = (_event: any, res: any) => {
                 duration: 500,
             });
             // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-            let getInstalledItemsCommand = "ll-cli list --json";
+            let getInstalledItemsCommand = "ll-cli --json list";
             if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
                 getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
             } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
-                getInstalledItemsCommand = "ll-cli list --json --type=all";
+                getInstalledItemsCommand = "ll-cli --json list --type=all";
             }
             ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
         } else {
-            ElNotification({
-                title: '操作异常!',
-                message: downloadLogMsg,
-                type: 'error',
-                duration: 5000,
-                dangerouslyUseHTMLString: true
-            });
+            ElNotification({ title: '操作异常!', message: downloadLogMsg, type: 'error', duration: 5000, dangerouslyUseHTMLString: true });
             flag.value = true;
         }
         downloadLogMsg = ""; // 清除当前程序安装的日志记录
