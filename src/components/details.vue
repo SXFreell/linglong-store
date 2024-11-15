@@ -176,41 +176,28 @@ const changeStatus = async (item: any, flag: string) => {
         let command= 'll-cli install ' + item.appId + '/' + item.version;
         // 发送操作命令
         let commandType = compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") < 0 ? 'command' : 'linglong';
-        ipcRenderer.send(commandType, {
-                ...item,
-                command: command,
-                loading: false,
-            });
+        ipcRenderer.send(commandType, { ...item, command: command, loading: false });
     } else {
         message = '正在卸载' + item.name + '(' + item.version + ')';
         ipcRenderer.send('command', {
-            ...item,
+            ...item, loading: false,
             command: 'll-cli uninstall ' + item.appId + '/' + item.version,
-            loading: false,
         });
     }
     // 弹出提示框
-    ElNotification({
-        title: '提示',
-        message: message,
-        type: 'info',
-        duration: 500,
-    });
+    ElNotification({ title: '提示', message: message, type: 'info', duration: 500 });
 }
 // 运行按钮
 const toRun = (item: CardFace) => {
     // 发送操作命令
     ipcRenderer.send('command', {
-        ...item,
+        ...item, loading: false,
         command: 'll-cli run ' + item.appId + '/' + item.version,
-        loading: false,
     });
     // 弹出运行提示框
     ElNotification({
-        title: '提示',
+        title: '提示', type: 'info', duration: 500,
         message: item.name + '(' + item.version + ')即将被启动！',
-        type: 'info',
-        duration: 500,
     });
 }
 // 页面启动时加载
