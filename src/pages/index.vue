@@ -34,7 +34,7 @@
         <template #footer>
             <div class="dialog-footer">
                 <el-button type="info" @click="exitBtnClick">退出商店</el-button>
-                <el-button type="info" @click="autoInstallBtnClick">自动安装</el-button>
+                <!-- <el-button type="info" @click="autoInstallBtnClick">自动安装</el-button> -->
                 <el-button type="primary" @click="manualInstallBtnClick">手动安装</el-button>
             </div>
         </template>

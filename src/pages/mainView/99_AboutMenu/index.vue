@@ -18,13 +18,14 @@
       </el-button>
     </li>
     <div class="item">
-      当前版本: {{ pkg.version }}
+      当前商店版本: {{ pkg.version }}
       <el-button class="updateBtn" type="warning" :size="'small'" @click="checkVersion()" :disabled="updateBtnStatus">
         检查版本<el-icon class="el-icon--right">
           <Upload />
         </el-icon>
       </el-button>
     </div>
+    <div class="item">当前玲珑组件版本：{{ systemConfigStore.llVersion }}</div>
     <div class="item">开发作者：{{ pkg.author }}</div>
     <div class="item">
       码云地址：<a class="link" href="https://gitee.com/Jokul2018/linglong_store"

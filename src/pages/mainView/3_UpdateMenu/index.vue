@@ -13,11 +13,11 @@
             </div>
             <h1>暂无数据</h1>
         </div>
-        <transition name="el-zoom-in-bottom">
+        <!-- <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0 && !loading" class="transition-update-btn">
                 <el-button type="primary" @click="updateAll" :disabled="disableClick">一键更新</el-button>
             </div>
-        </transition>
+        </transition> -->
     </div>
 </template>
 <script setup lang="ts">

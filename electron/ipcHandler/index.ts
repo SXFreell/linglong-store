@@ -218,7 +218,7 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.post(data.url, { ...data }).then(response => {
             ipcLog.info('ipc-appLogin-success：',JSON.stringify(response.data));
         }).catch(error => {
-            ipcLog.info('ipc-appLogin-error：',error);
+            ipcLog.info('ipc-appLogin-error：',error.message);
         });
     });
 
