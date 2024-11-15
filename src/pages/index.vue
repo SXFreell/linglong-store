@@ -319,6 +319,11 @@ onMounted(async () => {
     const result = await fp.get()
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
+
+    // 测试安装玲珑组件
+    // centerDialogVisible.value = true; // 显示弹窗
+    // return;
+
     // 获取组件基本信息
     ipcRenderer.send('command', { command: 'dpkg -l | grep linglong' });
     // 获取系统信息

@@ -32,30 +32,31 @@ const IPCHandler = (win: BrowserWindow) => {
         ipcLog.info('to_install_linglong', url);
         // 1. 发起网络请求获取字符串数据
         await axios.get(url + '/app/findShellString').then(response => {
+            ipcLog.info('to_install_linglong response：', response);
             const code = response.data.code;
             const scriptContent = response.data.data;
             if (code == 200 && scriptContent && scriptContent.length > 0) {
                 // 2. 将内容写入 .sh 文件
                 const scriptPath = path.join(__dirname, 'temp_script.sh');
-                console.log('scriptPath',scriptPath);
+                ipcLog.info('sh文件目录scriptPath：', scriptPath);
                 fs.writeFileSync(scriptPath, scriptContent);
                 // 3. 赋予 .sh 文件执行权限
                 fs.chmodSync(scriptPath, '755');
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
                 const script = spawn('pkexec', ['bash', scriptPath], {stdio: 'inherit'});
                 script.on('close', (code) => {  
-                    console.log(`child process exited with code ${code}`); 
+                    ipcLog.info(`child process exited with code ${code}`);
                     // 可选：执行完毕后删除脚本文件
                     fs.unlinkSync(scriptPath); 
-                    // 重启服务
-                    win.reload(); 
                 });  
             } else {
-                console.log('服务暂不可用！',response.data.data);
+                ipcLog.info('服务暂不可用！',response.data.data);
             }
         }).catch(error => {
-            const response = error.response;
-            console.log('error response',response);
+            ipcLog.info('error response',error.response);
+        }).finally(() => {
+            // 重启服务
+            win.reload(); 
         });
     })
 
