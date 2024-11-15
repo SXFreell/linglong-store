@@ -151,20 +151,6 @@ const commandResult = async (_event: any, res: any) => {
                 installedItemsStore.initInstalledItemsOld(result);
             }
             if (command == 'll-cli --json list') {
-                if (result.includes("ll-cli migrate")) {
-                    ElMessageBox.confirm('当前旧数据需要迁移后才能使用，确认开始执行吗？', '提示', {
-                        confirmButtonText: '确认',
-                        cancelButtonText: '取消',
-                        type: 'info',
-                        center: true,
-                    }).then(() => {
-                        ipcRenderer.send('command', { command: 'll-cli migrate' });
-                        ipcRenderer.send('logger', 'info', "当前旧数据正在执行迁移...");
-                    })
-                    // 延时1000毫秒进入
-                    await new Promise(resolve => setTimeout(resolve, 1000));
-                    window.close();
-                }
                 installedItemsStore.initInstalledItems(result);
             }
             message.value = "已安装的玲珑程序检测完成...";
@@ -226,6 +212,23 @@ const commandResult = async (_event: any, res: any) => {
         systemConfigStore.changeLinglongBinVersion(installedVersion);
     }
     if(command == 'll-cli repo show') {
+        if (code == 'error') {
+            console.log('resultresult',result);
+            ElMessageBox.confirm('当前旧数据需要迁移后才能使用，确认开始执行吗？', '提示', {
+                confirmButtonText: '确认',
+                cancelButtonText: '取消',
+                type: 'info',
+                center: true,
+            }).then(async () => {
+                ipcRenderer.send('command', { command: 'll-cli migrate' });
+                ipcRenderer.send('logger', 'info', "当前旧数据开始执行迁移...");
+                // 延时1000毫秒进入
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                window.close();
+            }).catch(() => {
+                window.close();
+            })
+        }
         const lines = result.split('\n');
         let defaultRepoName = '';
         lines.forEach((line: string) => {
