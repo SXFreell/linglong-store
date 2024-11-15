@@ -136,16 +136,34 @@ function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, 
  * @param flag 安装/卸载
  */
 const changeStatus = async (item: any, flag: string) => {
+    // 判断正在安装队列应用数量
     if (installingItemsStore.installingItemList.length >= 10) {
         // 弹出提示框
         ElNotification({
-            title: '提示',
+            title: '提示', type: 'warning', duration: 500,
             message: '当前下载队列超过10条，请稍后操作...',
-            type: 'warning',
-            duration: 500,
         });
         return;
     }
+    // 大于等于1.7.0版本后，安装低版本会进行校验
+    if (compareVersions(systemConfigStore.llVersion, "1.7.0") >= 0) {
+        let tempList = installedItemsStore.installedItemList;
+        let theAppIdList = tempList.filter(it => it.appId == item.appId);
+        if (theAppIdList.length > 0) {
+            for (let index = 0; index < theAppIdList.length; index++) {
+                const element = theAppIdList[index];
+                if ( compareVersions(element.version, item.version) > 0) {
+                    // 弹出提示框
+                    ElNotification({
+                        title: '提示', type: 'warning', duration: 3000,
+                        message: '当前应用存在更高版本，若想安装低版本，请卸载高版本后操作...',
+                    });
+                    return;
+                }
+            }
+        }
+    }
+    
     // 启用加载框
     allAppItemsStore.updateItemLoadingStatus(item, true); // 全部程序列表(新)
     installedItemsStore.updateItemLoadingStatus(item, true); // 已安装程序列表
