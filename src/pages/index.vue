@@ -111,8 +111,8 @@ const commandResult = async (_event: any, res: any) => {
         if(code == 'stdout') {
             const tempVersion = result.trim();
             // 判断是否为对象并且具有 version 字段
-            if (typeof tempVersion === 'object' && tempVersion !== null && 'version' in tempVersion) {
-                const obj = tempVersion as { version: unknown }; // 类型断言
+            if (tempVersion.startsWith('{') && tempVersion.endsWith('}') && 'version' in JSON.parse(tempVersion)) {
+                const obj = JSON.parse(tempVersion) as { version: unknown }; // 类型断言
                 // 判断 version 字段是否为字符串
                 if (typeof obj.version === 'string') {
                     systemConfigStore.changeLlVersion(obj.version);
