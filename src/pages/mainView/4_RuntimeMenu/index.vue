@@ -21,6 +21,7 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { ipcRenderer } from "electron";
 import { ElNotification } from 'element-plus'
+import { RunTime } from "@/interface";
 import { parseRef } from "@/util/refParam";
 import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
@@ -28,17 +29,6 @@ import { useSystemConfigStore } from "@/store/systemConfig";
 const systemConfigStore = useSystemConfigStore();
 
 let runtimeList = ref<RunTime[]>([]);
-
-interface RunTime {
-    app: string,
-    containerId: string,
-    pid: string,
-    Path: string,
-    version: string,
-    arch: string,
-    channel: string,
-    repo: string,
-}
 
 // 监听命令事件
 const commandResult = (_event: any, res: any) => {
@@ -134,8 +124,13 @@ const killAppResult = async (_event: any, res: any) => {
 const stopPross = (item: RunTime) => {
     const { containerId } = item;
     const linglongBinVersion = systemConfigStore.linglongBinVersion;
+    const llVersion = systemConfigStore.llVersion;
     if (linglongBinVersion && compareVersions(linglongBinVersion,'1.5.0') < 0) {
         ipcRenderer.send('command', { command: `ll-cli kill ${containerId}` });
+    } else if (compareVersions(llVersion,'1.7.0') >= 0) {
+        // main:org.dde.calendar/5.14.5.1/x86_64
+        const { channel, app, version, arch } = item;
+        ipcRenderer.send('kill-app', { command: `ll-cli kill ${channel}:${app}/${version}/${arch}` });
     } else {
         ipcRenderer.send('kill-app', { command: `ll-cli kill ${containerId}` });
     }

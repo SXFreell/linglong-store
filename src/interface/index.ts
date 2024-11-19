@@ -155,3 +155,17 @@ export interface Pagination {
     page: number;
     size: number;
 }
+
+/**
+ * 运行时对象
+ */
+export interface RunTime {
+    app: string,
+    containerId: string,
+    pid: string,
+    Path: string,
+    version: string,
+    arch: string,
+    channel: string,
+    repo: string,
+}
