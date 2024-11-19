@@ -197,6 +197,7 @@ const commandResult = (_event: any, res: any) => {
             let baseURL = import.meta.env.VITE_SERVER_URL as string;
             params.url = baseURL + "/visit/save";
             params.visitorId = systemConfigStore.visitorId;
+            params.clientIp = systemConfigStore.clientIP;
             ipcRenderer.send('visit', params);
         }
         // 安装成功后，弹出通知
@@ -254,6 +255,7 @@ const linglongResult = (_event: any, res: any) => {
                 let baseURL = import.meta.env.VITE_SERVER_URL as string;
                 params.url = baseURL + "/visit/save";
                 params.visitorId = systemConfigStore.visitorId;
+                params.clientIp = systemConfigStore.clientIP;
                 ipcRenderer.send('visit', params);
             }
             // 安装成功后，弹出通知

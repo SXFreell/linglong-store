@@ -170,6 +170,30 @@ const IPCHandler = (win: BrowserWindow) => {
         })
     })
 
+    /* ********** 通过网络服务获取客户端ip ********** */
+    // 使用 ipify API 获取 IPv4/IPv6 地址
+    // const response = await axios.get('https://api64.ipify.org?format=json');
+    // const response = await axios.get('http://ip-api.com/json');
+    ipcMain.on("fetchClientIP", () => {
+        axios.defaults.timeout = 30000;
+        axios.get('http://ip-api.com/json').then(response => {
+            const code = response.data.code;
+            const dataList = response.data;
+            const result = {
+                code: code,
+                data: dataList
+            };
+            win.webContents.send("fetchClientIP-result", result);
+        }).catch(error => {
+            const response = error.response;
+            const result = {
+                code: response.status,
+                msg: response.data
+            };
+            win.webContents.send("fetchClientIP-result", result);
+        });
+    });
+
     /* ********** 执行网络请求 ********** */
     ipcMain.on("network", (_event, data) => {
         ipcLog.info('ipc-network：', JSON.stringify(data));

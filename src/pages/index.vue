@@ -190,7 +190,8 @@ const commandResult = async (_event: any, res: any) => {
                 osVersion: systemConfigStore.osVersion,
                 defaultRepoName: systemConfigStore.defaultRepoName,
                 appVersion: pkg.version,
-                visitorId: systemConfigStore.visitorId 
+                visitorId: systemConfigStore.visitorId,
+                clientIp: systemConfigStore.clientIP 
             })
         }
         // 延时1000毫秒进入
@@ -322,7 +323,9 @@ onMounted(async () => {
     const result = await fp.get()
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
-
+    // 获取客户端ip
+    ipcRenderer.send('fetchClientIP');
+    ipcRenderer.once('fetchClientIP-result',(_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query))
     // 测试安装玲珑组件
     // centerDialogVisible.value = true; // 显示弹窗
     // return;
