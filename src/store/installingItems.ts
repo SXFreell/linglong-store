@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { InstalledEntity } from "@/interface";
+import { useSystemConfigStore } from "@/store/systemConfig";
+const systemConfigStore = useSystemConfigStore();
 
 /**
  * 已安装的全部应用
@@ -25,6 +27,9 @@ export const useInstallingItemsStore = defineStore("installingItems", () => {
         const index = installingItemList.value.findIndex((i) => i.appId === item.appId && i.name === item.name && i.version === item.version);
         if (index !== -1) {
             installingItemList.value.splice(index, 1);
+        }
+        if (installingItemList.value.length <= 0) {
+            systemConfigStore.changeUpdateStatus(false);
         }
     };
     /**

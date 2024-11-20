@@ -37,6 +37,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         osVersion: ref(''),
         // 客户端ip地址
         clientIP: ref(''),
+        // 一键更新状态
+        updateStatus: ref(false),
     }),
     getters: {
         getSystemConfigInfo: (state) => {
@@ -56,6 +58,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',detailMsg:' + state.detailMsg
             + ',osVersion:' + state.osVersion
             + ',clientIP:' + state.clientIP
+            + ',updateStatus:' + state.updateStatus
         },
         getIsShowDisArch: (state) => state.isShowDisArch,
     },
@@ -139,6 +142,11 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeClientIP(clientIP: string){
             const that = this;
             that.clientIP = clientIP;
+        },
+        // 修改一键更新状态
+        changeUpdateStatus(updateStatus: boolean){
+            const that = this;
+            that.updateStatus = updateStatus;
         },
     },
     persist: true

@@ -43,11 +43,14 @@ const defaultName = computed(() => {
 const svg = `<path class="path" d="M 30 15 L 28 17 M 25.61 25.61 A 15 15, 0, 0, 1, 15 30 A 15 15, 0, 1, 1, 27.99 7.5 L 15 15" style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>`
 // 打开不同版本页面
 const openDetails = () => {
-    let queryParams: LocationQueryRaw = {
+    let queryParams = {
         menuName: '更新程序',
         ...props,
     } as OpenDetailParams as unknown as LocationQueryRaw;
-    router.push({ path: '/details', query: queryParams });
+    // 更新卡片，当为加载中时，无法点击进入详情页面
+    if (!queryParams.loading) {
+        router.push({ path: '/details', query: queryParams });
+    }
 }
 </script>
 

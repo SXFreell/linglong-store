@@ -13,16 +13,17 @@
             </div>
             <h1>暂无数据</h1>
         </div>
-        <!-- <transition name="el-zoom-in-bottom">
+        <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0 && !loading" class="transition-update-btn">
-                <el-button type="primary" @click="updateAll" :disabled="disableClick">一键更新</el-button>
+                <el-button type="primary" @click="updateAll" :disabled="systemConfigStore.updateStatus">一键更新</el-button>
             </div>
-        </transition> -->
+        </transition>
     </div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
 import { ipcRenderer } from "electron";
+import { ElNotification } from 'element-plus'
 import { CardFace,InstalledEntity } from "@/interface";
 import updateCard from "@/components/updateCard.vue";
 import string2card from "@/util/string2card";
@@ -32,23 +33,21 @@ import { useInstalledItemsStore } from "@/store/installedItems";
 import { useUpdateItemsStore } from "@/store/updateItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstallingItemsStore } from "@/store/installingItems";
-import elertTip from "@/util/NetErrorTips";
 
 const installedItemsStore = useInstalledItemsStore();
 const updateItemsStore = useUpdateItemsStore();
-const systemConfig = useSystemConfigStore();
+const systemConfigStore = useSystemConfigStore();
 const installingItemsStore = useInstallingItemsStore();
 // 页面加载状态
 const loading = ref(true);
+
 // 记录循环次数的标记值
 let currentIndex = 0;
-// 一键更新按钮是否可点击
-const disableClick = ref(false);
 // 嵌套循环获取所有已安装的玲珑程序是否有更新版本
 const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
     if (currentIndex < uniqueInstalledSet.length) {
         const { appId, version, module } = uniqueInstalledSet[currentIndex];
-        if (compareVersions(systemConfig.llVersion, '1.3.99') > 0) {
+        if (compareVersions(systemConfigStore.llVersion, '1.3.99') > 0) {
             ipcRenderer.send("command", { command: `ll-cli --json search ${appId}`, appId: appId, version: version });
         } else {
             ipcRenderer.send("command", { command: `ll-cli query ${appId}`, appId: appId, version: version });
@@ -57,7 +56,10 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
             const command: string = res.param.command;
             // 返回异常判定为网络异常
             if ('stdout' != res.code) {
-                systemConfig.changeNetworkRunStatus(false);
+                ElNotification({
+                    title: '提示', type: 'error', duration: 5000,
+                    message: "系统操作异常...",
+                });
                 return;
             }
             const appId: string = res.param.appId;
@@ -102,11 +104,12 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
 }
 // 更新所有
 const updateAll = () => {
-    disableClick.value = true;
+    // 更改一键更新状态为true
+    systemConfigStore.changeUpdateStatus(true);
     // 执行一键更新
     const updateItemList = updateItemsStore.updateItemList;
     updateItemList.forEach((item) => {
-        item.loading = false;
+        item.loading = true;
         item.command = `ll-cli install ${item.appId}/${item.version}`;
         ipcRenderer.send("command", { ...item });
         // 新增到加载中列表
@@ -115,25 +118,28 @@ const updateAll = () => {
 }
 // 页面打开时执行
 onMounted(async () => {
-    // 清空页面列表数据
-    updateItemsStore.clearItems();
-    elertTip(); // 检测网络
+    updateItemsStore.clearItems(); // 清空页面列表数据
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-    let getInstalledItemsCommand = "ll-cli --json list";
-    if (compareVersions(systemConfig.llVersion, "1.3.99") < 0) {
-        getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    } else if (compareVersions(systemConfig.linglongBinVersion, "1.5.0") >= 0 && systemConfig.isShowBaseService) {
-        getInstalledItemsCommand = "ll-cli --json list --type=all";
+    if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
+        let getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
+        ipcRenderer.send('command', { command: getInstalledItemsCommand});
+    } else if (compareVersions(systemConfigStore.llVersion, '1.3.99') >= 0 && compareVersions(systemConfigStore.llVersion, '1.5.0') < 0) {
+        let getInstalledItemsCommand = "ll-cli --json list";
+        ipcRenderer.send('command', { command: getInstalledItemsCommand});
+    } else if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
+        if (systemConfigStore.isShowBaseService) {
+            let getInstalledItemsCommand = "ll-cli --json list --type=all";
+            ipcRenderer.send('command', { command: getInstalledItemsCommand});
+        } else {
+            let getInstalledItemsCommand = "ll-cli --json list";
+            ipcRenderer.send('command', { command: getInstalledItemsCommand});
+        }
     }
-    ipcRenderer.send('command', { command: getInstalledItemsCommand});
-
-    // 延时1000毫秒进入
+    // 2.延时1000毫秒进入
     await new Promise(resolve => setTimeout(resolve, 1000));
-
-    const installedItemList: InstalledEntity[] = installedItemsStore.installedItemList;
-    // 初始化一个数组用于存储去重后当前已安装程序列表
+    // 3.初始化一个数组用于存储去重后当前已安装程序列表
     const uniqueInstalledSet: InstalledEntity[] = [];
-    installedItemList.forEach(installedItem => {
+    installedItemsStore.installedItemList.forEach(installedItem => {
         const { appId, version, categoryName } = installedItem;
         if (categoryName != '玲珑组件') {
             const item = uniqueInstalledSet.find(item => item.appId == appId);
