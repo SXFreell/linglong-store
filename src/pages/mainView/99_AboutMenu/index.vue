@@ -2,13 +2,15 @@
   <div>
     <h1>关于程序</h1>
     <li>
-      <a class="title" :title="`Node版本：${versions.node}&#10;Electron版本：${versions.electron}&#10;Chrome版本：${versions.chrome}`">玲珑信息</a>
+      <a class="title"
+        :title="`Node版本：${versions.node}&#10;Electron版本：${versions.electron}&#10;Chrome版本：${versions.chrome}`">玲珑信息</a>
     </li>
-    <div class="item">玲珑官网：<a class="link" href="https://linglong.space/" target="_blank">https://linglong.space/</a></div>
+    <div class="item">玲珑官网：<a class="link" href="https://linglong.space/" target="_blank">https://linglong.space/</a>
+    </div>
     <!-- <div class="item">玲珑网页版商店：<a class="link" href="https://store.linglong.space/"
         target="_blank">https://store.linglong.space/</a></div> -->
     <div class="item">玲珑网页版商店：<a class="link" href="https://store.linyaps.org.cn/"
-          target="_blank">https://store.linyaps.org.cn/</a></div>
+        target="_blank">https://store.linyaps.org.cn/</a></div>
     <div class="item">当前共收录玲珑程序数: {{ systemConfigStore.linglongCount }} 个</div>
     <br>
     <li>
@@ -40,8 +42,8 @@
       <a class="title">赞助支持</a>
     </li>
     <div class="item" style="padding-top: 10px;">
-      <img class="image" src="@/assets/aliPay.png" alt="Image"/>
-      <img class="image" src="@/assets/wePay.jpg" alt="Image"/>
+      <img class="image" src="@/assets/aliPay.png" alt="Image" />
+      <img class="image" src="@/assets/wePay.jpg" alt="Image" />
     </div>
   </div>
   <div class="progress" v-show="downloadModule">
@@ -84,17 +86,15 @@ const suggest = () => {
     if (value) {
       // 发送建议到主进程
       let baseURL = import.meta.env.VITE_SERVER_URL as string;
-      const url = baseURL + "/visit/suggest";
-      ipcRenderer.send('suggest', { url: url, 
-        llVersion: systemConfigStore.llVersion, 
-        appVersion: pkg.version, 
+      ipcRenderer.send('suggest', {
+        url: baseURL + "/visit/suggest",
+        llVersion: systemConfigStore.llVersion,
+        appVersion: pkg.version,
         message: value,
-        visitorId: systemConfigStore.visitorId  
+        visitorId: systemConfigStore.visitorId,
+        clientIp: systemConfigStore.clientIP
       })
-      ElMessage({
-        type: 'success',
-        message: `反馈内容已发送`,
-      })
+      ElMessage({ type: 'success', message: `反馈内容已发送` })
     }
   })
 }
@@ -167,7 +167,7 @@ const updateMessage = (_event: any, text: string) => {
   }
 }
 async function getLinglongCount() {
-  const res = await getSearchAppList({repoName: systemConfigStore.defaultRepoName, pageNo: 1, pageSize: 100000 });
+  const res = await getSearchAppList({ repoName: systemConfigStore.defaultRepoName, pageNo: 1, pageSize: 100000 });
   if (res.code == 200) {
     let count = res.data.total;
     systemConfigStore.changeLinglongCount(count);
