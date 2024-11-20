@@ -79,22 +79,15 @@
             <transition name="el-zoom-in-left">
                 <div v-show="showQueueBox" class="transition-queue-box">
                     <el-table :data="installingItemsStore.installingItemList" style="width: 100%;height: 100%;">
-                        <el-table-column prop="name" label="名称" width="100" 
-                            class-name="name-column" header-align="center" align="center">
-                            <template #default="scope">
-                                <el-tooltip class="item" effect="dark" :content=scope.row.name placement="top">  
-                                    <span>{{ scope.row.name }}</span>  
-                                </el-tooltip>
-                            </template>
-                        </el-table-column>
-                        <el-table-column prop="version" label="版本" header-align="center" align="center" width="180" />
-                        <el-table-column label="安装进度" header-align="center" align="center">
+                        <el-table-column label="安装进度" header-align="center" align="center" width="120" show-overflow-tooltip>
                             <template #default="scope">
                                 <a v-if="compareVersions(systemConfigStore.linglongBinVersion,'1.5.0') >= 0 && scope.row.schedule != '-'">{{ scope.row.schedule }}</a>
                                 <a v-else-if="compareVersions(systemConfigStore.linglongBinVersion,'1.5.0') >= 0 && scope.row.schedule == '-'">等待中...</a>
                                 <a v-else>-</a>
                             </template>
                         </el-table-column>
+                        <el-table-column prop="name" label="名称" header-align="center" align="center" show-overflow-tooltip/>
+                        <el-table-column prop="version" label="版本" header-align="center" align="center" width="160" show-overflow-tooltip/>
                         <el-table-column fixed="right" label="操作" header-align="center" align="center" width="120">
                             <template #default="scope">
                                 <el-button v-if="!scope.row.isInstalled && scope.row.loading && scope.row.schedule != '-'" loading>安装中...</el-button>
@@ -146,14 +139,11 @@ const flag = ref(true);
 let downloadLogMsg = "";
 // 命令执行响应函数
 const commandResult = (_event: any, res: any) => {
-    const code = res.code;   // 返回命令执行状态
     const params = res.param;  // 返回命令执行入参参数
     const result = res.result;  // 返回命令执行结果
     const command: string = params.command;  // 返回执行的命令
-    if (code != 'stdout') {
+    if (res.code != 'stdout') {
         ipcRenderer.send('logger', 'error', "\"" + command + "\"命令执行异常::" + result);
-        // 网络异常，变更标识
-        // systemConfigStore.changeNetworkRunStatus(false);
         return;
     }
     // 监听获取玲珑列表的命令
@@ -203,10 +193,8 @@ const commandResult = (_event: any, res: any) => {
         // 安装成功后，弹出通知
         const msg = command.startsWith('ll-cli install') ? '安装' : '卸载';
         ElNotification({
-            title: msg + '成功!',
+            title: msg + '成功!', type: 'success', duration: 500,
             message: params.name + '(' + params.version + ')被成功' + msg + '!',
-            type: 'success',
-            duration: 500,
         });
         // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
         let getInstalledItemsCommand = "ll-cli --json list";
@@ -283,9 +271,15 @@ const linglongResult = (_event: any, res: any) => {
         if (result.toLowerCase().includes('error')) {
             flag.value = false;
         }
-        const aaa = res.result.replace('[K[?25l','').replace('[?25h','');
-        const schedule = aaa.split(' ')[0];
-        installingItemsStore.updateItemSchedule(params as InstalledEntity, schedule);
+        if (compareVersions(systemConfigStore.llVersion,'1.7.0') >= 0) {
+            let maohao = result.lastIndexOf(':');
+            let baifenhao = result.lastIndexOf('%');
+            const schedule = result.substring(maohao + 1, baifenhao + 1);
+            installingItemsStore.updateItemSchedule(params as InstalledEntity, schedule);
+        } else {
+            const schedule = result.replace('[K[?25l','').replace('[?25h','').split(' ')[0];
+            installingItemsStore.updateItemSchedule(params as InstalledEntity, schedule);
+        }
     }
 }
 // 终止安装点击事件
@@ -415,9 +409,4 @@ onBeforeUnmount(() => {
     background: radial-gradient(circle at 50% 50%, transparent, var(--base-color));
 }
 
-.name-column .cell{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
 </style>
