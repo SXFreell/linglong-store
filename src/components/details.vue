@@ -80,7 +80,6 @@ import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import elertTip from "@/util/NetErrorTips";
 import { useRouter } from 'vue-router';
 
 const allAppItemsStore = useAllAppItemsStore();
@@ -203,20 +202,26 @@ const toRun = (item: CardFace) => {
 // 页面启动时加载
 onMounted(async () => {
     difVersionItemsStore.clearItems(); // 清除表单数据
-    elertTip(); // 检测网络
     // 发送命令到主线程获取版本列表结果
-    let itemsCommand = "ll-cli --json search " + query.appId
     if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
-        itemsCommand = "ll-cli query " + query.appId;
-    } else if (compareVersions(systemConfigStore.linglongBinVersion,'1.5.0') >= 0 && systemConfigStore.isShowBaseService) {
-        itemsCommand = "ll-cli --json search " + query.appId + " --type=all";
+        let itemsCommand = "ll-cli query " + query.appId;
+        ipcRenderer.send("command", { 'command': itemsCommand });
+    } else if (compareVersions(systemConfigStore.llVersion, '1.3.99') >= 0 && compareVersions(systemConfigStore.llVersion, '1.5.0') < 0) {
+        let itemsCommand = "ll-cli --json search " + query.appId;
+        ipcRenderer.send("command", { 'command': itemsCommand });
+    } else if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
+        if (systemConfigStore.isShowBaseService) {
+            let itemsCommand = "ll-cli --json search " + query.appId + " --type=all";
+            ipcRenderer.send("command", { 'command': itemsCommand });
+        } else {
+            let itemsCommand = "ll-cli --json search " + query.appId;
+            ipcRenderer.send("command", { 'command': itemsCommand });
+        }
     }
-    ipcRenderer.send("command", { 'command': itemsCommand });
     ipcRenderer.once('command-result', (_event: any, res: any) => {
         const command: string = res.param.command;
-        const code: string = res.code;
         const result: any = res.result;
-        if (code == 'stdout') {
+        if (res.code == 'stdout') {
             if (command.startsWith("ll-cli query")) {
                 difVersionItemsStore.initDifVersionItemsOld(result, query);
             } else if (command.startsWith("ll-cli --json search")) {
