@@ -1,5 +1,6 @@
 <template>
-    <div class="apps-container">
+    <div class="apps-container" v-loading="loading" element-loading-text="加载中..."
+        element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="displayedItems && displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
                 <rankingServCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch" :channel="`newRanking`"
@@ -28,6 +29,8 @@ import router from '@/router';
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
+// 页面加载状态
+const loading = ref(true);
 
 let params = ref<AppListParams>({ 
     repoName: systemConfigStore.defaultRepoName,
@@ -52,6 +55,7 @@ onMounted(async () => {
     // 恢复保存的滚动位置
     const container = document.getElementsByClassName('apps-container')[0] as HTMLDivElement;
     container.scrollTop = Number(router.currentRoute.value.meta.savedPosition) || 0;
+    loading.value = false;
 })
 // 在router路由离开前执行
 onBeforeRouteLeave((to, _from, next) => {
