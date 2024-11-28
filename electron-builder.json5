@@ -9,6 +9,10 @@
   "directories": {
     "output": "release/${version}"
   },
+  "protocols": {
+    "schemes": ["linyapsSs"],
+    "name": "linglong_store"
+  },
   "files": [
     "dist-electron",
     "dist",

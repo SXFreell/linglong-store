@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Menu, screen, ipcMain } from "electron";
+import { app, BrowserWindow, shell, Menu, screen, ipcMain, protocol } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./logger";
 import TrayMenu from "./trayMenu";
@@ -107,8 +107,19 @@ function floatingBall() {
 
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
+
+  protocol.registerHttpProtocol('linyapsSs', (request, callback) => {
+    // 这里处理 URL，例如：linyapsSs://action
+    // 检查请求的 URL 是否正确
+    mainLog.info('request自定义协议打开的地址：', request.url);
+    // 启动应用程序的相关操作
+  });
+
+  // 注册协议并关联
+  app.setAsDefaultProtocolClient('linyapsSs');
+
   // 注册自定义协议
-  app.setAsDefaultProtocolClient('linglong_store');
+  // app.setAsDefaultProtocolClient('linglong_store');
   createWindow(); // 创建商店主窗口
   // floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
