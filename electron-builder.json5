@@ -10,7 +10,7 @@
     "output": "release/${version}"
   },
   "protocols": {
-    "schemes": ["linyapsSs"],
+    "schemes": ["linyapsss"],
     "name": "linglong_store"
   },
   "files": [

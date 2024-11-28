@@ -108,7 +108,7 @@ function floatingBall() {
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
 
-  protocol.registerHttpProtocol('linyapsSs', (request, callback) => {
+  protocol.registerHttpProtocol('linyapsss', (request, callback) => {
     // 这里处理 URL，例如：linyapsSs://action
     // 检查请求的 URL 是否正确
     mainLog.info('request自定义协议打开的地址：', request.url);
@@ -116,7 +116,7 @@ app.whenReady().then(() => {
   });
 
   // 注册协议并关联
-  app.setAsDefaultProtocolClient('linyapsSs');
+  app.setAsDefaultProtocolClient('linyapsss');
 
   // 注册自定义协议
   // app.setAsDefaultProtocolClient('linglong_store');
