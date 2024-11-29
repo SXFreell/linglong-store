@@ -1,4 +1,5 @@
-import { app, BrowserWindow, shell, Menu, screen, ipcMain, protocol } from "electron";
+import { app, BrowserWindow, shell, Menu, screen, ipcMain, protocol, net } from "electron";
+import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 import { mainLog } from "./logger";
 import TrayMenu from "./trayMenu";
@@ -107,23 +108,41 @@ function floatingBall() {
 
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
+  // 测试协议
+  // protocol.handle('linyapsss', (request) => {
+  //     console.log('Custom protocol request received');
+  //     mainLog.info('request自定义协议：', request);
+  //     mainLog.info('request自定义协议打开的地址：', request.url);
+  //     const filePath = request.url.slice('linyapsss://'.length);
+  //     mainLog.info('Extracted file path:', filePath);
 
-  protocol.registerHttpProtocol('linyapsss', (request, callback) => {
-    // 这里处理 URL，例如：linyapsSs://action
-    // 检查请求的 URL 是否正确
-    mainLog.info('request自定义协议打开的地址：', request.url);
-    // 启动应用程序的相关操作
-  });
+  //     return net.fetch(pathToFileURL(join(__dirname, filePath)).toString());
+  // });
 
-  // 注册协议并关联
-  app.setAsDefaultProtocolClient('linyapsss');
+  protocol.handle('linyapsss', (req) => {
+    const { host, pathname } = new URL(req.url)
+    if (host === 'bundle') {
+      if (pathname === '/') {
+        return new Response('<h1>hello, world</h1>', {
+          headers: { 'content-type': 'text/html' }
+        })
+      }
+    } else if (host === 'api') {
+      return net.fetch('https://storeapi.linyaps.org.cn' + pathname, {
+        method: req.method,
+        headers: req.headers,
+        body: req.body
+      })
+    } else {
+      return net.fetch('https://store.linyaps.org.cn/');
+    }
+  })
 
-  // 注册自定义协议
-  // app.setAsDefaultProtocolClient('linglong_store');
-  createWindow(); // 创建商店主窗口
+  // 创建商店主窗口
+  createWindow(); 
   // floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
-  // TrayMenu(win); // 加载托盘
+  TrayMenu(win); // 加载托盘
   IPCHandler(win); // 加载IPC服务
   updateHandle(win); // 自动更新
 
@@ -142,6 +161,7 @@ app.whenReady().then(() => {
 app.on('open-url', (event, url) => {
   event.preventDefault();
   mainLog.info('自定义协议打开的地址：', url);
+  console.log('Extracted url:', url); // 确保 filePath 被正确提取
   // const parsedUrl = new URL(url);
   // const fileUrl = parsedUrl.searchParams.get('url');
   // const fileName = 'downloaded_file.zip';

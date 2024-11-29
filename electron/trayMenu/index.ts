@@ -17,10 +17,10 @@ const TrayMenu = (mainWindow: BrowserWindow) => {
                 mainWindow.show();
             } 
         },
-        { 
-            label: '基础设置', 
-            type: 'radio' 
-        },
+        // { 
+        //     label: '基础设置', 
+        //     type: 'radio' 
+        // },
         { 
             label: '退出', 
             click: () => app.quit() 
