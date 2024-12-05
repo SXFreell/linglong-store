@@ -145,7 +145,7 @@ const changeStatus = async (item: any, flag: string) => {
         return;
     }
     // 大于等于1.7.0版本后，安装低版本会进行校验
-    if (compareVersions(systemConfigStore.llVersion, "1.7.0") >= 0) {
+    if (compareVersions(systemConfigStore.llVersion, "1.7.0") >= 0 && flag == 'install') {
         let tempList = installedItemsStore.installedItemList;
         let theAppIdList = tempList.filter(it => it.appId == item.appId);
         if (theAppIdList.length > 0) {
