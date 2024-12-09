@@ -1,6 +1,3 @@
-/**
- * @see https://www.electron.build/configuration/configuration
- */
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.dongpl.linglong-store",
@@ -15,7 +12,7 @@
   },
   "files": [
     "dist-electron",
-    "dist",
+    "dist"
   ],
   "mac": {
     "artifactName": "${productName}_${version}.${ext}",
@@ -41,22 +38,19 @@
       "icons"
     ],
     "target": [
-      {"target": "deb", "arch": ["x64","arm64"]},
-      {"target": "AppImage", "arch": ["x64","arm64"]},
-      // {"target": "flatpak", "arch": ["x64","arm64"]},
-      // {"target": "snap", "arch": ["x64","arm64"]},
-      // {"target": "rpm", "arch": ["x64","arm64"]},
-      // {"target": "pacman", "arch": ["x64","arm64"]},
-      // {"target": "apk", "arch": ["x64","arm64"]},
-    ],
+      { "target": "deb", "arch": ["x64", "arm64"] },
+      { "target": "AppImage", "arch": ["x64", "arm64"] }
+    ]
   },
-  "deb":{
+  "deb": {
     "desktop": {
       "Name": "玲珑应用商店",
       "Comment": "玲珑应用商店",
       "Terminal": false,
       "Type": "Application"
-    }
+    },
+    "depends": [],
+    "recommends": ["linglong-bin", "linglong-box"]
   },
   "nsis": {
     "oneClick": false,
