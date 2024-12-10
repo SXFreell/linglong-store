@@ -31,7 +31,7 @@
             <h1>暂无数据</h1>
         </div>
     </div>
-    <div class="loading-container" :class="{ 'show': isLoading }">
+    <div class="loading-bottom" :class="{ 'show': isLoading }">
         <img :src="loadingGIF" width="100%" height="100%" style="border-radius: 15px;"/>
     </div>
 </template>
@@ -137,20 +137,23 @@ onBeforeRouteLeave((to, _from, next) => {
 })
 </script>
 <style scoped>
-.loading-container {
-  position: fixed;
-  bottom: 25px;
-  right: 38%;
-  width: 12%;
-  height: 60px; /* 根据需要调整高度 */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transition: transform 1s ease-out;
-  transform: translateY(200%); /* 默认隐藏 */
+.loading-bottom {
+    height: 20px;
+    width: 100px;
+    background-color: rgba(255, 255, 255, 0.3); /* 可选：背景颜色和透明度 */
+    z-index: 1000; /* 确保图层悬浮在其他内容之上 */
+    position: fixed; /* 悬浮在页面上，始终可见 */
+    bottom: 28px; /* 对齐页面底部 */
+    left: 50%; /* 左侧对齐页面中心 */
+    padding: 10px 20px; /* 可选：内边距 */
+    border-radius: 8px; /* 可选：圆角效果 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* 可选：阴影效果 */
+    transition: transform 1.5s ease-out;
+    /* 默认隐藏 */
+    transform: translateY(200%); 
 }
 
-.loading-container.show {
-  transform: translateY(0); /* 显示状态 */
+.loading-bottom.show {
+    transform: translateY(0);  /* 显示状态 */
 }
 </style>
