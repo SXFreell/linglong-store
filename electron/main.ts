@@ -142,7 +142,7 @@ app.whenReady().then(() => {
   createWindow(); 
   // floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
-  TrayMenu(win); // 加载托盘
+  // TrayMenu(win); // 加载托盘
   IPCHandler(win); // 加载IPC服务
   updateHandle(win); // 自动更新
 
