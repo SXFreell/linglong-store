@@ -78,7 +78,7 @@
             </el-main>
             <transition name="el-zoom-in-left">
                 <div v-show="showQueueBox" class="transition-queue-box">
-                    <el-table :data="installingItemsStore.installingItemList" style="width: 100%;height: 100%;">
+                    <el-table :data="installingItemsStore.installingItemList" border stripe style="width: 100%;height: 100%;">
                         <el-table-column label="安装进度" header-align="center" align="center" width="120" show-overflow-tooltip>
                             <template #default="scope">
                                 <a v-if="compareVersions(systemConfigStore.linglongBinVersion,'1.5.0') >= 0 && scope.row.schedule != '-'">{{ scope.row.schedule }}</a>
