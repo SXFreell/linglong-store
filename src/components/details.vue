@@ -8,7 +8,7 @@
         <div class="base-message">
             <el-row style="height: 100%;">
                 <el-col :span="4" class="image-icon">
-                    <img v-lazy="query.icon" alt="程序图标" width="120px" height="120px"/>
+                    <img v-lazy="query.icon" alt="程序图标" width="120px" height="120px" />
                 </el-col>
                 <el-col :span="20" style="padding-left: 10px;height: 100%;">
                     <el-row style="margin-bottom: 6px;">
@@ -23,11 +23,13 @@
                         <el-col :span="3" class="base-message-key">appId：</el-col>
                         <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.appId }}</el-col>
                         <el-col :span="3" class="base-message-key">应用分类：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.categoryName }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.categoryName
+                            }}</el-col>
                     </el-row>
                     <el-row style="height: calc(100% - 70px);">
                         <el-col :span="3" class="base-message-key">应用简述：</el-col>
-                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ query.description }}</el-col>
+                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ query.description
+                            }}</el-col>
                     </el-row>
                 </el-col>
             </el-row>
@@ -35,22 +37,27 @@
     </div>
     <div class="choose-version">
         <div class="title">版本选择</div>
-        <el-table :data="difVersionItemsStore.difVersionItemList" border stripe style="width: 100%;border-radius: 5px;flex-grow: 1;border: 1px solid #DCDCDC;">
-            <el-table-column prop="version" label="版本号" width="120"/>
-            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100"/>
-            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100"/>
-            <el-table-column prop="module" label="模式" header-align="center" align="center" width="100"/>
-            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="100"/>
-            <el-table-column label="文件大小" header-align="center" align="center" width="120" :formatter="formatSize"/>
-            <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount"/>
-            <el-table-column label="上架时间" header-align="center" align="center" width="150" :formatter="formatUploadTime"/>
-            <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime"/>
-            <!-- <el-table-column prop="description" label="描述" min-width="800"/> -->
+        <el-table :data="difVersionItemsStore.difVersionItemList" border stripe
+            style="width: 100%;border-radius: 5px;flex-grow: 1;border: 1px solid #DCDCDC;">
+            <el-table-column prop="version" label="版本号" width="120" />
+            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100" />
+            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100" />
+            <el-table-column prop="module" label="模式" header-align="center" align="center" width="100" />
+            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="100" />
+            <el-table-column label="文件大小" header-align="center" align="center" width="120" :formatter="formatSize" />
+            <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount" />
+            <el-table-column label="上架时间" header-align="center" align="center" width="150"
+                :formatter="formatUploadTime" />
+            <el-table-column label="运行环境" header-align="center" align="center" min-width="260"
+                :formatter="formatRuntime" />
             <el-table-column fixed="right" label="操作" header-align="center" align="center" width="160">
                 <template #default="scope">
-                    <el-button class="uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app'" disabled>已安装</el-button>
+                    <el-button class="uninstall-btn"
+                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app'"
+                        disabled>已安装</el-button>
                     <!-- 卸载按钮 -->
-                    <el-button class="uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
+                    <el-button class="uninstall-btn"
+                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
                         @click="changeStatus(scope.row, 'uninstall')">卸载</el-button>
                     <el-button v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
                     <!-- 运行按钮 -->
@@ -97,7 +104,7 @@ const defaultName = computed(() => {
 })
 // 格式化架构字段
 const formatArch = computed(() => {
-    if(query.arch && (query.arch as string).startsWith('[')) {
+    if (query.arch && (query.arch as string).startsWith('[')) {
         return JSON.parse(query.arch as string).join(',');
     }
     return query.arch;
@@ -151,7 +158,7 @@ const changeStatus = async (item: any, flag: string) => {
         if (theAppIdList.length > 0) {
             for (let index = 0; index < theAppIdList.length; index++) {
                 const element = theAppIdList[index];
-                if ( compareVersions(element.version, item.version) > 0) {
+                if (compareVersions(element.version, item.version) > 0) {
                     // 弹出提示框
                     ElNotification({
                         title: '提示', type: 'warning', duration: 3000,
@@ -162,7 +169,7 @@ const changeStatus = async (item: any, flag: string) => {
             }
         }
     }
-    
+
     // 启用加载框
     allAppItemsStore.updateItemLoadingStatus(item, true); // 全部程序列表(新)
     installedItemsStore.updateItemLoadingStatus(item, true); // 已安装程序列表
@@ -172,7 +179,7 @@ const changeStatus = async (item: any, flag: string) => {
     if (flag == 'install') {
         installingItemsStore.addItem(item); // 新增到加载中列表
         message = '正在安装' + item.name + '(' + item.version + ')';
-        let command= 'll-cli install ' + item.appId + '/' + item.version;
+        let command = 'll-cli install ' + item.appId + '/' + item.version;
         // 发送操作命令
         let commandType = compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") < 0 ? 'command' : 'linglong';
         ipcRenderer.send(commandType, { ...item, command: command, loading: false });
@@ -201,23 +208,23 @@ const toRun = (item: CardFace) => {
 }
 // 页面启动时加载
 onMounted(async () => {
-    difVersionItemsStore.clearItems(); // 清除表单数据
-    // 发送命令到主线程获取版本列表结果
-    if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
-        let itemsCommand = "ll-cli query " + query.appId;
-        ipcRenderer.send("command", { 'command': itemsCommand });
-    } else if (compareVersions(systemConfigStore.llVersion, '1.3.99') >= 0 && compareVersions(systemConfigStore.llVersion, '1.5.0') < 0) {
-        let itemsCommand = "ll-cli --json search " + query.appId;
-        ipcRenderer.send("command", { 'command': itemsCommand });
-    } else if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        if (systemConfigStore.isShowBaseService) {
-            let itemsCommand = "ll-cli --json search " + query.appId + " --type=all";
-            ipcRenderer.send("command", { 'command': itemsCommand });
-        } else {
-            let itemsCommand = "ll-cli --json search " + query.appId;
-            ipcRenderer.send("command", { 'command': itemsCommand });
-        }
+    // 1.清除表单数据
+    difVersionItemsStore.clearItems(); 
+    // 2.发送命令到主线程获取版本列表结果
+    let thisAppVersion = systemConfigStore.llVersion;
+    let itemsCommand = ``;
+    if (compareVersions(thisAppVersion, '1.3.99') < 0) {
+        itemsCommand = `ll-cli query ${query.appId}`;
+    } else if (compareVersions(thisAppVersion, '1.3.99') >= 0 && compareVersions(thisAppVersion, '1.5.0') < 0) {
+        itemsCommand = `ll-cli --json search ${query.appId}`;
+    } else if (compareVersions(thisAppVersion, '1.5.0') >= 0) {
+        let showBaseFlag = systemConfigStore.isShowBaseService;
+        itemsCommand = showBaseFlag ? `ll-cli --json search ${query.appId} --type=all` : `ll-cli --json search ${query.appId}`;
+    } else {
+        ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
+        return;
     }
+    ipcRenderer.send("command", { 'command': itemsCommand });
     ipcRenderer.once('command-result', (_event: any, res: any) => {
         const command: string = res.param.command;
         const result: any = res.result;
@@ -272,7 +279,7 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
     text-align: center;
     border-radius: 10px;
     background: radial-gradient(circle at 50% 50%, transparent, var(--base-color));
-    backdrop-filter:blur(10px);
+    backdrop-filter: blur(10px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
     background-clip: padding-box;
     height: 100%;
@@ -307,17 +314,20 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
     padding: 6px;
     height: 24px;
 }
+
 .base-message-key {
     color: black;
     text-align: right;
     font-weight: bold;
 }
+
 .base-message-value {
     color: #213547;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
 }
+
 /* 隐藏滚动条 */
 ::-webkit-scrollbar {
     display: none;
@@ -327,6 +337,7 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
     .base-container {
         background-color: var(--base-color);
     }
+
     .choose-version {
         background-color: var(--base-color);
     }
