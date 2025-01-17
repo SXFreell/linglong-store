@@ -1,5 +1,4 @@
 import { app, BrowserWindow, shell, Menu, screen, ipcMain, protocol, net } from "electron";
-import { pathToFileURL } from "node:url";
 import { join } from "node:path";
 import { mainLog } from "./logger";
 import TrayMenu from "./trayMenu";
@@ -75,7 +74,6 @@ function floatingBall() {
     x: width - 100,           // 默认定位-宽度减100 在右边
     y: height - 150,          // 默认定位-高度减100 在下边
     webPreferences: {
-      // preload: join(__dirname, 'preloadBall.js'),
       preload,
       contextIsolation: false,
       nodeIntegration: true   // 允许使用Node.js
@@ -84,20 +82,15 @@ function floatingBall() {
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
   // 根据是否存在开发服务地址判断加载模式
-  // if (process.env.VITE_DEV_SERVER_URL) {
-  //     // floatingBallWindow.webContents.openDevTools({ mode: "detach" });
-  //     floatingBallWindow.loadFile(join(process.env.PUBLIC, '../floatingBall/index.html'));
-  // } else {
-  //     floatingBallWindow.loadFile(floatingBallHtml);
-  // }
+  floatingWin.loadFile(join(process.env.PUBLIC, '../floatingBall/index.html'));
   floatingWin.webContents.openDevTools({ mode: "detach" });
   mainLog.info("createFloatingBallWindow", VITE_DEV_SERVER_URL + "floating");
-  
-  if (process.env.VITE_DEV_SERVER_URL) {
-    floatingWin.loadURL(VITE_DEV_SERVER_URL + "floating")
-  } else {
-    floatingWin.loadFile(indexHtml);
-  }
+
+  // if (process.env.VITE_DEV_SERVER_URL) {
+  //   floatingWin.loadURL(`${VITE_DEV_SERVER_URL}/floating`);
+  // } else {
+  //   floatingWin.loadFile(indexHtml);
+  // }
 
   floatingWin.on('closed', () => {
     console.log('Floating closed');
@@ -108,17 +101,6 @@ function floatingBall() {
 
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
-  // 测试协议
-  // protocol.handle('linyapsss', (request) => {
-  //     console.log('Custom protocol request received');
-  //     mainLog.info('request自定义协议：', request);
-  //     mainLog.info('request自定义协议打开的地址：', request.url);
-  //     const filePath = request.url.slice('linyapsss://'.length);
-  //     mainLog.info('Extracted file path:', filePath);
-
-  //     return net.fetch(pathToFileURL(join(__dirname, filePath)).toString());
-  // });
-
   protocol.handle('linyapsss', (req) => {
     const { host, pathname } = new URL(req.url)
     if (host === 'bundle') {
@@ -139,7 +121,7 @@ app.whenReady().then(() => {
   })
 
   // 创建商店主窗口
-  createWindow(); 
+  createWindow();
   // floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
   // TrayMenu(win); // 加载托盘
