@@ -82,15 +82,16 @@ function floatingBall() {
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
   // 根据是否存在开发服务地址判断加载模式
-  floatingWin.loadFile(join(process.env.PUBLIC, '../floatingBall/index.html'));
-  floatingWin.webContents.openDevTools({ mode: "detach" });
+  // floatingWin.loadFile(join(process.env.PUBLIC, '../floatingBall/index.html'));
+  
   mainLog.info("createFloatingBallWindow", VITE_DEV_SERVER_URL + "floating");
 
-  // if (process.env.VITE_DEV_SERVER_URL) {
-  //   floatingWin.loadURL(`${VITE_DEV_SERVER_URL}/floating`);
-  // } else {
-  //   floatingWin.loadFile(indexHtml);
-  // }
+  if (process.env.VITE_DEV_SERVER_URL) {
+    floatingWin.webContents.openDevTools({ mode: "detach" });
+    floatingWin.loadURL(`${VITE_DEV_SERVER_URL}floating`);
+  } else {
+    floatingWin.loadFile(indexHtml);
+  }
 
   floatingWin.on('closed', () => {
     console.log('Floating closed');
@@ -122,7 +123,7 @@ app.whenReady().then(() => {
 
   // 创建商店主窗口
   createWindow();
-  // floatingBall();  // 创建悬浮按钮
+  floatingBall();  // 创建悬浮按钮
   // installList();      // 加载弹出层
   // TrayMenu(win); // 加载托盘
   IPCHandler(win); // 加载IPC服务
