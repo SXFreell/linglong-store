@@ -27,19 +27,19 @@
 </template>
 
 <script setup lang="ts">
-import InstalledCard from "@/components/installCard.vue";
-import defaultImage from '@/assets/logo.svg';
 import { ipcRenderer } from "electron";
+import { onMounted, ref, watchEffect } from "vue";
+import { onBeforeRouteLeave, useRouter } from "vue-router";
+import InstalledCard from "@/components/installCard.vue";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
-import { onBeforeRouteLeave, useRouter } from "vue-router";
-import { onMounted, ref, watchEffect } from "vue";
 import { compareVersions } from "@/util/checkVersion";
-import elertTip from "@/util/NetErrorTips";
-import { InstalledEntity } from "@/interface";
+import { InstalledEntity, GroupedItem } from "@/interface";
+import defaultImage from '@/assets/logo.svg';
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
+
 // 用于显示列表
 const displayedItems = ref<InstalledEntity[]>([]);
 // 路由对象
@@ -47,12 +47,11 @@ const router = useRouter();
 // 加载动画
 const loading = ref(true);
 
-interface GroupedItem {
-    highestVersion: string;
-    occurrenceNumber: number;
-    record: InstalledEntity; // 记录的完整数据
-}
+let llVersion = systemConfigStore.llVersion;
+let linglongBinVersion = systemConfigStore.linglongBinVersion;
+let isShowBaseService = systemConfigStore.isShowBaseService;
 
+// ipc响应处理
 const commandResult = async (_event: any, res: any) => {
     // 返回命令执行入参参数
     const params = res.param;
@@ -134,13 +133,14 @@ watchEffect(() => {
 })
 // 组件初始化时加载
 onMounted(() => {
-    elertTip(); // 检测网络
     // 根据版本环境获取安装程序列表发送命令
-    let getInstalledItemsCommand = "ll-cli --json list";
-    if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
+    let getInstalledItemsCommand = "";
+    if (compareVersions(llVersion, "1.3.99") < 0) {
         getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
+    } else if (compareVersions(linglongBinVersion, "1.5.0") >= 0 && isShowBaseService) {
         getInstalledItemsCommand = "ll-cli --json list --type=all";
+    } else {
+        getInstalledItemsCommand = "ll-cli --json list";
     }
     ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'installedPage' });
     ipcRenderer.once('command-result', commandResult);

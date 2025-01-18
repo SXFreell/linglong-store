@@ -169,3 +169,12 @@ export interface RunTime {
     channel: string,
     repo: string,
 }
+
+/**
+ * 角标记录对象
+ */
+export interface GroupedItem {
+    highestVersion: string;
+    occurrenceNumber: number;
+    record: InstalledEntity; // 记录的完整数据
+}

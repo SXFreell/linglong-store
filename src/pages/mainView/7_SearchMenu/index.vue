@@ -4,11 +4,11 @@
         <el-breadcrumb-item class="second-menu">{{ query.name }}</el-breadcrumb-item>
     </el-breadcrumb>
     <div ref="appsContainer" class="apps-container" @scroll="handleScroll">
-        <div class="card-items-container" v-if="allAppItemsStore.allAppItemList && allAppItemsStore.allAppItemList.length > 0">
-            <div class="card-items" v-for="(item, index) in allAppItemsStore.allAppItemList" :key="index">
+        <div class="card-items-container" v-if="allAppItemList && allAppItemList.length > 0">
+            <div class="card-items" v-for="(item, index) in allAppItemList" :key="index">
                 <SearchCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch"
-                    :isInstalled="item.isInstalled" :appId="item.appId" :icon="item.icon" :loading="item.loading" :zhName="item.zhName"
-                    :size="item.size"/>
+                    :isInstalled="item.isInstalled" :appId="item.appId" :icon="item.icon" :loading="item.loading"
+                    :zhName="item.zhName" :size="item.size" />
             </div>
         </div>
         <div class="no-data-container" v-else>
@@ -18,21 +18,21 @@
             <h1>查无数据</h1>
         </div>
     </div>
+    <div class="loading-bottom" :class="{ 'show': isLoading }">
+        <img :src="loadingGIF" width="100%" height="100%" style="border-radius: 15px;" />
+    </div>
 </template>
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import { onBeforeRouteLeave } from 'vue-router';
+import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { ArrowRight } from '@element-plus/icons-vue'
 import SearchCard from "@/components/searchCard.vue";
-import { pageResult } from '@/interface';
-import defaultImage from '@/assets/logo.svg';
-import elertTip from "@/util/NetErrorTips";
 import { useSystemConfigStore } from '@/store/systemConfig';
 import { useAllAppItemsStore } from '@/store/allAppItems';
 import { useInstalledItemsStore } from '@/store/installedItems';
-import { useRouter } from 'vue-router';
 import { getSearchAppList } from '@/api/server';
-
+import defaultImage from '@/assets/logo.svg';
+import loadingGIF from "@/assets/loading.gif";
 
 // 通过路由router对象获取相关数据
 const router = useRouter();
@@ -43,35 +43,47 @@ const systemConfigStore = useSystemConfigStore();
 const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 
-const appsContainer = ref<HTMLDivElement>()
+const appsContainer = ref<HTMLDivElement>();
+const isLoading = ref<boolean>(false);
 
-const params = ref({ 
-    categoryId: '',
-    repoName: systemConfigStore.defaultRepoName,
-    arch: systemConfigStore.arch, 
-    pageNo: 1, 
-    pageSize: 50
-})
+let repoName = systemConfigStore.defaultRepoName;
+let arch = systemConfigStore.arch;
+let allAppItemList = allAppItemsStore.allAppItemList;
 
-// 滚动条监听事件
-const handleScroll = async () => {
-    const container = document.getElementsByClassName('apps-container')[0] as HTMLDivElement;
-    // 判断滚动条位置是否接近底部，如果接近则加载更多数据(滚动位置 + 窗口高度 >= 内容高度)
-    if (container.scrollTop + container.clientHeight >= container.scrollHeight) {
-        params.value.pageNo++;
-        // 获取显示的程序列表
-        let res = await getSearchAppList(params.value);
+const params = ref({ categoryId: '', repoName: repoName, arch: arch, pageNo: 1, pageSize: 50 })
+
+// 方法：加载更多内容
+const loadMore = async () => {
+    if (isLoading.value) return; // 防止重复请求
+    isLoading.value = true;
+    try {
+        const res = await getSearchAppList(params.value);
         if (res.code == 200) {
-            (res.data as unknown as pageResult).records.forEach(item => {
+            res.data.records.forEach(item => {
                 item.isInstalled = installedItemsStore.installedItemList.find(it => it.appId == item.appId) ? true : false;
-                item.icon = item.icon?.includes("application-x-executable.svg") ? defaultImage : item.icon;
+                item.icon = !item.icon || item.icon.includes("application-x-executable.svg") ? defaultImage : item.icon;
                 allAppItemsStore.addItem(item);
             })
+            params.value.pageNo++;
         }
+    } catch (error) {
+        console.error('Failed to load data', error);
+    } finally {
+        isLoading.value = false;
+    }
+};
+
+// 滚动条监听事件
+const handleScroll = async (event: Event) => {
+    const container = event.target as HTMLDivElement;
+    // 判断滚动条位置是否接近底部，如果接近则加载更多数据(滚动位置 + 窗口高度 >= 内容高度)
+    if (container.scrollTop + container.clientHeight >= container.scrollHeight - 10) {
+        loadMore(); // 滚动到底部，加载更多内容
     }
 }
+
+// 页面初始化时加载
 onMounted(async () => {
-    elertTip(); // 检测网络
     // 根据路由状态参数进行查询初始化页面数据
     if (meta.savedPageNo && meta.savedPageSize) {
         params.value.categoryId = meta.savedCategoryId as string;
@@ -79,25 +91,14 @@ onMounted(async () => {
         params.value.pageSize = meta.savedPageSize as number;
     } else {
         allAppItemsStore.clearItems();
-        // 获取显示的程序列表
         params.value.categoryId = query.categoryId as string;
-        params.value.pageNo = 1;
-        params.value.pageSize = 50;
-        let res = await getSearchAppList(params.value);
-        if (res.code == 200) {
-            (res.data as unknown as pageResult).records.forEach(item => {
-                item.isInstalled = installedItemsStore.installedItemList.find(it => it.appId == item.appId) ? true : false;
-                item.icon = item.icon?.includes("application-x-executable.svg") ? defaultImage : item.icon;
-                allAppItemsStore.addItem(item);
-            })
-        }
+        loadMore();
     }
     // 等待下一次 DOM 更新
     await nextTick();
     // 恢复保存的滚动位置
-    const container = document.getElementsByClassName('apps-container')[0] as HTMLDivElement;
-    if (container) {
-        container.scrollTop = Number(meta.savedPosition) || 0;
+    if (appsContainer.value) {
+        appsContainer.value.scrollTop = Number(meta.savedPosition) || 0;
     }
 })
 // 在router路由离开前执行
@@ -112,5 +113,34 @@ onBeforeRouteLeave((to, _from, next) => {
 <style scoped>
 .apps-container {
     height: calc(100% - 37px);
+}
+
+.loading-bottom {
+    height: 20px;
+    width: 100px;
+    background-color: rgba(255, 255, 255, 0.3);
+    /* 可选：背景颜色和透明度 */
+    z-index: 1000;
+    /* 确保图层悬浮在其他内容之上 */
+    position: fixed;
+    /* 悬浮在页面上，始终可见 */
+    bottom: 28px;
+    /* 对齐页面底部 */
+    left: 50%;
+    /* 左侧对齐页面中心 */
+    padding: 10px 20px;
+    /* 可选：内边距 */
+    border-radius: 8px;
+    /* 可选：圆角效果 */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* 可选：阴影效果 */
+    transition: transform 1.5s ease-out;
+    /* 默认隐藏 */
+    transform: translateY(200%);
+}
+
+.loading-bottom.show {
+    transform: translateY(0);
+    /* 显示状态 */
 }
 </style>
