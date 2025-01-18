@@ -6,12 +6,16 @@ import hasUpdateVersion, { compareVersions } from "@/util/checkVersion";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { CardFace,InstalledEntity } from "@/interface";
+import { CardFace, InstalledEntity } from "@/interface";
 import { getSearchAppVersionList } from "@/api/server";
 
 const installedItemsStore = useInstalledItemsStore();
 const installingItemsStore = useInstallingItemsStore();
 const systemConfigStore = useSystemConfigStore();
+
+let repoName = systemConfigStore.defaultRepoName;
+let arch = systemConfigStore.arch;
+let linglongBinVersion = systemConfigStore.linglongBinVersion;
 /**
  * 不同版本列表
  */
@@ -53,56 +57,101 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @returns 将数据放入后的对象数组
      */
     const initDifVersionItems = async (data: string, query: LocationQuery) => {
-        clearItems(); // 清空原始对象
+        // 清空原始对象
+        clearItems();
+        // 命令查询返回
+        let appId = query.appId as string;
         let searchVersionItemList: any[] = data.trim() ? JSON.parse(data.trim()) : [];
-        let tempList: InstalledEntity[] = [];
-        if (searchVersionItemList.length > 0) {
-            // 1.获取服务器端数据
-            let result: InstalledEntity[] = [];
-            let appId = query.appId as string;
-            let response = await getSearchAppVersionList({ 
-                appId: appId, arch: systemConfigStore.arch,
-                repoName: systemConfigStore.defaultRepoName
-            });
-            if (response.code == 200) {
-                result = response.data as unknown as InstalledEntity[];
-            }
-            // 2.过滤不同appId和不是runtime的数据
-            for (const item of searchVersionItemList) {
-                // 处理主键id标识
-                item.appId = item.id ? item.id : item.appid ? item.appid : item.appId;
-                if (item.appId == query.appId && (item.module == 'runtime' || item.module == 'binary')) {
-                    // 处理arch架构
-                    item.arch = typeof item.arch === 'string' ? item.arch : Array.isArray(item.arch) ? item.arch[0] : '';
-                    // 来源仓库
-                    item.repoName = systemConfigStore.defaultRepoName
-                    // 安装卸载次数
-                    let app = result.find(it => it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module && it.channel === item.channel && it.kind === item.kind && it.repoName === item.repoName);
-                    item.installCount = app ? app.installCount : 0;
-                    item.uninstallCount = app ? app.uninstallCount : 0;
-                    item.createTime = app ? app.createTime : '';
-                    
-                    // 处理当前版本是否已安装状态
-                    item.isInstalled = installedItemsStore.installedItemList.some(it =>
-                        it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module 
-                        && it.channel === item.channel && it.kind === item.kind && it.repoName === item.repoName);
-                    // 处理当前版本是否加载中状态
-                    item.loading = installingItemsStore.installingItemList.some(it => 
-                        it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module 
-                        && it.channel === item.channel && it.kind === item.kind && it.repoName === item.repoName);
-                    // 去重
-                    if (tempList.some(it => it.appId === item.appId && it.name === item.name && it.version === item.version)) {
-                        const index = tempList.findIndex((it) => it.name === item.name && it.version === item.version && it.appId === item.appId);
-                        const aItem = tempList[index];
-                        aItem.module = compareVersions(systemConfigStore.linglongBinVersion,'1.5.5') >= 0 ? 'binary' : 'runtime';
-                        tempList.splice(index, 1, aItem);
-                        continue;
-                    }
-                    tempList.push(item);
-                }
-            }
-            difVersionItemList.value = tempList.sort((a, b) => compareVersions(b.version, a.version));
+
+        // 1.获取服务器端数据
+        let result: InstalledEntity[] = [];
+        let response = await getSearchAppVersionList({ appId, arch, repoName });
+        if (response.code == 200) {
+            result = response.data as unknown as InstalledEntity[];
         }
+        // 2.填充已安装应用到查询结果，然后判断数组是否为空
+        for (let item of installedItemsStore.installedItemList) {
+            let thisId = item.id ? item.id : item.appid ? item.appid : item.appId;
+            if (appId != thisId) {
+                continue;
+            }
+            searchVersionItemList.push({
+                appId,arch,repoName,
+                name: item.name ? item.name : '',
+                version: item.version,
+                channel: item.channel ? item.channel : '',
+                description: item.description ? item.description : '',
+                icon: item.icon ? item.icon : '',
+                kind: item.kind ? item.kind : '本地安装',
+                module: item.module ? item.module : '',
+                zhName: item.zhName ? item.zhName : '',
+                runtime: item.runtime ? item.runtime : '',
+                size: item.size ? item.size : 0,
+                createTime: item.createTime ? item.createTime : '',
+                uabUrl: item.uabUrl ? item.uabUrl : '',
+                user: item.user ? item.user : '',
+                categoryName: item.categoryName ? item.categoryName : ''
+            } as InstalledEntity);
+        }
+        if (searchVersionItemList.length <= 0) {
+            return difVersionItemList;
+        }
+        // 2.过滤不同appId和不是runtime的数据
+        let tempList: InstalledEntity[] = [];
+        for (const item of searchVersionItemList) {
+            // 处理主键id标识
+            item.appId = item.id ? item.id : item.appid ? item.appid : item.appId;
+
+            // 过滤非该标识的记录
+            if (item.appId != appId) {
+                continue;
+            }
+
+            // 处理arch架构
+            item.arch = typeof item.arch === 'string' ? item.arch : Array.isArray(item.arch) ? item.arch[0] : '';
+
+            // 来源仓库
+            item.repoName = repoName
+
+            // 安装卸载次数
+            let app = result.find(it => {
+                return it.appId === item.appId && it.name === item.name && it.version === item.version
+                    && it.module === item.module && it.channel === item.channel && it.kind === item.kind && it.repoName === repoName;
+            });
+            item.installCount = app ? app.installCount : 0;
+            item.uninstallCount = app ? app.uninstallCount : 0;
+            item.createTime = app ? app.createTime : '';
+
+            // 处理当前版本是否已安装状态
+            item.isInstalled = installedItemsStore.installedItemList.some(it =>
+                it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module
+                && it.channel === item.channel && it.kind === item.kind && it.repoName === repoName);
+
+            // 处理当前版本是否加载中状态
+            item.loading = installingItemsStore.installingItemList.some(it =>
+                it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module
+                && it.channel === item.channel && it.kind === item.kind && it.repoName === repoName);
+
+            // 去重
+            if (tempList.some(it => it.appId === item.appId && it.name === item.name && it.version === item.version)) {
+                const index = tempList.findIndex(it => it.name === item.name && it.version === item.version && it.appId === item.appId);
+                const aItem = tempList[index];
+                aItem.module = compareVersions(linglongBinVersion, '1.5.5') >= 0 ? 'binary' : 'runtime';
+                tempList.splice(index, 1, aItem);
+                continue;
+            }
+
+            // 类型为“本地安装”的直接填充默认值
+            if (item.kind == '本地安装') {
+                item.installCount = 1;
+                item.uninstallCount = 0;
+                item.isInstalled = true;
+                item.loading = false;
+            }
+            
+            tempList.push(item);
+        }
+        difVersionItemList.value = tempList.sort((a, b) => compareVersions(b.version, a.version));
         return difVersionItemList;
     }
 

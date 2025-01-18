@@ -53,16 +53,16 @@
             <el-table-column fixed="right" label="操作" header-align="center" align="center" width="160">
                 <template #default="scope">
                     <el-button class="uninstall-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app'"
+                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app' && scope.row.kind != '本地安装'"
                         disabled>已安装</el-button>
                     <!-- 卸载按钮 -->
                     <el-button class="uninstall-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
+                        v-if="scope.row.isInstalled && !scope.row.loading && (scope.row.kind == 'app' || scope.row.kind == '本地安装')"
                         @click="changeStatus(scope.row, 'uninstall')">卸载</el-button>
                     <el-button v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
                     <!-- 运行按钮 -->
                     <el-button class="run-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
+                        v-if="scope.row.isInstalled && !scope.row.loading && (scope.row.kind == 'app' || scope.row.kind == '本地安装')"
                         @click="toRun(scope.row)">运行</el-button>
                     <!-- 安装按钮 -->
                     <el-button class="install-btn"
@@ -115,11 +115,13 @@ function formatSize(row: any, _column: TableColumnCtx<any>, _cellValue: any, _in
     if (!size) return '';
     return (size / 1024 / 1024).toFixed(2) + 'MB'; // 做一些格式化处理并返回字符串
 }
+// 格式化下载量
 function formatCount(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
     if (row.kind && row.kind != 'app') return '-';
     let installCount = row.installCount ? row.installCount : 0;
     return installCount + "次";
 }
+// 格式化上架时间
 function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
     let uploadTime = row.createTime;
     if (!uploadTime) return '';
@@ -129,6 +131,7 @@ function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: an
     }
     return date.toISOString().split('T')[0]; // 做一些格式化处理并返回字符串
 }
+// 格式化运行环境
 function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
     const runtime = row.runtime;
     if (!runtime) return '';
@@ -136,6 +139,7 @@ function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, 
     const value = values.length > 2 ? values[0] + "/" + values[1] : values[0];
     return value; // 做一些格式化处理并返回字符串
 };
+
 /**
  * 操作按钮的点击事件
  * @param item 要操作的对象
@@ -198,18 +202,18 @@ const toRun = (item: CardFace) => {
     // 发送操作命令
     ipcRenderer.send('command', {
         ...item, loading: false,
-        command: 'll-cli run ' + item.appId + '/' + item.version,
+        command: `ll-cli run ${item.appId}/${item.version}`,
     });
     // 弹出运行提示框
     ElNotification({
         title: '提示', type: 'info', duration: 500,
-        message: item.name + '(' + item.version + ')即将被启动！',
+        message: `${item.name}(${item.version})j即将被启动！`,
     });
 }
 // 页面启动时加载
 onMounted(async () => {
     // 1.清除表单数据
-    difVersionItemsStore.clearItems(); 
+    difVersionItemsStore.clearItems();
     // 2.发送命令到主线程获取版本列表结果
     let thisAppVersion = systemConfigStore.llVersion;
     let itemsCommand = ``;
@@ -227,13 +231,14 @@ onMounted(async () => {
     ipcRenderer.send("command", { 'command': itemsCommand });
     ipcRenderer.once('command-result', (_event: any, res: any) => {
         const command: string = res.param.command;
-        const result: any = res.result;
-        if (res.code == 'stdout') {
-            if (command.startsWith("ll-cli query")) {
-                difVersionItemsStore.initDifVersionItemsOld(result, query);
-            } else if (command.startsWith("ll-cli --json search")) {
-                difVersionItemsStore.initDifVersionItems(result, query);
-            }
+        if (res.code != 'stdout') {
+            ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
+            return;
+        }
+        if (command.startsWith("ll-cli query")) {
+            difVersionItemsStore.initDifVersionItemsOld(res.result, query);
+        } else if (command.startsWith("ll-cli --json search")) {
+            difVersionItemsStore.initDifVersionItems(res.result, query);
         }
     });
 })
