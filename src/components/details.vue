@@ -13,7 +13,7 @@
                 <el-col :span="20" style="padding-left: 10px;height: 100%;">
                     <el-row style="margin-bottom: 6px;">
                         <el-col :span="3" class="base-message-key">中文名称：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.zhName">{{ query.zhName }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="query.zhName">{{ defaultName }}</el-col>
                         <el-col :span="3" class="base-message-key">应用名称：</el-col>
                         <el-col :span="5" class="base-message-value" :title="query.name">{{ query.name }}</el-col>
                         <el-col :span="3" class="base-message-key">架构：</el-col>
@@ -23,8 +23,7 @@
                         <el-col :span="3" class="base-message-key">appId：</el-col>
                         <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.appId }}</el-col>
                         <el-col :span="3" class="base-message-key">应用分类：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.categoryName
-                            }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.categoryName }}</el-col>
                     </el-row>
                     <el-row style="height: calc(100% - 70px);">
                         <el-col :span="3" class="base-message-key">应用简述：</el-col>

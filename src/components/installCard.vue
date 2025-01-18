@@ -17,7 +17,7 @@
 import { computed } from "vue";
 import { ipcRenderer } from "electron";
 import { ElMessageBox } from 'element-plus'
-import { CardFace,InstalledEntity, OpenDetailParams } from "@/interface";
+import { CardFace, InstalledEntity, OpenDetailParams } from "@/interface";
 import { LocationQueryRaw, useRouter } from 'vue-router';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
@@ -30,32 +30,22 @@ const router = useRouter();
 // 接受父组件传递的参数，并设置默认值
 // icon: "https://linglong.dev/asset/logo.svg",
 const props = withDefaults(defineProps<CardFace>(), {
-    appId: "",
-    name: "程序名称",
-    arch: "X86_64",
-    version: "0.0.1",
-    description: "描述说明",
-    icon: "",
-    isInstalled: true,
-    loading: false,
+    appId: "", name: "程序名称", arch: "X86_64", version: "0.0.1", 
+    description: "描述说明", icon: "", isInstalled: true, loading: false,
 })
 // 计算属性
-const desc = computed(() => {
-    return props.description ? props.description.replace(/(.{20})/g, '$1\n') : '';
-});
-const defaultName = computed(() => {
-    return props.zhName ? props.zhName : props.name;
-})
+const desc = computed(() => props.description ? props.description.replace(/(.{20})/g, '$1\n') : '');
+// 中文名称
+const defaultName = computed(() => props.zhName ? props.zhName : props.name);
 // 加载的svg动画
 const svg = `<path class="path" d="M 30 15 L 28 17 M 25.61 25.61 A 15 15, 0, 0, 1, 15 30 A 15 15, 0, 1, 1, 27.99 7.5 L 15 15" style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>`
+
 // 打开玲珑明细页面
 const openDetails = () => {
-    let queryParams: LocationQueryRaw = {
-        menuName: '卸载程序',
-        ...props,
-    } as OpenDetailParams as unknown as LocationQueryRaw;
+    let queryParams = { menuName: '卸载程序', ...props } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }
+
 // 按钮点击操作事件
 const changeStatus = (item: CardFace) => {
     ElMessageBox.confirm('确定要卸载当前程序已安装的最新版本吗？<br> 如若卸载当前应用其他版本，请点击图标查看详情进行操作', '提示', {
@@ -76,9 +66,9 @@ const changeStatus = (item: CardFace) => {
             version: item.version,
             description: item.description,
             isInstalled: item.isInstalled,
-            command: 'll-cli uninstall ' + item.appId + '/' + item.version,
             icon: item.icon,
-            loading: false
+            loading: false,
+            command: `ll-cli uninstall ${item.appId}/${item.version}`,
         });
     })
 };

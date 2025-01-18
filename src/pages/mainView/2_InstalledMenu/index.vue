@@ -1,12 +1,19 @@
 <template>
-    <div class="apps-container" v-loading="loading" element-loading-text="加载中..." 
+    <div class="apps-container" v-loading="loading" element-loading-text="加载中..."
         element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
-                <el-badge :value="item.occurrenceNumber" :max="99" class="item">
-                    <InstalledCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch"
-                        :isInstalled="true" :appId="item.appId" :icon="item.icon" :loading="item.loading" :zhName="item.zhName"
-                        :size="item.size" :categoryName="item.categoryName"/>
+                <el-badge v-if="item.occurrenceNumber || item.occurrenceNumber as number <= 1" class="item">
+                    <InstalledCard :name="item.name" :version="item.version" :description="item.description"
+                        :arch="item.arch" :isInstalled="true" :appId="item.appId" :icon="item.icon"
+                        :loading="item.loading" :zhName="item.zhName" :size="item.size"
+                        :categoryName="item.categoryName" />
+                </el-badge>
+                <el-badge v-else :value="item.occurrenceNumber" :max="99" class="item">
+                    <InstalledCard :name="item.name" :version="item.version" :description="item.description"
+                        :arch="item.arch" :isInstalled="true" :appId="item.appId" :icon="item.icon"
+                        :loading="item.loading" :zhName="item.zhName" :size="item.size"
+                        :categoryName="item.categoryName" />
                 </el-badge>
             </div>
         </div>
@@ -41,35 +48,35 @@ const router = useRouter();
 const loading = ref(true);
 
 interface GroupedItem {
-  highestVersion: string;
-  occurrenceNumber: number;
-  record: InstalledEntity; // 记录的完整数据
+    highestVersion: string;
+    occurrenceNumber: number;
+    record: InstalledEntity; // 记录的完整数据
 }
 
 const commandResult = async (_event: any, res: any) => {
-    const code = res.code;   // 返回命令执行状态
-    const params = res.param;  // 返回命令执行入参参数
-    const result = res.result;  // 返回命令执行结果
-    const command: string = params.command;  // 返回执行的命令
-    if (code != 'stdout') {
-        ipcRenderer.send('logger', 'error', "\"" + command + "\"命令执行异常::" + result);
+    // 返回命令执行入参参数
+    const params = res.param;
+    // 响应异常，则报错直接返回
+    if (res.code != 'stdout') {
+        ipcRenderer.send('logger', 'error', `\"${params.command}\"命令执行异常::${res.result}`);
         loading.value = false; // 关闭loading加载动画
         // 弹出提示框
-        ElNotification({ title: '错误', message: result, type: 'error', duration: 500 });
+        ElNotification({ title: '错误', message: res.result, type: 'error', duration: 500 });
         return;
     }
+    // 继续处理业务逻辑
     if (params.type && params.type == 'installedPage') {
-        if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
-            await installedItemsStore.initInstalledItemsOld(result);
+        if (params.command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
+            await installedItemsStore.initInstalledItemsOld(res.result);
             displayedItems.value = installedItemsStore.installedItemList;
-        } else if (command == 'll-cli --json list' || command == 'll-cli --json list --type=all') {
-            await installedItemsStore.initInstalledItems(result);
+        } else if (params.command == 'll-cli --json list' || params.command == 'll-cli --json list --type=all') {
+            await installedItemsStore.initInstalledItems(res.result);
             const datas = installedItemsStore.installedItemList;
             if (systemConfigStore.isShowMergeApp && datas.length > 0) {
                 const grouped = datas.reduce<Record<string, GroupedItem>>((acc, item) => {
                     const { appId, version } = item;
                     if (!acc[appId]) {
-                        acc[appId] = { highestVersion: version, occurrenceNumber: 0 , record: item};
+                        acc[appId] = { highestVersion: version, occurrenceNumber: 0, record: item };
                     }
                     // 获取最高版本的记录
                     if (compareVersions(version, acc[appId].highestVersion) > 0) {
@@ -103,7 +110,7 @@ watchEffect(() => {
         const grouped = datas.reduce<Record<string, GroupedItem>>((acc, item) => {
             const { appId, version } = item;
             if (!acc[appId]) {
-                acc[appId] = { highestVersion: version, occurrenceNumber: 0 , record: item};
+                acc[appId] = { highestVersion: version, occurrenceNumber: 0, record: item };
             }
             // 获取最高版本的记录
             if (compareVersions(version, acc[appId].highestVersion) > 0) {
@@ -147,7 +154,7 @@ onBeforeRouteLeave((to, _from, next) => {
 </script>
 <style scoped>
 .item {
-  margin-top: 6px;
-  width: 96%;
+    margin-top: 6px;
+    width: 96%;
 }
 </style>
