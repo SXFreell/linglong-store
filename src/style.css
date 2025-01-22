@@ -17,19 +17,24 @@
   --menu-base-color: #6E6E6E;
   --menu-base-font-color: #ffffff;
   --base-background-color: #2D2F2F;
+  
 }
+
 /*    全局基础样式    */
-html,body {
+html,
+body {
   width: 100%;
   height: 100%;
   margin: 0;
   padding: 0;
 }
+
 #app {
   width: 100%;
   height: 100%;
   position: relative;
 }
+
 /*   面包屑层级菜单   */
 .el-breadcrumb {
   height: 25px;
@@ -37,34 +42,44 @@ html,body {
   margin-bottom: 6px;
   --el-text-color-placeholder: var(--menu-base-font-color);
 }
-.first-menu > .el-breadcrumb__inner {
+
+.first-menu>.el-breadcrumb__inner {
   cursor: pointer;
   font-weight: bold;
   font-size: 18px;
   color: var(--menu-base-font-color);
 }
-.first-menu > .el-breadcrumb__inner:hover {
+
+.first-menu>.el-breadcrumb__inner:hover {
   color: var(--menu-base-color);
 }
-.second-menu > .el-breadcrumb__inner {
+
+.second-menu>.el-breadcrumb__inner {
   cursor: default !important;
   color: var(--menu-base-font-color) !important;
 }
+
 /*     表单基础公共样式     */
 .el-table {
   --el-table-header-bg-color: #ccc;
   border-radius: 12px;
 }
+
 .el-table th {
   color: #000;
 }
-.el-notification__content {  
-  max-height: 100px; /* 设置合适的高度 */  
-  overflow-y: auto; /* 垂直方向滚动 */  
+
+.el-notification__content {
+  max-height: 100px;
+  /* 设置合适的高度 */
+  overflow-y: auto;
+  /* 垂直方向滚动 */
 }
-.el-notification__content::-webkit-scrollbar {  
-  display: none;  
+
+.el-notification__content::-webkit-scrollbar {
+  display: none;
 }
+
 /*     全部程序上部搜索栏样式      */
 .header {
   display: flex;
@@ -78,34 +93,41 @@ html,body {
   border-radius: 5px;
   background: radial-gradient(circle at 50% 50%, transparent, var(--base-color));
 }
+
 .header-left {
   display: flex;
   align-items: center;
 }
+
 .header-left-title {
   margin-left: 10px;
 }
+
 .header-right {
   display: flex;
   align-items: center;
 }
+
 .header-right-search {
   display: flex;
   align-items: center;
   margin-right: 10px;
 }
+
 /*     页面整体基础样式     */
 .apps-container {
   height: 100%;
   width: 100%;
   overflow-y: auto;
 }
+
 .card-items-container {
   display: grid;
   grid-gap: 10px;
-  grid-template-columns: repeat(auto-fill,minmax(190px,1fr));
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   margin-right: 12px;
 }
+
 .card-items {
   padding: 10px;
   flex: 1;
@@ -116,12 +138,14 @@ html,body {
   box-sizing: border-box;
   background: radial-gradient(circle at 50% 50%, transparent, var(--base-color));
 }
+
 .card-container {
   width: 100%;
   border: none;
   position: relative;
   background: radial-gradient(circle at 50% 20%, var(--base-color), transparent);
 }
+
 .card-icon {
   display: flex;
   justify-content: center;
@@ -130,6 +154,7 @@ html,body {
   width: 100px;
   height: 100px;
 }
+
 .card-name {
   display: flex;
   text-align: center;
@@ -142,6 +167,7 @@ html,body {
   white-space: nowrap;
   color: var(--menu-base-font-color);
 }
+
 .card-zh-name {
   background-color: #6d6d6d;
   display: flex;
@@ -153,6 +179,7 @@ html,body {
   color: var(--menu-base-font-color);
   padding: 3px;
 }
+
 .card-version {
   display: flex;
   justify-content: center;
@@ -160,21 +187,25 @@ html,body {
   font-size: 14px;
   color: var(--menu-base-font-color);
 }
+
 .card-bottom {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
+
 .card-arch {
   font-size: 14px;
   color: var(--menu-base-font-color);
 }
+
 .no-data-container {
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100%;
 }
+
 .install-btn {
   height: 24px;
   width: 58px;
@@ -182,10 +213,12 @@ html,body {
   color: var(--menu-base-font-color);
   border: none;
 }
+
 .install-btn:hover {
   background-color: #999999;
   color: var(--menu-base-font-color);
 }
+
 .uninstall-btn {
   height: 24px;
   width: 58px;
@@ -193,9 +226,23 @@ html,body {
   color: var(--menu-base-font-color);
   border: none;
 }
+
 .uninstall-btn:hover {
   background-color: #999999;
   color: var(--menu-base-font-color);
+}
+
+
+@keyframes scroll-text {
+  0% {
+    /* 从右侧开始 */
+    transform: translateX(100%);
+  }
+
+  100% {
+    /* 向左滚动 */
+    transform: translateX(-100%);
+  }
 }
 
 @media (prefers-color-scheme: light) {
@@ -206,19 +253,25 @@ html,body {
     --menu-base-color: #C1C1C1;
     --menu-base-font-color: #2e2c2c;
     --base-background-color: #DCDCDC;
+    
   }
-  .first-menu > .el-breadcrumb__inner:hover {
+
+  .first-menu>.el-breadcrumb__inner:hover {
     color: var(--base-color);
   }
+
   .el-table {
     --el-table-header-bg-color: #C1C1C1;
   }
+
   .card-items {
     border: 1px solid #ccc;
   }
+
   .card-container {
     border: 1px solid #ccc;
   }
+
   .card-zh-name {
     background-color: var(--base-background-color);
     color: var(--menu-base-font-color);

@@ -5,8 +5,8 @@
             <img style="width: 100px;height: 100px;" v-lazy="icon" alt="Image" />
         </div>
         <span class="card-name" :title="name">{{ name }}</span>
-        <div class="text-container" :title="defaultName">
-            <span class="text-content">{{ defaultName }}</span>
+        <div ref="containerRef" class="text-container">
+            <span ref="textRef" class="text-content">{{ defaultName }}</span>
         </div>
         <!-- <span class="card-zh-name">{{ defaultName }}</span> -->
         <span class="card-version">{{ version }}</span>
@@ -21,11 +21,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { LocationQueryRaw, useRouter } from 'vue-router';
 import { CardFace, OpenDetailParams } from "@/interface";
 
 const router = useRouter();
+
+const containerRef = ref<HTMLElement | null>(null);
+const textRef = ref<HTMLElement | null>(null);
 
 // 接受父组件传递的参数
 const props: CardFace = defineProps<CardFace>();
@@ -43,16 +46,17 @@ const openDetails = () => {
     let queryParams = { menuName: '排行榜', ...props } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }
-
-// const textContainer = document.querySelector('.text-container') as HTMLElement;
-// const textContent = document.querySelector('.text-content') as HTMLElement;
-
-// if (textContent.offsetWidth > textContainer.offsetWidth) {
-//   textContent.style.animation = 'scroll-text 10s linear infinite'; // 激活滚动动画
-// } else {
-//   textContent.style.textAlign = 'center'; // 文本居中显示
-// }
-
+// 页面加载时执行
+onMounted(() => {
+    const containerElement = containerRef.value as HTMLElement;
+    const textElement = textRef.value as HTMLElement;
+    if (textElement && containerElement && textElement.scrollWidth > containerElement.offsetWidth) {
+        textElement.style.animation = 'scroll-text 10s linear infinite';
+    } else {
+        textElement.style.textAlign = 'center';
+        textElement.style.animation = 'none'; // 去除滚动动画
+    }
+})
 </script>
 
 <style scoped>
@@ -99,24 +103,10 @@ const openDetails = () => {
 
 .text-content {
     display: inline-block;
-    /* 文字滚动效果 */
-    animation: scroll-text 10s linear infinite;
 }
 
 .text-container:hover .text-content {
     /* 鼠标悬停时暂停滚动 */
     animation-play-state: paused;
-}
-
-@keyframes scroll-text {
-    0% {
-        /* 从右侧开始 */
-        transform: translateX(100%);
-    }
-
-    100% {
-        /* 向左滚动 */
-        transform: translateX(-100%);
-    }
 }
 </style>
