@@ -31,8 +31,8 @@ const IPCHandler = (win: BrowserWindow) => {
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
         ipcLog.info('to_install_linglong', url);
         // 1. 发起网络请求获取字符串数据
-        await axios.get(url + '/app/findShellString').then(response => {
-            ipcLog.info('to_install_linglong response：', response);
+        await axios.get(url + '/app/findShellString').then(async response => {
+            // ipcLog.info('to_install_linglong response：', response);
             const code = response.data.code;
             const scriptContent = response.data.data;
             if (code == 200 && scriptContent && scriptContent.length > 0) {
@@ -43,23 +43,53 @@ const IPCHandler = (win: BrowserWindow) => {
                 // 3. 赋予 .sh 文件执行权限
                 fs.chmodSync(scriptPath, '755');
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
-                const script = spawn('pkexec', ['bash', scriptPath], {stdio: 'inherit'});
-                script.on('close', (code) => {  
-                    ipcLog.info(`child process exited with code ${code}`);
+                // const script = spawn('pkexec', ['bash', scriptPath], {stdio: 'inherit'});
+                // script.on('close', (code) => {  
+                //     ipcLog.info(`child process exited with code ${code}`);
                     // 可选：执行完毕后删除脚本文件
                     fs.unlinkSync(scriptPath); 
-                });  
+                // });
+                const result = await runScript(scriptPath);
+                console.log('Script Output:', result);  
             } else {
                 ipcLog.info('服务暂不可用！',response.data.data);
             }
         }).catch(error => {
             ipcLog.info('error response',error.response);
         }).finally(() => {
+            // 可选：执行完毕后删除脚本文件
+            // fs.unlinkSync(scriptPath);
             // 重启服务
-            // win.reload(); 
-            win.close();
+            win.reload(); 
+            // win.close();
         });
     })
+
+    function runScript(scriptPath) {
+        return new Promise((resolve, reject) => {
+          const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
+          let stdoutData = '';
+          let stderrData = '';
+          // 监听标准输出流
+          child.stdout.on('data', (data) => {
+            stdoutData += data;
+          });
+          // 监听标准错误输出流
+          child.stderr.on('data', (data) => {
+            stderrData += data;
+          });
+          ipcLog.info('runScript stdoutData', stdoutData);
+          ipcLog.info('runScript stderrData', stderrData);
+          // 监听子进程关闭事件
+          child.on('close', (code) => {
+            if (code === 0) {
+              resolve(stdoutData);
+            } else {
+              reject(new Error(`Child process exited with code ${code}: ${stderrData}`));
+            }
+          });
+        });
+      }
 
     /* ********** 执行脚本命令 ********** */
     ipcMain.on("command_only_stdout", (_event, code: string) => {
