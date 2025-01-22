@@ -36,7 +36,7 @@
     <div class="choose-version">
         <div class="title">版本选择</div>
         <el-table class="version-table" :data="difVersionItemsStore.difVersionItemList" border stripe v-loading="loading">
-            <el-table-column prop="version" label="版本号" width="120" />
+            <el-table-column prop="version" label="版本号" header-align="center" width="120" show-overflow-tooltip/>
             <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100" />
             <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100" />
             <el-table-column prop="module" label="模式" header-align="center" align="center" width="100" />

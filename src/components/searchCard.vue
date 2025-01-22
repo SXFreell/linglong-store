@@ -6,7 +6,7 @@
         <span class="card-name" :title="name">{{ name }}</span>
         <span class="card-zh-name">{{ defaultName }}</span>
         <span class="card-version">{{ version }}</span>
-        <div class="card-bottom" v-loading="loading" :element-loading-svg="svg" 
+        <div class="card-bottom" v-loading="loading" :element-loading-svg="svg"
             element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="uninstall-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
             <el-button class="install-btn" v-else @click="openDetails">安装</el-button>
@@ -24,30 +24,18 @@ const router = useRouter();
 // 接受父组件传递的参数，并设置默认值
 // icon: "https://linglong.dev/asset/logo.svg",
 const props = withDefaults(defineProps<CardFace>(), {
-    appId: "",
-    name: "程序名称",
-    arch: "X86_64",
-    version: "0.0.1",
-    description: "描述说明",
-    icon: "",
-    isInstalled: true,
-    loading: false,
+    appId: "", name: "程序名称", arch: "X86_64", version: "0.0.1", description: "描述说明",
+    icon: "", isInstalled: true, loading: false,
 })
-// 计算属性
-const desc = computed(() => {
-    return props.description.replace(/(.{20})/g, '$1\n');
-});
-const defaultName = computed(() => {
-    return props.zhName ? props.zhName : props.name;
-})
+// 格式化程序描述
+const desc = computed(() => props.description.replace(/(.{20})/g, '$1\n'));
+// 格式化程序名称
+const defaultName = computed(() => props.zhName ? props.zhName : props.name);
 // 加载的svg动画
 const svg = `<path class="path" d="M 30 15 L 28 17 M 25.61 25.61 A 15 15, 0, 0, 1, 15 30 A 15 15, 0, 1, 1, 27.99 7.5 L 15 15" style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>`
 // 打开不同版本页面
 const openDetails = () => {
-    let queryParams: LocationQueryRaw = {
-        menuName: '分类推荐',
-        ...props,
-    } as OpenDetailParams as unknown as LocationQueryRaw;
+    let queryParams = { menuName: '分类推荐', ...props } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }
 </script>

@@ -24,35 +24,19 @@ const router = useRouter();
 // 接受父组件传递的参数，并设置默认值
 // icon: "https://linglong.dev/asset/logo.svg",
 const props = withDefaults(defineProps<CardFace>(), {
-    appId: "",
-    name: "程序名称",
-    arch: "X86_64",
-    version: "0.0.1",
-    description: "描述说明",
-    icon: "",
-    isInstalled: true,
-    loading: false,
-    createTime: "2023-04-11 10:00:00",
-    installCount: 0,
-    channel: "",
-    zhName: "",
-    size: "",
+    appId: "", name: "程序名称", arch: "X86_64", version: "0.0.1", description: "描述说明", icon: "",
+    isInstalled: true, loading: false, createTime: "2023-04-11 10:00:00", installCount: 0,
+    channel: "", zhName: "", size: "",
 })
-// 计算属性
-const desc = computed(() => {
-    return props.description.replace(/(.{20})/g, '$1\n');
-});
-const defaultName = computed(() => {
-    return props.zhName ? props.zhName : props.name;
-});
+// 格式化程序描述
+const desc = computed(() => props.description.replace(/(.{20})/g, '$1\n'));
+// 格式化程序名称
+const defaultName = computed(() => props.zhName ? props.zhName : props.name);
 // 加载的svg动画
 const svg = `<path class="path" d="M 30 15 L 28 17 M 25.61 25.61 A 15 15, 0, 0, 1, 15 30 A 15 15, 0, 1, 1, 27.99 7.5 L 15 15" style="stroke-width: 4px; fill: rgba(0, 0, 0, 0)"/>`
 // 打开不同版本页面
 const openDetails = () => {
-    let queryParams: LocationQueryRaw = {
-        menuName: '玲珑推荐',
-        ...props,
-    } as OpenDetailParams as unknown as LocationQueryRaw;
+    let queryParams = { menuName: '玲珑推荐', ...props } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }
 </script>
