@@ -37,7 +37,7 @@ const IPCHandler = (win: BrowserWindow) => {
             const scriptContent = response.data.data;
             if (code == 200 && scriptContent && scriptContent.length > 0) {
                 // 2. 将内容写入 .sh 文件
-                const scriptPath = path.join(__dirname, 'temp_script.sh');
+                const scriptPath = path.join('/tmp', 'temp_script.sh');
                 ipcLog.info('sh文件目录scriptPath：', scriptPath);
                 fs.writeFileSync(scriptPath, scriptContent);
                 // 3. 赋予 .sh 文件执行权限
@@ -56,7 +56,8 @@ const IPCHandler = (win: BrowserWindow) => {
             ipcLog.info('error response',error.response);
         }).finally(() => {
             // 重启服务
-            win.reload(); 
+            // win.reload(); 
+            win.close();
         });
     })
 

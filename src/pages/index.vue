@@ -28,13 +28,13 @@
             <strong style="text-align: center; display: block; color: red">检测当前系统中不存在玲珑组件环境</strong>
             <div style="text-align: center; margin-top: 10px">
                 <p>请先安装玲珑组件环境，方可使用本玲珑商店。</p>
-                <!-- <p>目前自动安装支持Deepin 23/UOS 1070/OpenEuler 24.03/Ubuntu 22.04/Ubuntu 24.04/Debian 12/openKylin 2.0rc</p> -->
+                <p>目前自动安装支持Deepin 23/UOS 1070/OpenEuler 24.03/Ubuntu 22.04/Ubuntu 24.04/Debian 12/openKylin 2.0rc</p>
             </div>
         </span>
         <template #footer>
             <div class="dialog-footer">
                 <el-button type="info" @click="exitBtnClick">退出商店</el-button>
-                <!-- <el-button type="info" @click="autoInstallBtnClick">自动安装</el-button> -->
+                <el-button type="info" @click="autoInstallBtnClick">自动安装</el-button>
                 <el-button type="primary" @click="manualInstallBtnClick">手动安装</el-button>
             </div>
         </template>
@@ -326,10 +326,6 @@ onMounted(async () => {
     // 获取客户端ip
     ipcRenderer.send('fetchClientIP');
     ipcRenderer.once('fetchClientIP-result',(_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query))
-    // 测试安装玲珑组件
-    // centerDialogVisible.value = true; // 显示弹窗
-    // return;
-
     // 获取组件基本信息
     ipcRenderer.send('command', { command: 'dpkg -l | grep linglong' });
     // 获取系统信息
