@@ -30,27 +30,18 @@ const IPCHandler = (win: BrowserWindow) => {
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
         ipcLog.info('to_install_linglong', url);
+        const scriptPath = path.join('/tmp', 'temp_script.sh');
+        ipcLog.info('sh文件目录scriptPath：', scriptPath);
         // 1. 发起网络请求获取字符串数据
         await axios.get(url + '/app/findShellString').then(async response => {
-            // ipcLog.info('to_install_linglong response：', response);
-            const code = response.data.code;
-            const scriptContent = response.data.data;
-            if (code == 200 && scriptContent && scriptContent.length > 0) {
-                // 2. 将内容写入 .sh 文件
-                const scriptPath = path.join('/tmp', 'temp_script.sh');
-                ipcLog.info('sh文件目录scriptPath：', scriptPath);
-                fs.writeFileSync(scriptPath, scriptContent);
-                // 3. 赋予 .sh 文件执行权限
-                fs.chmodSync(scriptPath, '755');
+            const data = response.data;
+            const scriptContent = data.data;
+            if (data.code == 200 && scriptContent && scriptContent.length > 0) {
+                fs.writeFileSync(scriptPath, scriptContent); // 2. 将内容写入 .sh 文件
+                fs.chmodSync(scriptPath, '755'); // 3. 赋予 .sh 文件执行权限
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
-                // const script = spawn('pkexec', ['bash', scriptPath], {stdio: 'inherit'});
-                // script.on('close', (code) => {  
-                //     ipcLog.info(`child process exited with code ${code}`);
-                    // 可选：执行完毕后删除脚本文件
-                    fs.unlinkSync(scriptPath); 
-                // });
                 const result = await runScript(scriptPath);
-                console.log('Script Output:', result);  
+                ipcLog.info('Script Output:', result);
             } else {
                 ipcLog.info('服务暂不可用！',response.data.data);
             }
@@ -58,10 +49,9 @@ const IPCHandler = (win: BrowserWindow) => {
             ipcLog.info('error response',error.response);
         }).finally(() => {
             // 可选：执行完毕后删除脚本文件
-            // fs.unlinkSync(scriptPath);
-            // 重启服务
-            win.reload(); 
-            // win.close();
+            fs.unlinkSync(scriptPath);
+            // win.reload();  // 重启服务
+            win.close();
         });
     })
 
