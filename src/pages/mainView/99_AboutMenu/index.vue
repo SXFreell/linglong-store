@@ -56,7 +56,7 @@ import { ipcRenderer } from 'electron';
 import pkg from '../../../../package.json';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { ElNotification, ElMessageBox, ElMessage } from 'element-plus'
-import { getSearchAppList } from '@/api/server';
+import { getSearchAppList } from '@/api';
 import { useUpdateStatusStore } from "@/store/updateStatus";
 import { useSystemConfigStore } from "@/store/systemConfig";
 

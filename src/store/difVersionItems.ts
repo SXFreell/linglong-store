@@ -7,7 +7,7 @@ import { useInstalledItemsStore } from "@/store/installedItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { CardFace, InstalledEntity } from "@/interface";
-import { getSearchAppVersionList } from "@/api/server";
+import { getSearchAppVersionList } from "@/api";
 
 const installedItemsStore = useInstalledItemsStore();
 const installingItemsStore = useInstallingItemsStore();

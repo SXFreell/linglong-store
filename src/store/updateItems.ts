@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { CardFace } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { getAppDetails } from "@/api/server";
+import { getAppDetails } from "@/api";
 
 const systemConfigStore = useSystemConfigStore();
 /**

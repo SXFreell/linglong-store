@@ -21,7 +21,7 @@ import { nextTick, onMounted, ref } from 'vue';
 import defaultImage from '@/assets/logo.svg';
 import rankingServCard from '@/components/rankingServCard.vue';
 import { AppListParams, CardFace, pageResult } from '@/interface';
-import { getInstallAppList } from '@/api/server';
+import { getInstallAppList } from '@/api';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { onBeforeRouteLeave } from 'vue-router';

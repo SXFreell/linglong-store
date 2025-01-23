@@ -30,7 +30,7 @@
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { getWelcomeAppList, getWelcomeCarouselList } from "@/api/server";
+import { getWelcomeAppList, getWelcomeCarouselList } from "@/api";
 import defaultImage from '@/assets/logo.svg';
 import WelcomeCard from "@/components/welcomeCard.vue";
 import { AppListParams, CardFace, OpenDetailParams, pageResult } from "@/interface";

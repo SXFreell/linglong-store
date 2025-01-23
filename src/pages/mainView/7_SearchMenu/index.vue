@@ -30,7 +30,7 @@ import SearchCard from "@/components/searchCard.vue";
 import { useSystemConfigStore } from '@/store/systemConfig';
 import { useAllAppItemsStore } from '@/store/allAppItems';
 import { useInstalledItemsStore } from '@/store/installedItems';
-import { getSearchAppList } from '@/api/server';
+import { getSearchAppList } from '@/api';
 import defaultImage from '@/assets/logo.svg';
 import loadingGIF from "@/assets/loading.gif";
 

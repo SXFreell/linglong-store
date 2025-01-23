@@ -42,7 +42,7 @@ import AllAppCard from "@/components/allAppCard.vue";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
-import { getSearchAppList, getDisCategoryList } from '@/api/server';
+import { getSearchAppList, getDisCategoryList } from '@/api';
 import defaultImage from '@/assets/logo.svg';
 import loadingGIF from "@/assets/loading.gif";
 

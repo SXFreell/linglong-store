@@ -3,7 +3,7 @@ import { ref } from "vue";
 import string2card from "@/util/string2card";
 import { CardFace,InstalledEntity } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { getAppDetails } from "@/api/server";
+import { getAppDetails } from "@/api";
 
 const systemConfigStore = useSystemConfigStore();
 /**

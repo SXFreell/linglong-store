@@ -20,7 +20,7 @@
 import { nextTick, onMounted, ref } from 'vue';
 import defaultImage from '@/assets/logo.svg';
 import rankingServCard from '@/components/rankingServCard.vue';
-import { getNewAppList } from '@/api/server';
+import { getNewAppList } from '@/api';
 import { AppListParams, CardFace, pageResult } from '@/interface';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";

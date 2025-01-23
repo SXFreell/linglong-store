@@ -50,7 +50,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs'
 import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
-import { getSearchAppList } from '@/api/server';
+import { getSearchAppList } from '@/api';
 import { pageResult } from '@/interface';
 
 const systemConfigStore = useSystemConfigStore();
