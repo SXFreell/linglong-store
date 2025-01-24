@@ -14,13 +14,13 @@ process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL ? join(process.env.DIST_ELE
 const preload = join(__dirname, 'preload.js')
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
-let win: BrowserWindow | null;
+let mainWin: BrowserWindow | null;
 let floatingWin: BrowserWindow | null; // 悬浮球窗口
 let floatingEnabled = false;
 
 // 创建窗口并初始化相关参数
 function createWindow() {
-  win = new BrowserWindow({
+  mainWin = new BrowserWindow({
     width: 1280,
     height: 768,
     minWidth: 800,
@@ -33,23 +33,23 @@ function createWindow() {
       // webSecurity: false, // 禁用 Web 安全策略
     },
   });
-  mainLog.info("dev环境的配置地址", VITE_DEV_SERVER_URL);
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
+  // 根据环境以不同方式加载页面
   if (VITE_DEV_SERVER_URL) {
-    win.webContents.openDevTools({ mode: "detach" });
-    mainLog.info("createWindow VITE_DEV_SERVER_URL ", VITE_DEV_SERVER_URL);
-    win.loadURL(VITE_DEV_SERVER_URL);
+    mainWin.webContents.openDevTools({ mode: "detach" });
+    mainLog.info("mainWin loadURL ", VITE_DEV_SERVER_URL);
+    mainWin.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    mainLog.info("createWindow indexHtml ", join(process.env.DIST, "index.html"));
-    win.loadFile(join(process.env.DIST, "index.html"));
+    mainLog.info("mainWin loadFile ", join(process.env.DIST, "index.html"));
+    mainWin.loadFile(join(process.env.DIST, "index.html"));
   }
   // 测试程序加载完毕，打印当前时间
-  win.webContents.on("did-finish-load", () => {
-    win?.webContents.send("main-process-message", new Date().toLocaleString());
+  mainWin.webContents.on("did-finish-load", () => {
+    mainWin?.webContents.send("main-process-message", new Date().toLocaleString());
   });
   // 设置所有链接通过默认浏览器打开，而非程序内打开
-  win.webContents.setWindowOpenHandler(({ url }) => {
+  mainWin.webContents.setWindowOpenHandler(({ url }) => {
     mainLog.info("打开url", url);
     // 如果是http或https协议的链接，则通过默认浏览器打开
     if (url.startsWith("https:") || url.startsWith("http:")) {
@@ -78,87 +78,77 @@ function floatingBall() {
       nodeIntegration: true   // 允许使用Node.js
     }
   });
-
-  mainLog.info("createFloatingBallWindow", `${VITE_DEV_SERVER_URL}floating`);
-
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
+  // 根据环境以不同方式加载页面
   if (VITE_DEV_SERVER_URL) {
     floatingWin.webContents.openDevTools({ mode: "detach" });
+    mainLog.info("floatingWin dev loadURL ", `${VITE_DEV_SERVER_URL}floatingBall/index.html`);
     floatingWin.loadURL(`${VITE_DEV_SERVER_URL}floatingBall/index.html`);
   } else {
+    mainLog.info("floatingWin loadFile ", join(process.env.DIST, "floatingBall/index.html"));
     floatingWin.loadFile(join(process.env.DIST, "floatingBall/index.html"));
   }
-
+  // 检测窗口关闭事件
   floatingWin.on('closed', () => {
     console.log('Floating closed');
     floatingWin = null;
   });
-
 }
 
-// 应用准备就绪创建窗口
-app.whenReady().then(() => {
-  handleCustomProtocol('linyapsss://');
-  createWindow(); // 创建商店主窗口
-  floatingBall();  // 创建悬浮按钮
-  installList();      // 加载弹出层
-  TrayMenu(win); // 加载托盘
-  IPCHandler(win); // 加载IPC服务
-  updateHandle(win); // 自动更新
+// 确保单实例
+const gotTheLock = app.requestSingleInstanceLock();
 
-  // macOS事件(应用被激活时触发)
-  app.on('activate', () => {
-    const allWindows = BrowserWindow.getAllWindows();
-    mainLog.info('活跃窗口个数：', allWindows.length);
-    if (allWindows.length) {
-      allWindows[0].focus()
-    } else {
-      createWindow()
+if (!gotTheLock) {
+  app.quit();
+} else {
+  // 应用监听开启第二个窗口事件
+  app.on('second-instance', (_event, argv) => {
+    // Linux 会通过 argv 传递 URL
+    mainLog.info('应用监听开启第二个窗口事件:', argv);
+    handleCustomProtocol(argv);
+    if (mainWin) {
+      if (mainWin.isMinimized()) mainWin.restore();
+      mainWin.focus();
     }
-  })
-});
+  });
+  app.whenReady().then(() => {
+    createWindow(); // 创建商店主窗口
+    floatingBall();  // 创建悬浮按钮
+    installList();      // 加载弹出层
+    TrayMenu(mainWin); // 加载托盘
+    IPCHandler(mainWin); // 加载IPC服务
+    updateHandle(mainWin); // 自动更新
+    // 处理首次启动时的协议调用
+    mainLog.info('处理首次启动时的协议调用:', process.argv);
+    handleCustomProtocol(process.argv);
+    // macOS事件(应用被激活时触发)
+    app.on('activate', () => {
+      const allWindows = BrowserWindow.getAllWindows();
+      mainLog.info('活跃窗口个数：', allWindows.length);
+      if (allWindows.length) {
+        allWindows[0].focus()
+      } else {
+        createWindow()
+      }
+    })
+  });
 
-app.on('open-url', (event, url) => {
-  event.preventDefault();
-  mainLog.info('自定义协议打开的地址：', url);
-  console.log('Extracted url:', url); // 确保 filePath 被正确提取
-  // const parsedUrl = new URL(url);
-  // const fileUrl = parsedUrl.searchParams.get('url');
-  // const fileName = 'downloaded_file.zip';
-
-  // 执行下载
-  // https.get(fileUrl, (response) => {
-  //     const fileStream = fs.createWriteStream(fileName);
-  //     response.pipe(fileStream);
-  //     fileStream.on('finish', () => {
-  //         fileStream.close();
-  //         dialog.showMessageBox({
-  //             type: 'info',
-  //             title: '下载完成',
-  //             message: `文件已下载到: ${fileName}`
-  //         });
-  //     });
-  // });
-});
+  app.on('open-url', (event, url) => {
+    event.preventDefault();
+    mainLog.info('自定义协议打开的地址：', url);
+    console.log('Protocol URL:', url);
+    handleCustomProtocol([url]);
+  });
+}
 
 // 应用监听所有关闭事件，退出程序
 app.on("window-all-closed", () => {
-  win = null;
+  mainWin = null;
   if (process.platform !== 'darwin') {
     app.quit();
   }
 });
-
-// 应用监听开启第二个窗口
-// app.on('second-instance', () => {
-//   if (win) {
-//     if (win.isMinimized()) {
-//       win.restore()
-//     }
-//     win.focus()
-//   }
-// })
 
 // 处理应用程序关闭事件（在这里进行必要的清理操作，如果有未完成的更新，取消它）
 app.on('before-quit', () => clearUpdateCache());
