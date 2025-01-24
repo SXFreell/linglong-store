@@ -6,13 +6,13 @@ import fs from "fs-extra";
 /* ******************************** mainLog ******************************** */
 export const mainLog = log.create({logId:'mainLog'});
 // 每次项目启动，删除历史日志，重新生成日志
-const mainPath = app.getPath('logs');
-fs.pathExists(mainPath, (err,_exists) => {
-    if (!err) {
-        // 重新生成空文件
-        fs.emptyDir(mainPath);
-    }
-});
+// const mainPath = app.getPath('logs');
+// fs.pathExists(mainPath, (err,_exists) => {
+//     if (!err) {
+//         // 重新生成空文件
+//         fs.emptyDir(mainPath);
+//     }
+// });
 // mainLog.transports.file.format = '{y}-{m}-{d} {h}:{i}:{s} {level} {text}';
 mainLog.transports.file.level = 'info';
 // 达到最大上限后，备份文件并重命名为：main.old.log，有且仅有一个备份文件
@@ -24,13 +24,13 @@ mainLog.transports.console.level = 'silly';
 export const ipcLog = log.create({logId:'ipcLog'});
 const ipcPath = join(app.getPath('logs'), 'print-ipc');
 // 检测更新日志目录是否存在
-fs.pathExists(ipcPath, (exists) => {
-    if (!exists) {
-        // 打印日志
-        mainLog.info('ipc调用日志文件缓存路径:' + ipcPath);
-        fs.emptyDir(ipcPath);
-    }
-});
+// fs.pathExists(ipcPath, (exists) => {
+//     if (!exists) {
+//         // 打印日志
+//         mainLog.info('ipc调用日志文件缓存路径:' + ipcPath);
+//         fs.emptyDir(ipcPath);
+//     }
+// });
 // ipcLog.transports.file.format = '{h}:{i}:{s} {level} {text}';
 ipcLog.transports.console.level = false
 ipcLog.transports.file.resolvePathFn = () => join(ipcPath,'main.log');
@@ -44,13 +44,13 @@ export const updateLog = log.create({logId:'updateLog'});
 // 在app缓存目录，创建目录
 const updatePendingPath = join(app.getPath('logs'), 'print-updater');
 // 检测更新日志目录是否存在
-fs.pathExists(updatePendingPath, (exists) => {
-    if (!exists) {
-        // 打印日志
-        mainLog.info('升级日志文件缓存路径:' + updatePendingPath);
-        fs.emptyDir(updatePendingPath);
-    }
-});
+// fs.pathExists(updatePendingPath, (exists) => {
+//     if (!exists) {
+//         // 打印日志
+//         mainLog.info('升级日志文件缓存路径:' + updatePendingPath);
+//         fs.emptyDir(updatePendingPath);
+//     }
+// });
 // updateLog.transports.file.format = '{h}:{i}:{s} {level} {text}';
 updateLog.transports.console.level = false
 updateLog.transports.file.resolvePathFn = () => join(updatePendingPath,'main.log');
