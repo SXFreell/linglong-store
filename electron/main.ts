@@ -1,10 +1,10 @@
-import { app, BrowserWindow, shell, Menu, screen, ipcMain, protocol, net } from "electron";
+import { app, BrowserWindow, shell, Menu, screen, ipcMain } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./logger";
 import TrayMenu from "./trayMenu";
 import IPCHandler from "./ipcHandler";
 import { updateHandle } from "./update";
-import { clearUpdateCache } from "./utils";
+import { clearUpdateCache, handleCustomProtocol } from "./utils";
 import installList from "./utils/installList";
 
 process.env.DIST_ELECTRON = join(__dirname, '../dist-electron');
@@ -13,7 +13,6 @@ process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL ? join(process.env.DIST_ELE
 
 const preload = join(__dirname, 'preload.js')
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
-const indexHtml = join(process.env.DIST, "index.html");
 
 let win: BrowserWindow | null;
 let floatingWin: BrowserWindow | null; // 悬浮球窗口
@@ -35,15 +34,15 @@ function createWindow() {
     },
   });
   mainLog.info("dev环境的配置地址", VITE_DEV_SERVER_URL);
-  mainLog.info("pro环境的配置地址", indexHtml);
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
-  // 根据是否存在开发服务地址判断加载模式
-  if (process.env.VITE_DEV_SERVER_URL) {
+  if (VITE_DEV_SERVER_URL) {
     win.webContents.openDevTools({ mode: "detach" });
+    mainLog.info("createWindow VITE_DEV_SERVER_URL ", VITE_DEV_SERVER_URL);
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(indexHtml);
+    mainLog.info("createWindow indexHtml ", join(process.env.DIST, "index.html"));
+    win.loadFile(join(process.env.DIST, "index.html"));
   }
   // 测试程序加载完毕，打印当前时间
   win.webContents.on("did-finish-load", () => {
@@ -79,18 +78,16 @@ function floatingBall() {
       nodeIntegration: true   // 允许使用Node.js
     }
   });
+
+  mainLog.info("createFloatingBallWindow", `${VITE_DEV_SERVER_URL}floating`);
+
   // 禁用菜单，一般情况下，不需要禁用
   Menu.setApplicationMenu(null);
-  // 根据是否存在开发服务地址判断加载模式
-  // floatingWin.loadFile(join(process.env.PUBLIC, '../floatingBall/index.html'));
-  
-  mainLog.info("createFloatingBallWindow", VITE_DEV_SERVER_URL + "floating");
-
-  if (process.env.VITE_DEV_SERVER_URL) {
+  if (VITE_DEV_SERVER_URL) {
     floatingWin.webContents.openDevTools({ mode: "detach" });
-    floatingWin.loadURL(`${VITE_DEV_SERVER_URL}floating`);
+    floatingWin.loadURL(`${VITE_DEV_SERVER_URL}floatingBall/index.html`);
   } else {
-    floatingWin.loadFile(indexHtml);
+    floatingWin.loadFile(join(process.env.DIST, "floatingBall/index.html"));
   }
 
   floatingWin.on('closed', () => {
@@ -102,30 +99,11 @@ function floatingBall() {
 
 // 应用准备就绪创建窗口
 app.whenReady().then(() => {
-  protocol.handle('linyapsss', (req) => {
-    const { host, pathname } = new URL(req.url)
-    if (host === 'bundle') {
-      if (pathname === '/') {
-        return new Response('<h1>hello, world</h1>', {
-          headers: { 'content-type': 'text/html' }
-        })
-      }
-    } else if (host === 'api') {
-      return net.fetch('https://storeapi.linyaps.org.cn' + pathname, {
-        method: req.method,
-        headers: req.headers,
-        body: req.body
-      })
-    } else {
-      return net.fetch('https://store.linyaps.org.cn/');
-    }
-  })
-
-  // 创建商店主窗口
-  createWindow();
-  // floatingBall();  // 创建悬浮按钮
-  // installList();      // 加载弹出层
-  // TrayMenu(win); // 加载托盘
+  handleCustomProtocol('linyapsss://');
+  createWindow(); // 创建商店主窗口
+  floatingBall();  // 创建悬浮按钮
+  installList();      // 加载弹出层
+  TrayMenu(win); // 加载托盘
   IPCHandler(win); // 加载IPC服务
   updateHandle(win); // 自动更新
 
@@ -182,11 +160,8 @@ app.on("window-all-closed", () => {
 //   }
 // })
 
-// 处理应用程序关闭事件
-app.on('before-quit', () => {
-  // 在这里进行必要的清理操作，如果有未完成的更新，取消它
-  clearUpdateCache();
-});
+// 处理应用程序关闭事件（在这里进行必要的清理操作，如果有未完成的更新，取消它）
+app.on('before-quit', () => clearUpdateCache());
 
 /* ********** 监听显示隐藏悬浮球 ********** */
 ipcMain.on('toggle-floating', (_event, enable) => {
