@@ -106,7 +106,7 @@ if (!gotTheLock) {
   app.on('second-instance', (_event, argv) => {
     // Linux 会通过 argv 传递 URL
     mainLog.info('应用监听开启第二个窗口事件:', argv);
-    handleCustomProtocol(argv);
+    handleCustomProtocol(argv, mainWin);
     if (mainWin) {
       if (mainWin.isMinimized()) mainWin.restore();
       mainWin.focus();
@@ -121,7 +121,7 @@ if (!gotTheLock) {
     updateHandle(mainWin); // 自动更新
     // 处理首次启动时的协议调用
     mainLog.info('处理首次启动时的协议调用:', process.argv);
-    handleCustomProtocol(process.argv);
+    handleCustomProtocol(process.argv, mainWin);
     // macOS事件(应用被激活时触发)
     app.on('activate', () => {
       const allWindows = BrowserWindow.getAllWindows();
@@ -138,7 +138,7 @@ if (!gotTheLock) {
     event.preventDefault();
     mainLog.info('自定义协议打开的地址：', url);
     console.log('Protocol URL:', url);
-    handleCustomProtocol([url]);
+    handleCustomProtocol([url], mainWin);
   });
 }
 

@@ -297,6 +297,10 @@ onMounted(() => {
     // 监听命令执行结果
     ipcRenderer.on('command-result', commandResult);
     ipcRenderer.on('linglong-result', linglongResult);
+    // 监听自定义协议
+    ipcRenderer.on('custom-protocol', (_event: any, res: any) => {
+        ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
+    });
 });
 // 页面销毁前执行
 onBeforeUnmount(() => {

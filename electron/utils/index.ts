@@ -1,6 +1,5 @@
-import { app, protocol, net } from "electron";
+import { app } from "electron";
 import { join } from "node:path";
-const url = require('url');
 import fs from "fs-extra";
 import { mainLog } from "../logger";
 
@@ -26,61 +25,19 @@ export function clearUpdateCache() {
 }
 
 // 处理接收到的自定义协议请求
-// export function handleCustomProtocol(url: string) {
-//     protocol.handle('linyapsss', (req) => {
-//         const { host, pathname } = new URL(req.url);
-//         mainLog.log('处理自定义协议请求:', new URL(req.url));
-//         if (host === 'bundle') {
-//             if (pathname === '/') {
-//                 return new Response('<h1>hello, world</h1>', {
-//                     headers: { 'content-type': 'text/html' }
-//                 })
-//             }
-//         } else if (host === 'api') {
-//             return net.fetch('https://storeapi.linyaps.org.cn' + pathname, {
-//                 method: req.method,
-//                 headers: req.headers,
-//                 body: req.body
-//             })
-//         } else {
-//             return net.fetch('https://store.linyaps.org.cn/');
-//         }
-//     })
-// }
-
-export function handleCustomProtocol(argv) {
+export function handleCustomProtocol(argv, mainWindow) {
     mainLog.log('自定义协议传入的参数:', argv);
     // 查找命令行中的协议 URL
     const protocolUrl = argv.find(arg => arg.startsWith('linyapsss://'));
-    mainLog.log('protocolUrl：', protocolUrl);
     if (protocolUrl) {
-      const parsedUrl = url.parse(protocolUrl, true); // 解析 URL
-      const { path, query, pathname } = parsedUrl;
-      mainLog.log('path:', path);
-      mainLog.log('自定义协议路径:', pathname);
-      mainLog.log('参数:', query);
-      // 根据路径和参数执行逻辑
-      if (pathname === '/action' && query.param1 === 'value1') {
-        mainLog.log('执行特定逻辑', query);
-      } else {
-        mainLog.log('执行默认逻辑', query);
-      }
+        // 截取argv双斜杠后的内容，如果为空则不处理，如果有内容则处理
+        const url = protocolUrl.split('//')[1];
+        if (url) {
+            mainLog.log('处理自定义协议请求:', url);
+            // 等待5秒钟，再发送ipc到渲染线程
+            setTimeout(() => {
+                mainWindow.webContents.send('custom-protocol', url);
+            }, 5000);
+        }
     }
-    // const parsedUrl = new URL(url);
-    // const fileUrl = parsedUrl.searchParams.get('url');
-    // const fileName = 'downloaded_file.zip';
-
-    // 执行下载
-    // https.get(fileUrl, (response) => {
-    //     const fileStream = fs.createWriteStream(fileName);
-    //     response.pipe(fileStream);
-    //     fileStream.on('finish', () => {
-    //         fileStream.close();
-    //         dialog.showMessageBox({
-    //             type: 'info',
-    //             title: '下载完成',
-    //             message: `文件已下载到: ${fileName}`
-    //         });
-    //     });
-    // });
   }
