@@ -114,8 +114,8 @@ if (!gotTheLock) {
   });
   app.whenReady().then(() => {
     createWindow(); // 创建商店主窗口
-    floatingBall();  // 创建悬浮按钮
-    installList();      // 加载弹出层
+    // floatingBall();  // 创建悬浮按钮
+    // installList();      // 加载弹出层
     TrayMenu(mainWin); // 加载托盘
     IPCHandler(mainWin); // 加载IPC服务
     updateHandle(mainWin); // 自动更新

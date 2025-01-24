@@ -10,10 +10,6 @@ const router = createRouter({
             component: () => import("../pages/index.vue")
         },
         {
-            path: '/floating',
-            component: () => import("../pages/floating/index.vue")
-        },
-        {
             path: '/main_view',
             redirect: '/welcome_menu',
             component: () => import("../pages/mainView/index.vue"),

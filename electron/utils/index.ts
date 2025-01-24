@@ -40,4 +40,4 @@ export function handleCustomProtocol(argv, mainWindow) {
             }, 5000);
         }
     }
-  }
+}
