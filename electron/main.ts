@@ -1,8 +1,8 @@
 import { app, BrowserWindow, shell, Menu, screen, ipcMain } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./logger";
-import TrayMenu from "./trayMenu";
-import IPCHandler from "./ipcHandler";
+import TrayMenu from "./utils/trayHandle";
+import IPCHandler from "./utils/ipcHandle";
 import { updateHandle } from "./update";
 import { clearUpdateCache, handleCustomProtocol } from "./utils";
 import installList from "./utils/installList";
@@ -72,6 +72,7 @@ function floatingBall() {
     hasShadow: false,         // 不需要窗口阴影
     x: width - 100,           // 默认定位-宽度减100 在右边
     y: height - 150,          // 默认定位-高度减100 在下边
+    skipTaskbar: true,        // 不显示任务栏图标
     webPreferences: {
       preload,
       contextIsolation: false,
