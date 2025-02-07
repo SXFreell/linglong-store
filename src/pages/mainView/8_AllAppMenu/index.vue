@@ -16,7 +16,8 @@
             </div>
         </div>
     </div>
-    <div ref="appsContainer" class="apps-container" @scroll="handleScroll">
+    <div v-if="isFirstLoad" class="apps-container"></div>
+    <div v-else class="apps-container" ref="appsContainer" @scroll="handleScroll">
         <div class="card-items-container" v-if="allAppItemList && allAppItemList.length > 0">
             <div class="card-items" v-for="(item, index) in allAppItemList" :key="index">
                 <AllAppCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch"
@@ -56,7 +57,10 @@ const installedItemsStore = useInstalledItemsStore();
 
 const appsContainer = ref<HTMLDivElement>()
 const categoryList = ref<any[]>([{ "categoryId": "", "categoryName": "全部程序" }]);
-const isLoading = ref<boolean>(false);
+// 是否是第一次加载(决定是否显示查无数据)
+const isFirstLoad = ref(true);
+// 页面加载状态
+const isLoading = ref(false);
 
 let repoName = systemConfigStore.defaultRepoName;
 let arch = systemConfigStore.arch;
@@ -78,6 +82,7 @@ const loadMore = async () => {
                 allAppItemsStore.addItem(item);
             })
             params.value.pageNo++;
+            isFirstLoad.value = false;
         }
     } catch (error) {
         console.error('Failed to load data', error);
@@ -91,6 +96,7 @@ const handleSearch = async () => {
     allAppItemsStore.clearItems();
     // 获取显示的程序列表
     params.value.pageNo = 1;
+    isFirstLoad.value = true;
     loadMore();
 }
 

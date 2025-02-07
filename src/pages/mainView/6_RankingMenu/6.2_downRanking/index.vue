@@ -1,5 +1,8 @@
 <template>
-    <div class="apps-container" v-loading="loading" element-loading-text="加载中..."
+    <div class="apps-container" v-if="isFirstLoad" v-loading="loading" element-loading-text="加载中..."
+        element-loading-background="rgba(122, 122, 122, 0.8)">
+    </div>
+    <div class="apps-container" v-else v-loading="loading" element-loading-text="加载中..."
         element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="displayedItems && displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
@@ -29,6 +32,8 @@ import router from '@/router';
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
+// 是否是第一次加载(决定是否显示查无数据)
+const isFirstLoad = ref(true);
 // 页面加载状态
 const loading = ref(true);
 
@@ -44,6 +49,7 @@ let displayedItems = ref<CardFace[]>([]);
 onMounted(async () => {
     let res = await getInstallAppList(params.value);
     if (res.code == 200) {
+        isFirstLoad.value = false;
         displayedItems.value = (res.data as unknown as pageResult).records;
         displayedItems.value.forEach(item => {
             item.isInstalled = installedItemsStore.installedItemList.find(it => it.appId == item.appId) ? true : false;

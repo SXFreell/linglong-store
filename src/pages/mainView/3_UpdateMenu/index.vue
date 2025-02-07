@@ -1,5 +1,8 @@
 <template>
-    <div class="apps-container" v-loading="loading" element-loading-text="加载中..."
+    <div class="apps-container" v-if="isFirstLoad" v-loading="loading" element-loading-text="加载中..."
+        element-loading-background="rgba(122, 122, 122, 0.8)">
+    </div>
+    <div class="apps-container" v-else v-loading="loading" element-loading-text="加载中..."
         element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="updateItemsStore.updateItemList && updateItemsStore.updateItemList.length > 0">
             <div class="card-items" v-for="(item, index) in updateItemsStore.updateItemList" :key="index">
@@ -38,6 +41,8 @@ const installedItemsStore = useInstalledItemsStore();
 const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
 const installingItemsStore = useInstallingItemsStore();
+// 是否是第一次加载(决定是否显示查无数据)
+const isFirstLoad = ref(true);
 // 页面加载状态
 const loading = ref(true);
 
@@ -100,6 +105,7 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
         // 查询结束，标记值归零并且停止加载
         currentIndex = 0;
         loading.value = false;
+        isFirstLoad.value = false;
     }
 }
 // 更新所有
