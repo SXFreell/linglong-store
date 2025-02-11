@@ -51,7 +51,7 @@ onMounted(() => {
     const containerElement = containerRef.value as HTMLElement;
     const textElement = textRef.value as HTMLElement;
     if (textElement && containerElement && textElement.scrollWidth > containerElement.offsetWidth) {
-        textElement.style.animation = 'scroll-text 10s linear infinite';
+        // textElement.style.animation = 'scroll-text 10s linear infinite';
     } else {
         textElement.style.textAlign = 'center';
         textElement.style.animation = 'none'; // 去除滚动动画
@@ -107,6 +107,18 @@ onMounted(() => {
 
 .text-container:hover .text-content {
     /* 鼠标悬停时暂停滚动 */
-    animation-play-state: paused;
+    /* animation-play-state: paused; */
+    animation: scroll-name 10s linear infinite;
+}
+
+@keyframes scroll-name {
+    /* 从右侧开始 */
+  0% {
+    transform: translateX(0);
+  }
+    /* 向左滚动 */
+  100% {
+    transform: translateX(-100%);
+  }
 }
 </style>
