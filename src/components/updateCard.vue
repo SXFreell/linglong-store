@@ -4,7 +4,9 @@
             <img style="width: 100px;height: 100px;" v-lazy="icon" alt="Image" />
         </div>
         <span class="card-name" :title="name">{{ name }}</span>
-        <span class="card-zh-name">{{ defaultName }}</span>
+        <div ref="containerRef" class="text-container">
+            <span ref="textRef" class="text-content">{{ defaultName }}</span>
+        </div>
         <span class="card-version">{{ version }}</span>
         <div class="card-bottom" v-loading="loading" :element-loading-svg="svg" 
             element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
@@ -14,11 +16,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from "vue";
-import { CardFace, OpenDetailParams } from "@/interface";
+import { computed, onMounted, ref } from "vue";
 import { LocationQueryRaw, useRouter } from 'vue-router';
+import { CardFace, OpenDetailParams } from "@/interface";
 
 const router = useRouter();
+
+const containerRef = ref<HTMLElement | null>(null);
+const textRef = ref<HTMLElement | null>(null);
 
 // 接受父组件传递的参数，并设置默认值
 // icon: "https://linglong.dev/asset/logo.svg",
@@ -40,6 +45,17 @@ const openDetails = () => {
         router.push({ path: '/details', query: queryParams });
     }
 }
+// 页面加载时执行
+onMounted(() => {
+    const containerElement = containerRef.value as HTMLElement;
+    const textElement = textRef.value as HTMLElement;
+    if (textElement && containerElement && textElement.scrollWidth > containerElement.offsetWidth) {
+        // textElement.style.animation = 'scroll-text 10s linear infinite';
+    } else {
+        textElement.style.textAlign = 'center';
+        textElement.style.animation = 'none'; // 去除滚动动画
+    }
+})
 </script>
 
 <style scoped>
@@ -55,5 +71,43 @@ const openDetails = () => {
 .uninstall-btn {
     padding: 6px;
     width: 75%;
+}
+
+.text-container {
+    width: 100%;
+    background-color: var(--base-background-color);
+    color: var(--menu-base-font-color);
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    /* 超出部分隐藏 */
+    overflow: hidden;
+    /* 保持文字在一行显示 */
+    white-space: nowrap;
+    /* 相对定位，便于定位悬浮框 */
+    position: relative;
+    /* 默认情况下文字居中显示 */
+    text-align: center;
+}
+
+.text-content {
+    display: inline-block;
+}
+
+.text-container:hover .text-content {
+    /* 鼠标悬停时暂停滚动 */
+    /* animation-play-state: paused; */
+    animation: scroll-name 10s linear infinite;
+}
+
+@keyframes scroll-name {
+    /* 从右侧开始 */
+  0% {
+    transform: translateX(0);
+  }
+    /* 向左滚动 */
+  100% {
+    transform: translateX(-100%);
+  }
 }
 </style>

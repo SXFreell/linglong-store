@@ -8,7 +8,6 @@
         <div ref="containerRef" class="text-container">
             <span ref="textRef" class="text-content">{{ defaultName }}</span>
         </div>
-        <!-- <span class="card-zh-name">{{ defaultName }}</span> -->
         <span class="card-version">{{ version }}</span>
         <div class="card-bottom" v-loading="loading" :element-loading-svg="svg"
             element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">

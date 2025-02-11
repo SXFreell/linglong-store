@@ -168,18 +168,6 @@ body {
   color: var(--menu-base-font-color);
 }
 
-.card-zh-name {
-  background-color: #6d6d6d;
-  display: flex;
-  justify-content: center;
-  white-space: nowrap;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: bold;
-  color: var(--menu-base-font-color);
-  padding: 3px;
-}
-
 .card-version {
   display: flex;
   justify-content: center;
@@ -270,10 +258,5 @@ body {
 
   .card-container {
     border: 1px solid #ccc;
-  }
-
-  .card-zh-name {
-    background-color: var(--base-background-color);
-    color: var(--menu-base-font-color);
   }
 }

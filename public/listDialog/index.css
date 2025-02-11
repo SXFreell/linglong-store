@@ -71,8 +71,4 @@ body::-webkit-scrollbar {
   .card-container {
     border: 1px solid #ccc;
   }
-  .card-zh-name {
-    background-color: var(--base-background-color);
-    color: var(--menu-base-font-color);
-  }
 }
