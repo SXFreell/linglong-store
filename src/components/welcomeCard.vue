@@ -5,7 +5,7 @@
         </div>
         <span class="card-name" :title="name">{{ name }}</span>
         <span class="card-zh-name">{{ defaultName }}</span>
-        <span class="card-version">{{ version }}</span>
+        <!-- <span class="card-version">{{ version }}</span> -->
         <div class="card-bottom" v-loading="loading" :element-loading-svg="svg"
             element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="uninstall-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
@@ -48,6 +48,7 @@ const openDetails = () => {
 }
 
 .card-bottom {
+    margin-top: 14px;
     justify-content: center;
 }
 
