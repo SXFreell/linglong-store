@@ -27,12 +27,12 @@
         style="margin-left: 50px;height: 24px;">清除废弃基础服务</el-button>
     </div>
     <hr>
-    <li><a class="title">测试环节</a></li>
+    <!-- <li><a class="title">测试环节</a></li>
     <div style="margin-left: 30px;">
       <label style="font-size: 14px;">测试玲珑命令：</label>
       <el-input v-model="msg" style="width: 300px;" @keyup.enter="reback"></el-input>
     </div>
-    <div>{{ result }}</div>
+    <div>{{ result }}</div> -->
   </div>
 </template>
 <script setup lang="ts">
@@ -66,8 +66,7 @@ const options = [
 
 // 切换仓库源的change事件
 const changeDefaultRepo = () => {
-  let repoCommond = 'll-cli repo modify --name=' + defaultRepo.value + ' https://mirror-repo-linglong.deepin.com';
-  ipcRenderer.send('command', { command: repoCommond });
+  ipcRenderer.send('command', { command: `ll-cli repo modify --name=${defaultRepo.value} https://mirror-repo-linglong.deepin.com` });
   router.push('/'); // 返回首页重新加载商店
 }
 
