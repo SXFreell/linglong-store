@@ -3,15 +3,20 @@ import { exec, spawn } from "child_process";
 import axios from "axios";
 import fs from "fs-extra";
 import log, { ipcLog, mainLog } from "../logger";
-const path = require('path'); 
+const path = require('path');
 
+/**
+ * 主窗口对象所有涉及的渲染线程和主线程之间的交互
+ * @param win 主窗口对象
+ */
 const IPCHandler = (win: BrowserWindow) => {
     /* ************************************************* ipcMain ********************************************** */
+    
     /* **** 启动程序 **** */
     ipcMain.on('run-app', (event, arg) => {
         console.log('Message from run-app:', arg);
         exec(arg, (error, stdout, stderr) => {
-            ipcLog.info('error:',error,' | stdout:',stdout,' | stderr:',stderr);
+            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
         })
     });
 
@@ -19,7 +24,7 @@ const IPCHandler = (win: BrowserWindow) => {
     ipcMain.on('message-from-renderer', (event, arg) => {
         console.log('Message from Renderer:', arg);
         exec(arg, (error, stdout, stderr) => {
-            ipcLog.info('error:',error,' | stdout:',stdout,' | stderr:',stderr);
+            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
             if (stdout) {
                 // 发送响应消息回渲染进程
                 event.reply('message-from-main', stdout);
@@ -43,10 +48,10 @@ const IPCHandler = (win: BrowserWindow) => {
                 const result = await runScript(scriptPath);
                 ipcLog.info('Script Output:', result);
             } else {
-                ipcLog.info('服务暂不可用！',response.data.data);
+                ipcLog.info('服务暂不可用！', response.data.data);
             }
         }).catch(error => {
-            ipcLog.info('error response',error.response);
+            ipcLog.info('error response', error.response);
         }).finally(() => {
             // 可选：执行完毕后删除脚本文件
             fs.unlinkSync(scriptPath);
@@ -57,37 +62,37 @@ const IPCHandler = (win: BrowserWindow) => {
 
     function runScript(scriptPath) {
         return new Promise((resolve, reject) => {
-          const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
-          let stdoutData = '';
-          let stderrData = '';
-          // 监听标准输出流
-          child.stdout.on('data', (data) => {
-            stdoutData += data;
-          });
-          // 监听标准错误输出流
-          child.stderr.on('data', (data) => {
-            stderrData += data;
-          });
-          ipcLog.info('runScript stdoutData', stdoutData);
-          ipcLog.info('runScript stderrData', stderrData);
-          // 监听子进程关闭事件
-          child.on('close', (code) => {
-            if (code === 0) {
-              resolve(stdoutData);
-            } else {
-              reject(new Error(`Child process exited with code ${code}: ${stderrData}`));
-            }
-          });
+            const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
+            let stdoutData = '';
+            let stderrData = '';
+            // 监听标准输出流
+            child.stdout.on('data', (data) => {
+                stdoutData += data;
+            });
+            // 监听标准错误输出流
+            child.stderr.on('data', (data) => {
+                stderrData += data;
+            });
+            ipcLog.info('runScript stdoutData', stdoutData);
+            ipcLog.info('runScript stderrData', stderrData);
+            // 监听子进程关闭事件
+            child.on('close', (code) => {
+                if (code === 0) {
+                    resolve(stdoutData);
+                } else {
+                    reject(new Error(`Child process exited with code ${code}: ${stderrData}`));
+                }
+            });
         });
-      }
+    }
 
     /* ********** 执行脚本命令 ********** */
     ipcMain.on("command_only_stdout", (_event, code: string) => {
         ipcLog.info('command_only_stdout：', code);
         // 在主进程中执行命令，并将结果返回到渲染进程
         exec(code, (error, stdout, stderr) => {
-            ipcLog.info('error:',error,' | stdout:',stdout,' | stderr:',stderr);
-            win.webContents.send("command_only_stdout_result", { stdout,stderr,error });
+            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
+            win.webContents.send("command_only_stdout_result", { stdout, stderr, error });
         })
     })
 
@@ -96,7 +101,7 @@ const IPCHandler = (win: BrowserWindow) => {
         ipcLog.info('ipc-command：', JSON.stringify(data));
         // 在主进程中执行命令，并将结果返回到渲染进程
         exec(data.command, (error, stdout, stderr) => {
-            ipcLog.info('ipc-command：：error:',error,' | stdout:',stdout,' | stderr:',stderr);
+            ipcLog.info('ipc-command：：error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
             if (stderr) {
                 win.webContents.send("command-result", { code: 'stderr', param: data, result: stderr });
                 return;
@@ -174,7 +179,7 @@ const IPCHandler = (win: BrowserWindow) => {
     }
 
     /* ****************** 强制退出程序 ******************* */
-    ipcMain.on('kill-app',(_event, params) => {
+    ipcMain.on('kill-app', (_event, params) => {
         ipcLog.info('kill-app：', JSON.stringify(params));
         const installProcess = exec(params.command, { encoding: 'utf8' });
         installProcess.stdout.on('data', (data) => {
@@ -249,9 +254,9 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.defaults.headers.common['Content-Type'] = 'application/json';
         axios.defaults.timeout = 30000;
         axios.post(data.url, JSON.stringify({ ...data })).then(response => {
-            ipcLog.info('ipc-visit-success：',JSON.stringify(response.data))
+            ipcLog.info('ipc-visit-success：', JSON.stringify(response.data))
         }).catch(error => {
-            ipcLog.info('ipc-visit-error：',error.message)
+            ipcLog.info('ipc-visit-error：', error.message)
         });
     });
 
@@ -261,9 +266,9 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.defaults.headers.common['Content-Type'] = 'application/json';
         axios.defaults.timeout = 30000;
         axios.post(data.url, { ...data }).then(response => {
-            ipcLog.info('ipc-appLogin-success：',JSON.stringify(response.data));
+            ipcLog.info('ipc-appLogin-success：', JSON.stringify(response.data));
         }).catch(error => {
-            ipcLog.info('ipc-appLogin-error：',error.message);
+            ipcLog.info('ipc-appLogin-error：', error.message);
         });
     });
 
@@ -273,9 +278,9 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.defaults.headers.common['Content-Type'] = 'application/json';
         axios.defaults.timeout = 30000;
         axios.post(data.url, { ...data }).then(response => {
-            ipcLog.info('ipc-suggest-success：',JSON.stringify(response.data));
+            ipcLog.info('ipc-suggest-success：', JSON.stringify(response.data));
         }).catch(error => {
-            ipcLog.info('ipc-suggest-error：',error);
+            ipcLog.info('ipc-suggest-error：', error);
         });
     });
 
@@ -291,6 +296,7 @@ const IPCHandler = (win: BrowserWindow) => {
             mainLog.debug(arg);
         }
     })
+    
     /* ************************************************* ipcMain ********************************************** */
 }
 

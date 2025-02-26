@@ -324,39 +324,37 @@ onMounted(async () => {
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
     // 获取客户端ip
-    ipcRenderer.send('fetchClientIP');
     ipcRenderer.once('fetchClientIP-result',(_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query))
+    ipcRenderer.send('fetchClientIP');
+    
+    // 监听命令行执行结果  /  监听更新事件
+    ipcRenderer.on('command-result', commandResult);
+    ipcRenderer.on('update-message', updateMessage);
+    
+    // 判断是否是开发模式，跳出版本检测
+    if (process.env.NODE_ENV == "development") {
+        message.value = "开发模式，跳过商店版本号检测...";
+        ipcRenderer.send('logger', 'warn', "开发模式，跳过商店版本号检测...");
+    } else {
+        // 开启先检测商店版本号是否有更新
+        if (systemConfigStore.autoCheckUpdate) {
+            message.value = "正在检测商店版本号...";
+            ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
+            ipcRenderer.send('checkForUpdate');
+            return;   
+        }
+        message.value = "跳过商店版本号检测...";
+        ipcRenderer.send('logger', 'warn', "跳过商店版本号检测...");
+    }
     // 获取组件基本信息
     ipcRenderer.send('command', { command: 'dpkg -l | grep linglong' });
     // 获取系统信息
     ipcRenderer.send('command', { command: 'uname -a' });
-    // 开启先检测商店版本号是否有更新
-    if (process.env.NODE_ENV != "development") {
-        if (systemConfigStore.autoCheckUpdate) {
-            message.value = "正在检测商店版本号...";
-            ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
-            ipcRenderer.send('checkForUpdate');    
-        } else {
-            message.value = "跳过商店版本号检测...";
-            ipcRenderer.send('logger', 'warn', "跳过商店版本号检测...");
-            message.value = "开始环境检测...";
-            ipcRenderer.send('logger', 'info', "开始环境检测...");
-            message.value = "检测当前系统架构...";
-            ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-            ipcRenderer.send('command', { command: 'uname -m' });
-        }
-    } else {
-        message.value = "开发模式，跳过商店版本号检测...";
-        ipcRenderer.send('logger', 'warn', "开发模式，跳过商店版本号检测...");
-        message.value = "开始环境检测...";
-        ipcRenderer.send('logger', 'info', "开始环境检测...");
-        message.value = "检测当前系统架构...";
-        ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-        ipcRenderer.send('command', { command: 'uname -m' });
-    }
-    // 监听命令行执行结果  /  监听更新事件
-    ipcRenderer.on('command-result', commandResult);
-    ipcRenderer.on('update-message', updateMessage);
+    message.value = "开始环境检测...";
+    ipcRenderer.send('logger', 'info', "开始环境检测...");
+    message.value = "检测当前系统架构...";
+    ipcRenderer.send('logger', 'info', "检测当前系统架构...");
+    ipcRenderer.send('command', { command: 'uname -m' });
 });
 // 销毁前执行
 onBeforeUnmount(() => {

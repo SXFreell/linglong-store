@@ -18,23 +18,19 @@ const app = createApp(App);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
 }
-// elementplus
-app.use(ElementPlus,{
-  locale: zhCn,
-});
+
+// 注册挂载elementplus，并开启中文
+app.use(ElementPlus,{ locale: zhCn });
+
 // 注册挂载pinia
 const pinia = createPinia();
 pinia.use(piniaPluginPersistedstate);
 app.use(pinia);
-// 配置项
-app.use(VueLazyload, {
-  preLoad: 1.3, //预加载的宽高比
-  loading: loadimage, //图片加载状态下显示的图片
-  error: errorimage, //图片加载失败时显示的图片
-  attempt: 1, // 加载错误后最大尝试次数
-})
+
+// 注册挂载懒加载，并配置项 (预加载的宽高比 / 图片加载状态下显示的图片 / 图片加载失败时显示的图片 / 加载错误后最大尝试次数)
+app.use(VueLazyload, { preLoad: 1.3, loading: loadimage, error: errorimage, attempt: 1,  })
+
 // 注册挂载路由
 app.use(router);
 
-app.mount('#app')
-    .$nextTick(() => postMessage({ payload: 'removeLoading' }, '*'))
+app.mount('#app').$nextTick(() => postMessage({ payload: 'removeLoading' }, '*'))
