@@ -121,6 +121,7 @@ onMounted(async () => {
         params.value.categoryId = meta.savedCategoryId as string;
         params.value.pageNo = meta.savedPageNo as number;
         params.value.pageSize = meta.savedPageSize as number;
+        isFirstLoad.value = false;
     } else {
         allAppItemsStore.clearItems();
         loadMore();
