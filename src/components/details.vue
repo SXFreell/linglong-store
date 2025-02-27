@@ -92,10 +92,11 @@ const systemConfigStore = useSystemConfigStore();
 
 // 路由传递的对象
 const router = useRouter();
-const query = router.currentRoute.value.query;
-
+// 玲珑组件版本
 let llVersion = systemConfigStore.llVersion;
-
+// 获取路由参数
+const query = router.currentRoute.value.query;
+// 加载状态
 let loading = ref(true);
 
 // 格式化程序名称
@@ -190,7 +191,7 @@ onMounted(async () => {
     // 1.清除表单数据
     difVersionItemsStore.clearItems();
     // 监听获取版本列表结果
-    ipcRenderer.once('command-result', (_event: any, res: any) => {
+    ipcRenderer.once('command-result', async (_event: any, res: any) => {
         const command: string = res.param.command;
         if (res.code != 'stdout') {
             ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
@@ -199,7 +200,7 @@ onMounted(async () => {
         if (command.startsWith("ll-cli query")) {
             difVersionItemsStore.initDifVersionItemsOld(res.result, query);
         } else if (command.startsWith("ll-cli --json search")) {
-            difVersionItemsStore.initDifVersionItems(res.result, query);
+            await difVersionItemsStore.initDifVersionItems(res.result, query);
         }
         loading.value = false;
     });
