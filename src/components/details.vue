@@ -163,12 +163,10 @@ const changeStatus = async (item: any, flag: string) => {
             }
         }
     }
-
     // 启用加载框
     allAppItemsStore.updateItemLoadingStatus(item, true); // 全部程序列表(新)
     installedItemsStore.updateItemLoadingStatus(item, true); // 已安装程序列表
     difVersionItemsStore.updateItemLoadingStatus(item, true); // 不同版本列表
-
     // 根据flag判断是安装还是卸载,发送命令并弹出提示框
     if (flag == 'install') {
         installingItemsStore.addItem(item); // 新增到加载中列表
@@ -191,6 +189,20 @@ const handleRunApp = (item: CardFace) => {
 onMounted(async () => {
     // 1.清除表单数据
     difVersionItemsStore.clearItems();
+    // 监听获取版本列表结果
+    ipcRenderer.once('command-result', (_event: any, res: any) => {
+        const command: string = res.param.command;
+        if (res.code != 'stdout') {
+            ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
+            return;
+        }
+        if (command.startsWith("ll-cli query")) {
+            difVersionItemsStore.initDifVersionItemsOld(res.result, query);
+        } else if (command.startsWith("ll-cli --json search")) {
+            difVersionItemsStore.initDifVersionItems(res.result, query);
+        }
+        loading.value = false;
+    });
     // 2.发送命令到主线程获取版本列表结果
     let itemsCommand = ``;
     if (compareVersions(llVersion, '1.3.99') < 0) {
@@ -205,19 +217,6 @@ onMounted(async () => {
         return;
     }
     ipcRenderer.send("command", { 'command': itemsCommand });
-    ipcRenderer.once('command-result', (_event: any, res: any) => {
-        const command: string = res.param.command;
-        if (res.code != 'stdout') {
-            ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
-            return;
-        }
-        if (command.startsWith("ll-cli query")) {
-            difVersionItemsStore.initDifVersionItemsOld(res.result, query);
-        } else if (command.startsWith("ll-cli --json search")) {
-            difVersionItemsStore.initDifVersionItems(res.result, query);
-        }
-        loading.value = false;
-    });
 })
 // 路由跳转离开前
 onBeforeRouteLeave((to: any, from: any, next: any) => {
