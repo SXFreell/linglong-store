@@ -3,59 +3,32 @@
         <el-container>
             <el-aside>
                 <el-menu :default-active="defaultActive">
-                    <el-menu-item index="1" @click="toPage('/welcome_menu')">
-                        <el-icon color="#D3D3D3">
-                            <Star />
-                        </el-icon>
-                        <span>玲珑推荐</span>
+                    <el-menu-item index="1" @click="router.push({path: '/welcome_menu'})">
+                        <el-icon><Star /></el-icon><span>玲珑推荐</span>
                     </el-menu-item>
-                    <el-menu-item index="6" @click="toPage('/ranking_menu')">
-                        <el-icon color="#D3D3D3">
-                            <Histogram />
-                        </el-icon>
-                        <span>排行榜</span>
+                    <el-menu-item index="6" @click="router.push({path: '/ranking_menu'})">
+                        <el-icon><Histogram /></el-icon><span>排行榜</span>
                     </el-menu-item>
-                    <el-menu-item index="2" @click="toPage('/all_app_menu')">
-                        <el-icon color="#D3D3D3">
-                            <HomeFilled />
-                        </el-icon>
-                        <span>全部程序</span>
+                    <el-menu-item index="2" @click="router.push({path: '/all_app_menu'})">
+                        <el-icon><HomeFilled /></el-icon><span>全部程序</span>
                     </el-menu-item>
-                    <el-menu-item index="3" @click="toPage('/installed_menu')">
-                        <el-icon>
-                            <GobletSquareFull />
-                        </el-icon>
-                        <span>卸载程序</span>
+                    <el-menu-item index="3" @click="router.push({path: '/installed_menu'})">
+                        <el-icon><GobletSquareFull /></el-icon><span>卸载程序</span>
                     </el-menu-item>
-                    <el-menu-item index="4" @click="toPage('/update_menu')">
-                        <el-icon>
-                            <UploadFilled />
-                        </el-icon>
-                        <span>更新程序</span>
+                    <el-menu-item index="4" @click="router.push({path: '/update_menu'})">
+                        <el-icon><UploadFilled /></el-icon><span>更新程序</span>
                     </el-menu-item>
-                    <el-menu-item index="5" @click="toPage('/runtime_menu')">
-                        <el-icon>
-                            <Odometer />
-                        </el-icon>
-                        <span>玲珑进程</span>
+                    <el-menu-item index="5" @click="router.push({path: '/runtime_menu'})">
+                        <el-icon><Odometer /></el-icon><span>玲珑进程</span>
                     </el-menu-item>
-                    <el-menu-item index="98" @click="toPage('/config_menu')">
-                        <el-icon>
-                            <setting />
-                        </el-icon>
-                        <span>基础设置</span>
+                    <el-menu-item index="98" @click="router.push({path: '/config_menu'})">
+                        <el-icon><setting /></el-icon><span>基础设置</span>
                     </el-menu-item>
-                    <el-menu-item index="99" @click="toPage('/about_menu')">
-                        <el-icon>
-                            <InfoFilled />
-                        </el-icon>
-                        <span>关于程序</span>
+                    <el-menu-item index="99" @click="router.push({path: '/about_menu'})">
+                        <el-icon><InfoFilled /></el-icon><span>关于程序</span>
                     </el-menu-item>
-                    <el-menu-item index="999" @click="toPage('/')" style="display: none;">
-                        <el-icon>
-                            <Loading />
-                        </el-icon>
-                        <span>返回首页</span>
+                    <el-menu-item index="999" @click="router.push({path: '/'})" style="display: none;">
+                        <el-icon><Loading /></el-icon><span>返回首页</span>
                     </el-menu-item>
                 </el-menu>
                 <!-- 更多菜单项 -->
@@ -64,18 +37,15 @@
                 </div>
                 <div class="network-info">
                     <div class="network-info-title">当前实时网速</div>
-                    <el-icon>
-                        <Top />
-                    </el-icon>上传速度: {{ uploadSpeed }}<br>
-                    <el-icon>
-                        <Bottom />
-                    </el-icon>下载速度: {{ downloadSpeed }}
+                    <el-icon><Top /></el-icon>上传速度: {{ uploadSpeed }}<br>
+                    <el-icon><Bottom /></el-icon>下载速度: {{ downloadSpeed }}
                 </div>
             </el-aside>
+            <!-- 这里将动态显示不同的功能页面 -->
             <el-main class="views">
-                <!-- 这里将动态显示不同的功能页面 -->
                 <router-view></router-view>
             </el-main>
+            <!-- 下载队列弹框 -->
             <transition name="el-zoom-in-left">
                 <div v-show="showQueueBox" class="transition-queue-box">
                     <el-table :data="installingItemsStore.installingItemList" border stripe style="width: 100%;height: 100%;">
@@ -124,26 +94,26 @@ const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
 const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
-
-// 默认菜单页签
-const defaultActive = ref('1');
 // 路由对象
 const router = useRouter();
-// 路由跳转
-const toPage = (url: string) => router.push(url);
+// 默认菜单页签
+const defaultActive = ref('1');
+// 基础服务器地址
+let baseURL = import.meta.env.VITE_SERVER_URL as string;
 // 显示下载队列框
 const showQueueBox = ref(false);
 // 下载过程中状态标识
 const flag = ref(true);
 // 下载日志
 let downloadLogMsg = "";
+
 // 命令执行响应函数
 const commandResult = (_event: any, res: any) => {
     const params = res.param;  // 返回命令执行入参参数
     const result = res.result;  // 返回命令执行结果
     const command: string = params.command;  // 返回执行的命令
     if (res.code != 'stdout') {
-        ipcRenderer.send('logger', 'error', "\"" + command + "\"命令执行异常::" + result);
+        ipcRenderer.send('logger', 'error', `\"${command}\"命令执行异常::${result}`);
         return;
     }
     // 监听获取玲珑列表的命令
@@ -157,11 +127,11 @@ const commandResult = (_event: any, res: any) => {
     }
     if (command.startsWith('ll-cli install') || command.startsWith('ll-cli uninstall')) {
         const installedEntity: InstalledEntity = params;
-        installedEntity.isInstalled = false;
         // 移除加载中列表
         installingItemsStore.removeItem(installedEntity);
+        // 获取安装/卸载状态
+        installedEntity.isInstalled = command.startsWith('ll-cli install');
         if (command.startsWith('ll-cli install')) {
-            installedEntity.isInstalled = true;
             installedItemsStore.addItem(installedEntity);
         } else {
             installedItemsStore.removeItem(installedEntity);
@@ -180,22 +150,26 @@ const commandResult = (_event: any, res: any) => {
         }
         // 移除需要更新的应用
         updateItemsStore.removeItem(item);
-        // 检测当前环境
-        const mode = import.meta.env.MODE as string;
-        if (mode != "development") {
-            // 非开发环境发送发送操作命令！
-            let baseURL = import.meta.env.VITE_SERVER_URL as string;
-            params.url = baseURL + "/visit/save";
-            params.visitorId = systemConfigStore.visitorId;
-            params.clientIp = systemConfigStore.clientIP;
-            ipcRenderer.send('visit', params);
+        // 非开发环境发送发送操作命令！
+        if (import.meta.env.MODE as string != "development") {
+            ipcRenderer.send('visit', {
+                url: `${baseURL}/visit/save`,
+                visitorId: systemConfigStore.visitorId,
+                clientIp: systemConfigStore.clientIP,
+            })
         }
-        // 安装成功后，弹出通知
-        const msg = command.startsWith('ll-cli install') ? '安装' : '卸载';
-        ElNotification({
-            title: msg + '成功!', type: 'success', duration: 500,
-            message: params.name + '(' + params.version + ')被成功' + msg + '!',
-        });
+        // 安装或卸载成功后，弹出通知
+        if (command.startsWith('ll-cli install')) {
+            ElNotification({
+                title: '安装成功!', type: 'success', duration: 500,
+                message: `${params.name}(${params.version})被成功安装!`
+            });
+        } else {
+            ElNotification({
+                title: '卸载成功!', type: 'success', duration: 500,
+                message: `${params.name}(${params.version})被成功卸载!`
+            });
+        }
         // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
         let getInstalledItemsCommand = "ll-cli --json list";
         if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
@@ -236,22 +210,26 @@ const linglongResult = (_event: any, res: any) => {
                 allAppItemsStore.updateItemInstallStatus(installedEntity);
             }
             difVersionItemsStore.updateItemInstallStatus(installedEntity);
-            // 检测当前环境
-            const mode = import.meta.env.MODE as string;
-            if (mode != "development") {
-                // 非开发环境发送发送操作命令！
-                let baseURL = import.meta.env.VITE_SERVER_URL as string;
-                params.url = baseURL + "/visit/save";
-                params.visitorId = systemConfigStore.visitorId;
-                params.clientIp = systemConfigStore.clientIP;
-                ipcRenderer.send('visit', params);
+            // 非开发环境发送发送操作命令！
+            if (import.meta.env.MODE as string != "development") {
+                ipcRenderer.send('visit', {
+                    url: `${baseURL}/visit/save`,
+                    visitorId: systemConfigStore.visitorId,
+                    clientIp: systemConfigStore.clientIP,
+                })
             }
-            // 安装成功后，弹出通知
-            const msg = command.startsWith('ll-cli install') ? '安装' : '卸载';
-            ElNotification({
-                title: msg + '成功!', type: 'success', duration: 500,
-                message: params.name + '(' + params.version + ')被成功' + msg + '!',
-            });
+            // 安装或卸载成功后，弹出通知
+            if (command.startsWith('ll-cli install')) {
+                ElNotification({
+                    title: '安装成功!', type: 'success', duration: 500,
+                    message: `${params.name}(${params.version})被成功安装!`
+                });
+            } else {
+                ElNotification({
+                    title: '卸载成功!', type: 'success', duration: 500,
+                    message: `${params.name}(${params.version})被成功卸载!`
+                });
+            }
             // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
             let getInstalledItemsCommand = "ll-cli --json list";
             if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
