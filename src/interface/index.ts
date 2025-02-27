@@ -178,3 +178,11 @@ export interface GroupedItem {
     occurrenceNumber: number;
     record: InstalledEntity; // 记录的完整数据
 }
+
+/**
+ * 分类对象
+ */
+export interface categoryItem {
+    categoryId: string,
+    categoryName: string,
+}

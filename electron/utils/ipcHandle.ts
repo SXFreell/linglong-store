@@ -205,18 +205,27 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.get('http://ip-api.com/json').then(response => {
             const code = response.data.code;
             const dataList = response.data;
-            const result = {
-                code: code,
-                data: dataList
-            };
+            const result = { code: code, data: dataList };
             win.webContents.send("fetchClientIP-result", result);
         }).catch(error => {
             const response = error.response;
-            const result = {
-                code: response.status,
-                msg: response.data
-            };
+            const result = { code: response.status, msg: response.data };
             win.webContents.send("fetchClientIP-result", result);
+        });
+    });
+
+    /* ********** 调用接口获取分类列表 ********** */
+    ipcMain.on("ipc-categories", (_event, data) => {
+        axios.defaults.timeout = 30000;
+        axios.get(`${data.url}/visit/getDisCategoryList`).then(response => {
+            const code = response.data.code;
+            const dataList = response.data.data;
+            const result = { code: code, data: dataList };
+            win.webContents.send("categories-result", result);
+        }).catch(error => {
+            const response = error.response;
+            const result = { code: response.status, msg: response.data };
+            win.webContents.send("categories-result", result);
         });
     });
 
@@ -228,22 +237,11 @@ const IPCHandler = (win: BrowserWindow) => {
         axios.get(data.url).then(response => {
             const code = response.data.code;
             const dataList = response.data.data.list;
-            const result = {
-                code: code,
-                data: dataList,
-                param: data
-            };
-            // 打印日志加密(btoa)/解密(atob)
-            // ipcLog.info('ipc-network-result：请求返回正常');
+            const result = { code: code, data: dataList, param: data };
             win.webContents.send("network-result", result);
         }).catch(error => {
             const response = error.response;
-            const result = {
-                code: response.status,
-                msg: response.data,
-                param: data
-            };
-            // ipcLog.info('ipc-network-error：',JSON.stringify(result));
+            const result = { code: response.status, msg: response.data, param: data };
             win.webContents.send("network-result", result);
         });
     });

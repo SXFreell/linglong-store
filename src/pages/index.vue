@@ -51,7 +51,7 @@ import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { getSearchAppList } from '@/api';
-import { pageResult } from '@/interface';
+import { categoryItem, pageResult } from '@/interface';
 
 const systemConfigStore = useSystemConfigStore();
 const installedItemsStore = useInstalledItemsStore();
@@ -326,6 +326,19 @@ onMounted(async () => {
     // 获取客户端ip
     ipcRenderer.once('fetchClientIP-result',(_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query))
     ipcRenderer.send('fetchClientIP');
+    // 获取分类列表
+    ipcRenderer.once('categories-result',(_event: any, res: any) => {
+        const categories = [{ "categoryId": "", "categoryName": "全部程序" }] as categoryItem[];
+        if (res.code == 200) {
+            const categoriesByIpc = (res.data as categoryItem[]).map(({ categoryId, categoryName }) => ({ categoryId, categoryName }));
+            categories.push(...categoriesByIpc);
+        } else {
+            systemConfigStore.changeNetworkRunStatus(false);
+            ipcRenderer.send('logger', 'error', "获取分类列表的接口状态异常...");
+        }
+        localStorage.setItem('categories', JSON.stringify(categories));
+    })
+    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     
     // 监听命令行执行结果  /  监听更新事件
     ipcRenderer.on('command-result', commandResult);

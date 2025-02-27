@@ -43,7 +43,7 @@ import AllAppCard from "@/components/allAppCard.vue";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
-import { getSearchAppList, getDisCategoryList } from '@/api';
+import { getSearchAppList } from '@/api';
 import defaultImage from '@/assets/logo.svg';
 import loadingGIF from "@/assets/loading.gif";
 
@@ -56,7 +56,7 @@ const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 
 const appsContainer = ref<HTMLDivElement>()
-const categoryList = ref<any[]>([{ "categoryId": "", "categoryName": "全部程序" }]);
+const categoryList = localStorage.getItem('categories') ? JSON.parse(localStorage.getItem('categories') as string) : [];
 // 是否是第一次加载(决定是否显示查无数据)
 const isFirstLoad = ref(true);
 // 页面加载状态
@@ -110,17 +110,13 @@ const handleScroll = (event: Event) => {
 
 // 页面初始化时加载
 onMounted(async () => {
-    // 获取分类列表
-    let res = await getDisCategoryList();
-    if (res.code == 200) {
-        res.data.forEach(item => categoryList.value.push({ categoryId: item.categoryId, categoryName: item.categoryName }))
-    }
     // 查询程序展示软件列表
     if (meta.savedPageNo && meta.savedPageSize) {
         params.value.name = meta.savedSearchName as string;
         params.value.categoryId = meta.savedCategoryId as string;
         params.value.pageNo = meta.savedPageNo as number;
         params.value.pageSize = meta.savedPageSize as number;
+        // 标识设定不是第一次加载
         isFirstLoad.value = false;
     } else {
         allAppItemsStore.clearItems();
