@@ -152,11 +152,10 @@ const commandResult = (_event: any, res: any) => {
         updateItemsStore.removeItem(item);
         // 非开发环境发送发送操作命令！
         if (import.meta.env.MODE as string != "development") {
-            ipcRenderer.send('visit', {
-                url: `${baseURL}/visit/save`,
-                visitorId: systemConfigStore.visitorId,
-                clientIp: systemConfigStore.clientIP,
-            })
+            params.url = `${baseURL}/visit/save`;
+            params.visitorId = systemConfigStore.visitorId;
+            params.clientIp = systemConfigStore.clientIP;
+            ipcRenderer.send('visit', params);
         }
         // 安装或卸载成功后，弹出通知
         if (command.startsWith('ll-cli install')) {
@@ -212,11 +211,10 @@ const linglongResult = (_event: any, res: any) => {
             difVersionItemsStore.updateItemInstallStatus(installedEntity);
             // 非开发环境发送发送操作命令！
             if (import.meta.env.MODE as string != "development") {
-                ipcRenderer.send('visit', {
-                    url: `${baseURL}/visit/save`,
-                    visitorId: systemConfigStore.visitorId,
-                    clientIp: systemConfigStore.clientIP,
-                })
+                params.url = `${baseURL}/visit/save`;
+                params.visitorId = systemConfigStore.visitorId;
+                params.clientIp = systemConfigStore.clientIP;
+                ipcRenderer.send('visit', params);
             }
             // 安装或卸载成功后，弹出通知
             if (command.startsWith('ll-cli install')) {
