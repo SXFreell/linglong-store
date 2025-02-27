@@ -301,12 +301,7 @@ onMounted(() => {
     ipcRenderer.on('custom-protocol', (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
         // 在应用中间弹出通知，接收到了自定义协议的消息
-        ElNotification({
-            title: '自定义协议消息',
-            message: `接收到了自定义协议的消息：${res}`,
-            type: 'success',
-            duration: 5000
-        });
+        ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
     });
 });
 // 页面销毁前执行
