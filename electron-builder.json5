@@ -14,23 +14,6 @@
     "dist-electron",
     "dist"
   ],
-  "mac": {
-    "artifactName": "${productName}_${version}.${ext}",
-    "target": [
-      "dmg"
-    ]
-  },
-  "win": {
-    "target": [
-      {
-        "target": "nsis",
-        "arch": [
-          "x64"
-        ]
-      }
-    ],
-    "artifactName": "${productName}_${version}.${ext}"
-  },
   "linux": {
     "category": "Network;",
     "icon": "icons/256x256.svg",
@@ -39,7 +22,11 @@
     ],
     "target": [
       { "target": "deb", "arch": ["x64", "arm64"] },
-      { "target": "AppImage", "arch": ["x64", "arm64"] }
+      { "target": "AppImage", "arch": ["x64", "arm64"] },
+      // { "target": "flatpak", "arch": ["x64", "arm64"] },
+      // { "target": "snap", "arch": ["x64", "arm64"] },
+      // { "target": "pacman", "arch": ["x64", "arm64"] },
+      // { "target": "rpm", "arch": ["x64", "arm64"] }
     ]
   },
   "deb": {
@@ -49,13 +36,11 @@
       "Terminal": false,
       "Type": "Application"
     },
+    "mimeTypes": [
+      "application/x-layer",
+      "inode/directory"
+    ],
     "depends": [],
     "recommends": ["linglong-bin", "linglong-box"]
-  },
-  "nsis": {
-    "oneClick": false,
-    "perMachine": false,
-    "allowToChangeInstallationDirectory": true,
-    "deleteAppDataOnUninstall": false
   }
 }
