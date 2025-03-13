@@ -1,25 +1,25 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
   "appId": "com.dongpl.linglong-store",
-  "copyright": "Copyright © 2024 Jokul",
+  "copyright": "Copyright © 2025 Jokul",
   "asar": true,
   "directories": {
     "output": "release/${version}"
   },
   "protocols": {
-    "schemes": ["linyapsss"],
-    "name": "linglong_store"
+    "name": "linglong-store",
+    "schemes": ["linyapsss"]
   },
-  "files": [
-    "dist-electron",
-    "dist"
-  ],
+  "files": ["dist-electron","dist"],
   "linux": {
     "category": "Network;",
     "icon": "icons/256x256.svg",
-    "extraFiles": [
-      "icons"
-    ],
+    "extraFiles": ["icons"],
+    "desktop": {
+      "Name": "玲珑应用商店",
+      "Type": "Application",
+      "Terminal": false
+    },
     "target": [
       { "target": "deb", "arch": ["x64", "arm64"] },
       { "target": "AppImage", "arch": ["x64", "arm64"] },
@@ -30,17 +30,8 @@
     ]
   },
   "deb": {
-    "desktop": {
-      "Name": "玲珑应用商店",
-      "Comment": "玲珑应用商店",
-      "Terminal": false,
-      "Type": "Application"
-    },
-    "mimeTypes": [
-      "application/x-layer",
-      "inode/directory"
-    ],
     "depends": [],
+    "mimeTypes": ["application/x-layer", "inode/directory"],
     "recommends": ["linglong-bin", "linglong-box"]
   }
 }
