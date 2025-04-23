@@ -16,11 +16,11 @@
             </div>
             <h1>暂无数据</h1>
         </div>
-        <transition name="el-zoom-in-bottom">
+        <!-- <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0 && !loading" class="transition-update-btn">
                 <el-button type="primary" @click="updateAll" :disabled="systemConfigStore.updateStatus">一键更新</el-button>
             </div>
-        </transition>
+        </transition> -->
     </div>
 </template>
 <script setup lang="ts">
@@ -52,8 +52,10 @@ let currentIndex = 0;
 const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
     if (currentIndex < uniqueInstalledSet.length) {
         const { appId, version, module } = uniqueInstalledSet[currentIndex];
-        if (compareVersions(systemConfigStore.llVersion, '1.3.99') > 0) {
+        if (compareVersions(systemConfigStore.llVersion, '1.3.99') > 0 && compareVersions(systemConfigStore.llVersion, '1.7.7') < 0) {
             ipcRenderer.send("command", { command: `ll-cli --json search ${appId}`, appId: appId, version: version });
+        } else if (compareVersions(systemConfigStore.llVersion, '1.7.7') >= 0) {
+            ipcRenderer.send("command", { command: `ll-cli --json search ${appId} --all`, appId: appId, version: version });
         } else {
             ipcRenderer.send("command", { command: `ll-cli query ${appId}`, appId: appId, version: version });
         }
@@ -83,8 +85,8 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
                 }
             } else if (command.startsWith('ll-cli --json search')) {  // 1.4版本以后的命令
                 searchVersionItemList = result.trim() ? JSON.parse(result.trim()) : [];
+                // 过滤不同appId和时devel的数据
                 if (searchVersionItemList.length > 0) {
-                    // 过滤不同appId和时devel的数据
                     searchVersionItemList = searchVersionItemList.filter(item => item && item.module != 'devel' && item.id == appId);
                 }
             }
