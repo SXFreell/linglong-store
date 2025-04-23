@@ -210,9 +210,11 @@ onMounted(async () => {
         itemsCommand = `ll-cli query ${query.appId}`;
     } else if (compareVersions(llVersion, '1.3.99') >= 0 && compareVersions(llVersion, '1.5.0') < 0) {
         itemsCommand = `ll-cli --json search ${query.appId}`;
-    } else if (compareVersions(llVersion, '1.5.0') >= 0) {
+    } else if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.0') < 0) {
         let showBaseFlag = systemConfigStore.isShowBaseService;
         itemsCommand = showBaseFlag ? `ll-cli --json search ${query.appId} --type=all` : `ll-cli --json search ${query.appId}`;
+    } else if (compareVersions(llVersion, '1.7.7') >= 0) {
+        itemsCommand = `ll-cli --json search ${query.appId} --all`;
     } else {
         ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
         return;
