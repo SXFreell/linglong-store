@@ -298,7 +298,7 @@ const updateMessage = async (_event: any, text: string) => {
         } else {
             handleCancelUpdate();
         }
-    } else {
+    } else if (text == '现在使用的就是最新版本，不用更新' || text == '检查更新出错'){
         handleOtherUpdateMessages(text);
     }
 }
