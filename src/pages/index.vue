@@ -66,6 +66,37 @@ const downloadPercentMsg = ref('');
 // 环境检测
 const centerDialogVisible = ref(false);
 
+const COMMANDS = {
+    CHECK_LINGLONG: 'dpkg -l | grep linglong',
+    CHECK_ARCH: 'uname -m',
+    CHECK_OS: 'uname -a',
+};
+
+const MESSAGES = {
+    START_ENV_CHECK: "开始环境检测...",
+    CHECK_ARCH: "检测当前系统架构...",
+};
+
+// 提取发送命令的逻辑
+const sendCommand = (command: string) => {
+    ipcRenderer.send('command', { command });
+};
+
+// 提取消息弹窗逻辑
+const showConfirmDialog = async (message: string, confirmText: string, cancelText: string) => {
+    try {
+        await ElMessageBox.confirm(message, '提示', {
+            confirmButtonText: confirmText,
+            cancelButtonText: cancelText,
+            type: 'info',
+            center: true,
+        });
+        return true;
+    } catch {
+        return false;
+    }
+};
+
 // 命令执行返回结果
 const commandResult = async (_event: any, res: any) => {
     const code: string = res.code;
@@ -242,55 +273,62 @@ const commandResult = async (_event: any, res: any) => {
     }
 }
 // 监听主进程发送的更新消息
-const updateMessage = (_event: any, text: string) => {
+const updateMessage = async (_event: any, text: string) => {
     if (text == '检测到新版本，是否选择下载？') {
-        ElMessageBox.confirm(text, '提示', {
-            confirmButtonText: '下载',
-            cancelButtonText: '取消',
-            type: 'info',
-            center: true,
-        }).then(() => {
+        const confirmed = await showConfirmDialog(text, '下载', '取消');
+        if (confirmed) {
             message.value = "新版本更新下载中...";
             ipcRenderer.send('logger', 'info', "新版本更新下载中...");
-            downloadPercent.value = 0
-            ipcRenderer.send('downloadUpdate')
-            // //注意：“downloadProgress”事件可能存在无法触发的问题，只需要限制一下下载网速就好了
+            downloadPercent.value = 0;
+            ipcRenderer.send('downloadUpdate');
+            // 注意：“downloadProgress”事件可能存在无法触发的问题，只需要限制一下下载网速就好了
             ipcRenderer.on('downloadProgress', (_event, progressObj) => {
-                downloadPercent.value = parseInt(progressObj.percent || 0)
-                downloadPercentMsg.value = "下载进度：" + parseInt(progressObj.percent || 0) + "%，网速：" + Math.ceil(progressObj.bytesPerSecond / 1000) + " kb/s";
-            })
-        }).catch(() => {
-            message.value = "取消更新，商店版本检测完成...";
-            ipcRenderer.send('logger', 'warn', "取消更新，商店版本检测完成...");
-            message.value = "检测当前系统架构...";
-            ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-            ipcRenderer.send('command', { command: 'uname -m' });
-        })
+                downloadPercent.value = parseInt(progressObj.percent || 0);
+                downloadPercentMsg.value = `下载进度：${downloadPercent.value}%，网速：${Math.ceil(progressObj.bytesPerSecond / 1000)} kb/s`;
+            });
+        } else {
+            handleCancelUpdate();
+        }
     } else if (text == '下载完毕，是否立刻更新？'){
-        ElMessageBox.confirm(text, '提示', {
-            confirmButtonText: '确认',
-            cancelButtonText: '取消',
-            type: 'info',
-            center: true,
-        }).then(() => {
+        const confirmed = await showConfirmDialog(text, '确认', '取消');
+        if (confirmed) {
             message.value = "下载完毕，正在更新中...";
             ipcRenderer.send('logger', 'info', "下载完毕，正在更新中...");
             ipcRenderer.send('isUpdateNow');
-        }).catch(() => {
-            message.value = "取消安装，商店版本检测完成...";
-            ipcRenderer.send('logger', 'warn', "取消安装，商店版本检测完成...");
-            message.value = "检测当前系统架构...";
-            ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-            ipcRenderer.send('command', { command: 'uname -m' });
-        })
-    } else if (text == '现在使用的就是最新版本，不用更新' || text == '检查更新出错'){
-        message.value = text + ",商店版本检测完成...";
-        ipcRenderer.send('logger', 'info', text + ",商店版本检测完成...");
-        message.value = "检测当前系统架构...";
-        ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-        ipcRenderer.send('command', { command: 'uname -m' });
+        } else {
+            handleCancelUpdate();
+        }
+    } else {
+        handleOtherUpdateMessages(text);
     }
 }
+
+// 提取取消更新的逻辑
+const handleCancelUpdate = () => {
+    message.value = "取消更新，商店版本检测完成...";
+    ipcRenderer.send('logger', 'warn', "取消更新，商店版本检测完成...");
+    sendCommand('dpkg -l | grep linglong');
+    sendCommand('uname -a');
+    message.value = "开始环境检测...";
+    ipcRenderer.send('logger', 'info', "开始环境检测...");
+    message.value = "检测当前系统架构...";
+    ipcRenderer.send('logger', 'info', "检测当前系统架构...");
+    sendCommand('uname -m');
+};
+
+// 处理其他更新消息
+const handleOtherUpdateMessages = (text: string) => {
+    message.value = `${text}, 商店版本检测完成...`;
+    ipcRenderer.send('logger', 'info', `${text}, 商店版本检测完成...`);
+    sendCommand('dpkg -l | grep linglong');
+    sendCommand('uname -a');
+    message.value = "开始环境检测...";
+    ipcRenderer.send('logger', 'info', "开始环境检测...");
+    message.value = "检测当前系统架构...";
+    ipcRenderer.send('logger', 'info', "检测当前系统架构...");
+    sendCommand('uname -m');
+};
+
 // 退出按钮点击事件
 const exitBtnClick = () => {
     ElMessageBox.confirm('确定退出吗？', '提示', {
@@ -314,8 +352,20 @@ const autoInstallBtnClick = () => {
     ipcRenderer.send('to_install_linglong',baseURL); // 执行脚本文件
 }
 
+const setupIpcListeners = () => {
+    ipcRenderer.on('command-result', commandResult);
+    ipcRenderer.on('update-message', updateMessage);
+};
+
+const removeIpcListeners = () => {
+    ipcRenderer.removeListener('command-result', commandResult);
+    ipcRenderer.removeListener('update-message', updateMessage);
+    ipcRenderer.removeAllListeners('downloadProgress');
+};
+
 // 加载前执行
 onMounted(async () => {
+    setupIpcListeners();
     // 开启系统参数中的网络标识
     systemConfigStore.changeNetworkRunStatus(true);
     // 获取指纹码
@@ -339,11 +389,6 @@ onMounted(async () => {
         localStorage.setItem('categories', JSON.stringify(categories));
     })
     ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
-    
-    // 监听命令行执行结果  /  监听更新事件
-    ipcRenderer.on('command-result', commandResult);
-    ipcRenderer.on('update-message', updateMessage);
-    
     // 判断是否是开发模式，跳出版本检测
     if (process.env.NODE_ENV == "development") {
         message.value = "开发模式，跳过商店版本号检测...";
@@ -371,9 +416,7 @@ onMounted(async () => {
 });
 // 销毁前执行
 onBeforeUnmount(() => {
-    ipcRenderer.removeListener('command-result', commandResult);
-    ipcRenderer.removeListener('update-message', updateMessage);
-    ipcRenderer.removeAllListeners('downloadProgress');
+    removeIpcListeners();
 });
 </script>
 <style scoped>
