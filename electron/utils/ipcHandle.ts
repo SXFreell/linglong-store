@@ -196,6 +196,11 @@ const IPCHandler = (win: BrowserWindow) => {
         })
     })
 
+    ipcMain.on('reflush-version-list', (_event, appId) => {
+        ipcLog.info('reflush-version-list：', appId);
+        win.webContents.send("reflush-version-list-result", { code: 'close', appId: appId });
+    });
+
     /* ********** 通过网络服务获取客户端ip ********** */
     // 使用 ipify API 获取 IPv4/IPv6 地址
     // const response = await axios.get('https://api64.ipify.org?format=json');

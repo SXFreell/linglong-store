@@ -70,7 +70,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ipcRenderer } from 'electron';
 import { CardFace } from '@/interface';
 import { onBeforeRouteLeave } from 'vue-router';
@@ -186,41 +186,57 @@ const handleRunApp = (item: CardFace) => {
     ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
 }
 
-// 页面启动时加载
-onMounted(async () => {
+const searchVersions = (appId: string) => {
     // 1.清除表单数据
     difVersionItemsStore.clearItems();
-    // 监听获取版本列表结果
-    ipcRenderer.once('command-result', async (_event: any, res: any) => {
-        const command: string = res.param.command;
-        if (res.code != 'stdout') {
-            ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
-            return;
-        }
-        if (command.startsWith("ll-cli query")) {
-            difVersionItemsStore.initDifVersionItemsOld(res.result, query);
-        } else if (command.startsWith("ll-cli --json search")) {
-            await difVersionItemsStore.initDifVersionItems(res.result, query);
-        }
-        loading.value = false;
-    });
-    // 2.发送命令到主线程获取版本列表结果
+    // 2.调用查询方法
     let itemsCommand = ``;
     if (compareVersions(llVersion, '1.3.99') < 0) {
-        itemsCommand = `ll-cli query ${query.appId}`;
+        itemsCommand = `ll-cli query ${appId}`;
     } else if (compareVersions(llVersion, '1.3.99') >= 0 && compareVersions(llVersion, '1.5.0') < 0) {
-        itemsCommand = `ll-cli --json search ${query.appId}`;
+        itemsCommand = `ll-cli --json search ${appId}`;
     } else if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.0') < 0) {
         let showBaseFlag = systemConfigStore.isShowBaseService;
-        itemsCommand = showBaseFlag ? `ll-cli --json search ${query.appId} --type=all` : `ll-cli --json search ${query.appId}`;
+        itemsCommand = showBaseFlag ? `ll-cli --json search ${appId} --type=all` : `ll-cli --json search ${appId}`;
     } else if (compareVersions(llVersion, '1.7.7') >= 0) {
-        itemsCommand = `ll-cli --json search ${query.appId} --all`;
+        itemsCommand = `ll-cli --json search ${appId} --all`;
     } else {
         ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
         return;
     }
     ipcRenderer.send("command", { 'command': itemsCommand });
+}
+
+const difVersionItemsCommand = async (_event: any, res: any) => {
+    const command: string = res.param.command;
+    if (res.code != 'stdout') {
+        ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
+        return;
+    }
+    if (command.startsWith("ll-cli query")) {
+        difVersionItemsStore.initDifVersionItemsOld(res.result, query);
+    } else if (command.startsWith("ll-cli --json search")) {
+        await difVersionItemsStore.initDifVersionItems(res.result, query);
+    }
+    loading.value = false;
+}
+
+// 页面启动时加载
+onMounted(async () => {
+    // 监听获取版本列表结果
+    ipcRenderer.on('command-result', difVersionItemsCommand);
+    // 2.发送命令到主线程获取版本列表结果
+    searchVersions(query.appId as string);
+    // 监听安装结果后版本刷新
+    ipcRenderer.on('reflush-version-list-result', (_event: any, res: any) => {
+        searchVersions(res.appId);
+    });
 })
+
+onBeforeUnmount(() => {
+    ipcRenderer.removeListener('command-result', difVersionItemsCommand);
+});
+
 // 路由跳转离开前
 onBeforeRouteLeave((to: any, from: any, next: any) => {
     const { meta: toMeta } = to;

@@ -177,6 +177,8 @@ const commandResult = (_event: any, res: any) => {
             getInstalledItemsCommand = "ll-cli --json list --type=all";
         }
         ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
+        // 刷新版本列表
+        ipcRenderer.send('reflush-version-list', installedEntity.appId);
     }
 }
 const linglongResult = (_event: any, res: any) => {
@@ -236,6 +238,8 @@ const linglongResult = (_event: any, res: any) => {
                 getInstalledItemsCommand = "ll-cli --json list --type=all";
             }
             ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
+            // 刷新版本列表
+            ipcRenderer.send('reflush-version-list', installedEntity.appId);
         } else {
             ElNotification({ title: '操作异常!', message: downloadLogMsg, type: 'error', duration: 5000, dangerouslyUseHTMLString: true });
             flag.value = true;
