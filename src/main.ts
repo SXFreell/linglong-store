@@ -12,8 +12,6 @@ import './style.css'
 import App from './App.vue'
 import router from './router'
 
-import './node-api'
-
 const app = createApp(App);
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
     app.component(key, component)
