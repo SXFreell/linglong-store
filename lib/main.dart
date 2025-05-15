@@ -18,16 +18,27 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FluentApp(
-      theme: FluentThemeData(
-        brightness: Brightness.light,
-        accentColor: Colors.blue,
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(8),
+        // color: Colors.transparent, // 背景颜色
+        border: Border.all(
+          color: Colors.black.withAlpha(30), // 边框颜色
+          width: 1, // 边框宽度
+        ),
       ),
-      darkTheme: FluentThemeData(
-        brightness: Brightness.dark,
-        accentColor: Colors.blue,
-      ),
-      home: const Layout(),
+      clipBehavior: Clip.antiAlias,
+      child: FluentApp(
+        theme: FluentThemeData(
+          brightness: Brightness.light,
+          accentColor: Colors.blue,
+        ),
+        darkTheme: FluentThemeData(
+          brightness: Brightness.dark,
+          accentColor: Colors.blue,
+        ),
+        home: const Layout(),
+      )
     );
   }
 }
