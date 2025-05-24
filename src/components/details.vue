@@ -37,14 +37,14 @@
         <div class="title">版本选择</div>
         <el-table class="version-table" :data="difVersionItemsStore.difVersionItemList" border stripe v-loading="loading">
             <el-table-column prop="version" label="版本号" header-align="center" width="120" show-overflow-tooltip/>
-            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100" />
-            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100" />
-            <el-table-column prop="module" label="模式" header-align="center" align="center" width="100" />
-            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="100" />
-            <el-table-column label="文件大小" header-align="center" align="center" width="120" :formatter="formatSize" />
-            <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount" />
-            <el-table-column label="上架时间" header-align="center" align="center" width="150" :formatter="formatUploadTime" />
-            <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime" />
+            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100" show-overflow-tooltip/>
+            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100" show-overflow-tooltip/>
+            <el-table-column prop="module" label="模式" header-align="center" align="center" width="100" show-overflow-tooltip/>
+            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="100" show-overflow-tooltip/>
+            <el-table-column label="文件大小" header-align="center" align="center" width="120" :formatter="formatSize" show-overflow-tooltip/>
+            <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount" show-overflow-tooltip/>
+            <el-table-column label="上架时间" header-align="center" align="center" width="150" :formatter="formatUploadTime" show-overflow-tooltip/>
+            <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime" show-overflow-tooltip/>
             <el-table-column fixed="right" label="操作" header-align="center" align="center" width="160">
                 <template #default="scope">
                     <el-button class="uninstall-btn"
@@ -77,6 +77,7 @@ import { onBeforeRouteLeave } from 'vue-router';
 import { ElNotification, TableColumnCtx } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
+import { parseRef } from "@/util/refParam";
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
@@ -134,9 +135,8 @@ function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: an
 function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
     const runtime = row.runtime;
     if (!runtime) return '';
-    const values: string[] = (runtime as string).split("/");
-    const value = values.length > 2 ? values[0] + "/" + values[1] : values[0];
-    return value; // 做一些格式化处理并返回字符串
+    let packs = parseRef(runtime);
+    return `${packs.appId}/${packs.version}`; // 做一些格式化处理并返回字符串
 };
 
 /**
@@ -185,28 +185,7 @@ const handleRunApp = (item: CardFace) => {
     ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
     ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
 }
-
-const searchVersions = (appId: string) => {
-    // 1.清除表单数据
-    difVersionItemsStore.clearItems();
-    // 2.调用查询方法
-    let itemsCommand = ``;
-    if (compareVersions(llVersion, '1.3.99') < 0) {
-        itemsCommand = `ll-cli query ${appId}`;
-    } else if (compareVersions(llVersion, '1.3.99') >= 0 && compareVersions(llVersion, '1.5.0') < 0) {
-        itemsCommand = `ll-cli --json search ${appId}`;
-    } else if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.0') < 0) {
-        let showBaseFlag = systemConfigStore.isShowBaseService;
-        itemsCommand = showBaseFlag ? `ll-cli --json search ${appId} --type=all` : `ll-cli --json search ${appId}`;
-    } else if (compareVersions(llVersion, '1.7.7') >= 0) {
-        itemsCommand = `ll-cli --json search ${appId} --all`;
-    } else {
-        ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
-        return;
-    }
-    ipcRenderer.send("command", { 'command': itemsCommand });
-}
-
+// 监听命令结果
 const difVersionItemsCommand = async (_event: any, res: any) => {
     const command: string = res.param.command;
     if (res.code != 'stdout') {
@@ -220,21 +199,41 @@ const difVersionItemsCommand = async (_event: any, res: any) => {
     }
     loading.value = false;
 }
+// 监听版本刷新结果
+const reflushVersionList = (_event: any, res: any) => {
+    // 1.清除表单数据
+    difVersionItemsStore.clearItems();
+    // 2.调用查询方法
+    let itemsCommand = ``;
+    if (compareVersions(llVersion, '1.3.99') < 0) {
+        itemsCommand = `ll-cli query ${res.appId}`;
+    } else if (compareVersions(llVersion, '1.3.99') >= 0 && compareVersions(llVersion, '1.5.0') < 0) {
+        itemsCommand = `ll-cli --json search ${res.appId}`;
+    } else if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.0') < 0) {
+        let showBaseFlag = systemConfigStore.isShowBaseService;
+        itemsCommand = showBaseFlag ? `ll-cli --json search ${res.appId} --type=all` : `ll-cli --json search ${res.appId}`;
+    } else if (compareVersions(llVersion, '1.7.7') >= 0) {
+        itemsCommand = `ll-cli --json search ${res.appId} --all`;
+    } else {
+        ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
+        return;
+    }
+    ipcRenderer.send("command", { 'command': itemsCommand });
+}
 
 // 页面启动时加载
 onMounted(async () => {
     // 监听获取版本列表结果
     ipcRenderer.on('command-result', difVersionItemsCommand);
-    // 2.发送命令到主线程获取版本列表结果
-    searchVersions(query.appId as string);
     // 监听安装结果后版本刷新
-    ipcRenderer.on('reflush-version-list-result', (_event: any, res: any) => {
-        searchVersions(res.appId);
-    });
+    ipcRenderer.on('reflush-version-list-result', reflushVersionList);
+    // 刷新版本列表
+    ipcRenderer.send('reflush-version-list', query.appId as string);
 })
-
+// 页面销毁前执行
 onBeforeUnmount(() => {
     ipcRenderer.removeListener('command-result', difVersionItemsCommand);
+    ipcRenderer.removeListener('reflush-version-list-result', reflushVersionList);
 });
 
 // 路由跳转离开前
