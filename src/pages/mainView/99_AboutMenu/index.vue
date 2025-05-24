@@ -167,7 +167,7 @@ const updateMessage = (_event: any, text: string) => {
   }
 }
 async function getLinglongCount() {
-  const res = await getSearchAppList({ repoName: systemConfigStore.defaultRepoName, pageNo: 1, pageSize: 100000 });
+  const res = await getSearchAppList({ repoName: systemConfigStore.defaultRepoName, pageNo: 1, pageSize: 1 });
   if (res.code == 200) {
     let count = res.data.total;
     systemConfigStore.changeLinglongCount(count);

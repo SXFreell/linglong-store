@@ -17,10 +17,11 @@
         </div>
     </div>
     <div class="footer" v-if="downloadPercent > 0">
-        <el-progress :percentage="downloadPercent" :stroke-width="10" status="success" striped striped-flow :duration="10" :show-text="false" />
+        <el-progress :percentage="downloadPercent" :stroke-width="10" status="success" striped striped-flow
+            :duration="10" :show-text="false" />
     </div>
-    <el-dialog v-model="centerDialogVisible" width="500" center destroy-on-close :close-on-click-modal="false" :show-close="false"
-        :close-on-press-escape="false">
+    <el-dialog v-model="centerDialogVisible" width="500" center destroy-on-close :close-on-click-modal="false"
+        :show-close="false" :close-on-press-escape="false">
         <template #header>
             <span style="user-select: none;color: black;font-weight: bold;">警告</span>
         </template>
@@ -50,8 +51,7 @@ import FingerprintJS from '@fingerprintjs/fingerprintjs'
 import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
-import { getSearchAppList } from '@/api';
-import { categoryItem, pageResult } from '@/interface';
+import { categoryItem, execEntity } from '@/interface';
 
 const systemConfigStore = useSystemConfigStore();
 const installedItemsStore = useInstalledItemsStore();
@@ -65,17 +65,6 @@ const downloadPercent = ref(0);
 const downloadPercentMsg = ref('');
 // 环境检测
 const centerDialogVisible = ref(false);
-
-const COMMANDS = {
-    CHECK_LINGLONG: 'dpkg -l | grep linglong',
-    CHECK_ARCH: 'uname -m',
-    CHECK_OS: 'uname -a',
-};
-
-const MESSAGES = {
-    START_ENV_CHECK: "开始环境检测...",
-    CHECK_ARCH: "检测当前系统架构...",
-};
 
 // 提取发送命令的逻辑
 const sendCommand = (command: string) => {
@@ -102,44 +91,8 @@ const commandResult = async (_event: any, res: any) => {
     const code: string = res.code;
     const result: any = res.result;
     const command: string = res.param.command;
-    if (command == 'dpkg -l | grep linglong') {
-        systemConfigStore.changeDetailMsg(res.result);
-    }
-    if (command == 'uname -a') {
-        systemConfigStore.changeOsVersion(res.result);
-    }
-    if (command == 'uname -m') {
-        if (code == 'stdout') {
-            systemConfigStore.changeArch(result.trim());
-            message.value = "系统架构检测完成...";
-            ipcRenderer.send('logger', 'info', "系统架构检测完成...");
-            message.value = "检测是否存在玲珑环境...";
-            ipcRenderer.send('logger', 'info', "检测是否存在玲珑环境...");
-            ipcRenderer.send('command', { command: 'll-cli --help' });
-        } else {
-            message.value = "系统架构检测异常,当前非Linux环境...";
-            ipcRenderer.send('logger', 'error', "系统架构检测异常,当前非Linux环境...");
-        }
-    }
-    if (command == 'll-cli --help') {
-        if(code == 'stdout') {
-            message.value = "玲珑环境存在...";
-            ipcRenderer.send('logger', 'info', "玲珑环境存在...");
-            message.value = "检测玲珑环境版本...";
-            ipcRenderer.send('logger', 'info', "检测玲珑环境版本...");
-            ipcRenderer.send('command', { command: 'll-cli --json --version' });
-            // 获取玲珑包程序(linglong-bin)的版本号
-            ipcRenderer.send("command",{ command: 'apt-cache policy linglong-bin' })
-            // 获取玲珑包当前使用的仓库名
-            ipcRenderer.send("command",{ command: 'll-cli repo show' })
-        } else {
-            message.value = "检测玲珑环境不存在...";
-            ipcRenderer.send('logger', 'error', "检测玲珑环境不存在...");
-            centerDialogVisible.value = true; // 显示弹窗
-        }
-    }
     if (command == 'll-cli --json --version') {
-        if(code == 'stdout') {
+        if (code == 'stdout') {
             const tempVersion = result.trim();
             // 判断是否为对象并且具有 version 字段
             if (tempVersion.startsWith('{') && tempVersion.endsWith('}') && 'version' in JSON.parse(tempVersion)) {
@@ -155,8 +108,8 @@ const commandResult = async (_event: any, res: any) => {
                 const items: RegExpMatchArray | null = tempVersion.match(/'[^']+'|\S+/g);
                 if (items) {
                     if (items.length == 3 || items.length == 2) {
-                        systemConfigStore.changeLlVersion(items[items.length -1]);
-                    } 
+                        systemConfigStore.changeLlVersion(items[items.length - 1]);
+                    }
                 } else {
                     systemConfigStore.changeLlVersion('1.3.8');
                     ipcRenderer.send('logger', 'error', "非异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
@@ -176,7 +129,7 @@ const commandResult = async (_event: any, res: any) => {
             ipcRenderer.send("command", { command: "ll-cli --json list" });
         }
     }
-    if (command =='ll-cli --json list' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
+    if (command == 'll-cli --json list' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
         if (code == 'stdout') {
             if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
                 installedItemsStore.initInstalledItemsOld(result);
@@ -192,29 +145,14 @@ const commandResult = async (_event: any, res: any) => {
             message.value = "已安装的玲珑程序检测异常...";
             ipcRenderer.send('logger', 'error', "已安装的玲珑程序检测异常...");
         }
-        message.value = "正在获取网络源玲珑程序列表...";
-        ipcRenderer.send('logger', 'info', "正在获取网络源玲珑程序列表...");
-        let response = await getSearchAppList({
-            repoName: systemConfigStore.defaultRepoName,
-            arch: systemConfigStore.arch, 
-            pageNo: 1, pageSize: 1 
-        });
-        if (response.code == 200) {
-            systemConfigStore.changeLinglongCount((response.data as unknown as pageResult).total);
-            message.value = "网络源玲珑程序列表获取完成...";
-            ipcRenderer.send('logger', 'info', "网络源玲珑程序列表获取完成...");
-        } else {
-            message.value = "网络源玲珑程序列表获取失败...";
-            ipcRenderer.send('logger', 'error', "网络源玲珑程序列表获取失败...");
-        }
         message.value = "加载完成...";
         downloadPercentMsg.value = "";
         ipcRenderer.send('logger', 'info', "加载完成...");
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
         if (import.meta.env.MODE != "development") {
-            ipcRenderer.send('appLogin', { 
-                url: import.meta.env.VITE_SERVER_URL + "/visit/appLogin", 
+            ipcRenderer.send('appLogin', {
+                url: import.meta.env.VITE_SERVER_URL + "/visit/appLogin",
                 llVersion: systemConfigStore.llVersion,
                 linglongBinVersion: systemConfigStore.linglongBinVersion,
                 detailMsg: systemConfigStore.detailMsg,
@@ -222,54 +160,13 @@ const commandResult = async (_event: any, res: any) => {
                 defaultRepoName: systemConfigStore.defaultRepoName,
                 appVersion: pkg.version,
                 visitorId: systemConfigStore.visitorId,
-                clientIp: systemConfigStore.clientIP 
+                clientIp: systemConfigStore.clientIP
             })
         }
         // 延时1000毫秒进入
         await new Promise(resolve => setTimeout(resolve, 1000));
         // 跳转到主界面
         router.push('/main_view');
-    }
-    if(command == 'apt-cache policy linglong-bin') {
-        const lines = result.split('\n');
-        let installedVersion = '';
-        lines.forEach((line: string) => {
-            if (line.includes('已安装：')) {
-                installedVersion = line.split('已安装：')[1].trim();
-            } else if (line.trim().startsWith('Installed:')) {
-                installedVersion = line.split('Installed:')[1].trim();
-            }
-        });
-        ipcRenderer.send('logger', 'info', '已安装版本：' + installedVersion);
-        systemConfigStore.changeLinglongBinVersion(installedVersion);
-    }
-    if(command == 'll-cli repo show') {
-        if (code == 'error') {
-            console.log('resultresult',result);
-            ElMessageBox.confirm('当前旧数据需要迁移后才能使用，确认开始执行吗？', '提示', {
-                confirmButtonText: '确认',
-                cancelButtonText: '取消',
-                type: 'info',
-                center: true,
-            }).then(async () => {
-                ipcRenderer.send('command', { command: 'll-cli migrate' });
-                ipcRenderer.send('logger', 'info', "当前旧数据开始执行迁移...");
-                // 延时1000毫秒进入
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                window.close();
-            }).catch(() => {
-                window.close();
-            })
-        }
-        const lines = result.split('\n');
-        let defaultRepoName = '';
-        lines.forEach((line: string) => {
-            if (line.includes('Default:')) {
-                defaultRepoName = line.split('Default:')[1].trim();
-            }
-        });
-        ipcRenderer.send('logger', 'info', '默认仓库名：' + defaultRepoName);
-        systemConfigStore.changeDefaultRepoName(defaultRepoName);
     }
 }
 // 监听主进程发送的更新消息
@@ -287,58 +184,142 @@ const updateMessage = async (_event: any, text: string) => {
                 downloadPercentMsg.value = `下载进度：${downloadPercent.value}%，网速：${Math.ceil(progressObj.bytesPerSecond / 1000)} kb/s`;
             });
         } else {
-            handleCancelUpdate();
+            message.value = "取消更新，商店版本检测完成...";
+            ipcRenderer.send('logger', 'warn', "取消更新，商店版本检测完成...");
+            startEnvCheck();
         }
-    } else if (text == '下载完毕，是否立刻更新？'){
+    } else if (text == '下载完毕，是否立刻更新？') {
         const confirmed = await showConfirmDialog(text, '确认', '取消');
         if (confirmed) {
             message.value = "下载完毕，正在更新中...";
             ipcRenderer.send('logger', 'info', "下载完毕，正在更新中...");
             ipcRenderer.send('isUpdateNow');
         } else {
-            handleCancelUpdate();
+            message.value = "取消更新，商店版本检测完成...";
+            ipcRenderer.send('logger', 'warn', "取消更新，商店版本检测完成...");
+            startEnvCheck();
         }
-    } else if (text == '现在使用的就是最新版本，不用更新' || text == '检查更新出错'){
-        handleOtherUpdateMessages(text);
+    } else if (text == '现在使用的就是最新版本，不用更新' || text == '检查更新出错') {
+        message.value = `${text}, 商店版本检测完成...`;
+        ipcRenderer.send('logger', 'info', `${text}, 商店版本检测完成...`);
+        startEnvCheck();
     }
 }
-
-// 提取取消更新的逻辑
-const handleCancelUpdate = () => {
-    message.value = "取消更新，商店版本检测完成...";
-    ipcRenderer.send('logger', 'warn', "取消更新，商店版本检测完成...");
-    sendCommand('dpkg -l | grep linglong');
-    sendCommand('uname -a');
-    message.value = "开始环境检测...";
-    ipcRenderer.send('logger', 'info', "开始环境检测...");
+// 环境检测开始阶段
+const startEnvCheck = () => {
+    // 获取系统信息
+    message.value = "准备开始环境检测...";
+    ipcRenderer.send('logger', 'info', "准备开始环境检测...");
+    ipcRenderer.once('uname-a-result', (_event: any, res: execEntity) => systemConfigStore.changeOsVersion(res.stdout));
+    ipcRenderer.send('uname-a');
+    // 获取系统架构
     message.value = "检测当前系统架构...";
     ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-    sendCommand('uname -m');
-};
-
-// 处理其他更新消息
-const handleOtherUpdateMessages = (text: string) => {
-    message.value = `${text}, 商店版本检测完成...`;
-    ipcRenderer.send('logger', 'info', `${text}, 商店版本检测完成...`);
-    sendCommand('dpkg -l | grep linglong');
-    sendCommand('uname -a');
-    message.value = "开始环境检测...";
-    ipcRenderer.send('logger', 'info', "开始环境检测...");
-    message.value = "检测当前系统架构...";
-    ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-    sendCommand('uname -m');
-};
+    ipcRenderer.once('uname-m-result', (_event: any, res: execEntity) => {
+        if (res.stdout) {
+            systemConfigStore.changeArch(res.stdout.trim());
+            message.value = "系统架构检测完成...";
+            ipcRenderer.send('logger', 'info', "系统架构检测完成...");
+            return;
+        }
+        message.value = "系统架构检测异常,当前非Linux环境...";
+        ipcRenderer.send('logger', 'error', "系统架构检测异常,当前非Linux环境...");
+    });
+    ipcRenderer.send('uname-m');
+    // 获取组件基本信息
+    ipcRenderer.once('dpkg-linyaps-result', (_event: any, res: execEntity) => systemConfigStore.changeDetailMsg(res.stdout));
+    ipcRenderer.send('dpkg-linyaps');
+    // 获取玲珑包核心程序(linglong-bin)的版本号
+    ipcRenderer.once('apt-linyaps-bin-result', (_event: any, res: execEntity) => {
+        if (res.stdout) {
+            const lines = res.stdout.split('\n');
+            let installedVersion = '';
+            lines.forEach((line: string) => {
+                if (line.includes('已安装：')) {
+                    installedVersion = line.split('已安装：')[1].trim();
+                } else if (line.trim().startsWith('Installed:')) {
+                    installedVersion = line.split('Installed:')[1].trim();
+                }
+            });
+            ipcRenderer.send('logger', 'info', '已安装版本：' + installedVersion);
+            systemConfigStore.changeLinglongBinVersion(installedVersion);
+        }
+    });
+    ipcRenderer.send('apt-linyaps-bin');
+    // 检查是否存在玲珑环境
+    message.value = "检测玲珑基础环境是否存在...";
+    ipcRenderer.send('logger', 'info', "检测玲珑基础环境是否存在...");
+    ipcRenderer.once('linyaps-exist-result', (_event: any, res: execEntity) => {
+        if (res.stdout) {
+            message.value = "玲珑基础环境已存在...";
+            ipcRenderer.send('logger', 'info', "玲珑基础环境已存在...");
+            checkLinyapsSomeThing();
+            return;
+        }
+        message.value = "检测玲珑基础环境不存在...";
+        ipcRenderer.send('logger', 'error', "检测玲珑基础环境不存在...");
+        centerDialogVisible.value = true; // 显示弹窗
+    });
+    ipcRenderer.send('linyaps-exist');
+}
+// 检测玲珑环境的一些东西
+const checkLinyapsSomeThing = () => {
+    // 获取玲珑包当前使用的仓库名
+    ipcRenderer.once('linyaps-repo-result', (_event: any, res: execEntity) => {
+        if (res.stdout) {
+            ipcRenderer.send('logger', 'info', "检查当前玲珑基础环境使用的仓库源...");
+            const lines = res.stdout.replace(/\x1B\[[0-9;]*m/g, '') // 去除ANSI颜色控制符
+                .split('\n').filter(line => line.trim() !== '');
+            const defaultLine = lines[0];
+            const defaultRepo = defaultLine.split(':')[1].trim();
+            ipcRenderer.send('logger', 'info', '当前默认仓库源：' + defaultRepo);
+            systemConfigStore.changeDefaultRepoName(defaultRepo);
+            // 跳过默认和标题行
+            const repoLines = lines.slice(2); 
+            const repos = repoLines.map(line => {
+                // 使用正则或者 split 拆分：假设字段之间用多个空格隔开
+                const parts = line.trim().split(/\s+/);
+                return {
+                    name: parts[0],
+                    url: parts[1],
+                    alias: parts[2],
+                    priority: parts[3]
+                };
+            });
+            systemConfigStore.changeSourceUrl(repos);
+            return { default: defaultRepo, repos };
+        }
+        // ElMessageBox.confirm('当前旧数据需要迁移后才能使用，确认开始执行吗？', '提示', {
+        //     confirmButtonText: '确认',
+        //     cancelButtonText: '取消',
+        //     type: 'info',
+        //     center: true,
+        // }).then(async () => {
+        //     ipcRenderer.send('command', { command: 'll-cli migrate' });
+        //     ipcRenderer.send('logger', 'info', "当前旧数据开始执行迁移...");
+        //     // 延时1000毫秒进入
+        //     await new Promise(resolve => setTimeout(resolve, 1000));
+        //     window.close();
+        // }).catch(() => {
+        //     window.close();
+        // })
+        message.value = "检测玲珑环境不存在...";
+        ipcRenderer.send('logger', 'error', "检测玲珑环境不存在...");
+    });
+    ipcRenderer.send('linyaps-repo');
+    // 检测玲珑基础环境版本号    
+    message.value = "检测玲珑基础环境版本号...";
+    ipcRenderer.send('logger', 'info', "检测玲珑基础环境版本号...");
+    // ipcRenderer.send('command', { command: 'll-cli --json --version' });
+    sendCommand('ll-cli --json --version');
+}
 
 // 退出按钮点击事件
 const exitBtnClick = () => {
     ElMessageBox.confirm('确定退出吗？', '提示', {
-        confirmButtonText: '确认',
-        cancelButtonText: '取消',
-        type: 'info',
-        center: true,
-    }).then(() => {
-        window.close();
-    })
+        confirmButtonText: '确认', cancelButtonText: '取消',
+        type: 'info', center: true,
+    }).then(() => window.close())
 }
 // 手动安装点击事件
 const manualInstallBtnClick = () => {
@@ -349,18 +330,12 @@ const manualInstallBtnClick = () => {
 const autoInstallBtnClick = () => {
     const baseURL = import.meta.env.VITE_SERVER_URL as string;
     centerDialogVisible.value = false
-    ipcRenderer.send('to_install_linglong',baseURL); // 执行脚本文件
+    ipcRenderer.send('to_install_linglong', baseURL); // 执行脚本文件
 }
-
+// 设置ipc监听器
 const setupIpcListeners = () => {
     ipcRenderer.on('command-result', commandResult);
     ipcRenderer.on('update-message', updateMessage);
-};
-
-const removeIpcListeners = () => {
-    ipcRenderer.removeListener('command-result', commandResult);
-    ipcRenderer.removeListener('update-message', updateMessage);
-    ipcRenderer.removeAllListeners('downloadProgress');
 };
 
 // 加载前执行
@@ -374,10 +349,10 @@ onMounted(async () => {
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
     // 获取客户端ip
-    ipcRenderer.once('fetchClientIP-result',(_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query))
+    ipcRenderer.once('fetchClientIP-result', (_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query));
     ipcRenderer.send('fetchClientIP');
     // 获取分类列表
-    ipcRenderer.once('categories-result',(_event: any, res: any) => {
+    ipcRenderer.once('categories-result', (_event: any, res: any) => {
         const categories = [{ "categoryId": "", "categoryName": "全部程序" }] as categoryItem[];
         if (res.code == 200) {
             const categoriesByIpc = (res.data as categoryItem[]).map(({ categoryId, categoryName }) => ({ categoryId, categoryName }));
@@ -390,33 +365,25 @@ onMounted(async () => {
     })
     ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     // 判断是否是开发模式，跳出版本检测
-    if (process.env.NODE_ENV == "development") {
+    if (process.env.NODE_ENV != "development" && systemConfigStore.autoCheckUpdate) {
+        message.value = "正在检测商店版本号...";
+        ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
+        ipcRenderer.send('checkForUpdate');
+        return;
+    } else if (process.env.NODE_ENV == "development") {
         message.value = "开发模式，跳过商店版本号检测...";
-        ipcRenderer.send('logger', 'warn', "开发模式，跳过商店版本号检测...");
+        ipcRenderer.send('logger', 'info', "开发模式，跳过商店版本号检测...");
     } else {
-        // 开启先检测商店版本号是否有更新
-        if (systemConfigStore.autoCheckUpdate) {
-            message.value = "正在检测商店版本号...";
-            ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
-            ipcRenderer.send('checkForUpdate');
-            return;   
-        }
         message.value = "跳过商店版本号检测...";
-        ipcRenderer.send('logger', 'warn', "跳过商店版本号检测...");
+        ipcRenderer.send('logger', 'info', "跳过商店版本号检测...");
     }
-    // 获取组件基本信息
-    ipcRenderer.send('command', { command: 'dpkg -l | grep linglong' });
-    // 获取系统信息
-    ipcRenderer.send('command', { command: 'uname -a' });
-    message.value = "开始环境检测...";
-    ipcRenderer.send('logger', 'info', "开始环境检测...");
-    message.value = "检测当前系统架构...";
-    ipcRenderer.send('logger', 'info', "检测当前系统架构...");
-    ipcRenderer.send('command', { command: 'uname -m' });
+    startEnvCheck();
 });
 // 销毁前执行
 onBeforeUnmount(() => {
-    removeIpcListeners();
+    ipcRenderer.removeListener('command-result', commandResult);
+    ipcRenderer.removeListener('update-message', updateMessage);
+    ipcRenderer.removeAllListeners('downloadProgress');
 });
 </script>
 <style scoped>

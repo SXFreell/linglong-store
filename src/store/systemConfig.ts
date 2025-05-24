@@ -9,8 +9,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         arch: ref('x86_64'),
         // 玲珑版本
         llVersion: ref('1.3.8'),
-        // 玲珑源地址
-        sourceUrl: ref('https://mirror-repo-linglong.deepin.com'),
+        // 玲珑源地址 'https://mirror-repo-linglong.deepin.com'
+        sourceUrl: ref<Record<string, any>>(),
         // 是否显示非当前架构程序
         isShowDisArch: ref(true),
         // 是否显示无图标玲珑程序
@@ -74,7 +74,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             that.llVersion = llVersion;
         },
         // 修改玲珑源地址
-        changeSourceUrl(inSourceUrl: string){
+        changeSourceUrl(inSourceUrl: Record<string, any>){
             const that = this;
             that.sourceUrl = inSourceUrl;
         },

@@ -186,3 +186,15 @@ export interface categoryItem {
     categoryId: string,
     categoryName: string,
 }
+
+/**
+ * 执行命令返回对象
+ * @param stdout 标准输出
+ * @param stderr 错误输出
+ * @param error 错误信息
+ */
+export interface execEntity {
+    stdout: string,
+    stderr: string,
+    error: string,
+}

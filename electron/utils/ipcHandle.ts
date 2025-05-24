@@ -201,6 +201,54 @@ const IPCHandler = (win: BrowserWindow) => {
         win.webContents.send("reflush-version-list-result", { code: 'close', appId: appId });
     });
 
+    /* ****************** 命令 uname -a ******************* */
+    ipcMain.on("uname-a", () => {
+        exec("uname -a", (error, stdout, stderr) => {
+            ipcLog.info('uname -a >>', { error, stdout, stderr });
+            win.webContents.send("uname-a-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 uname -m ******************* */
+    ipcMain.on("uname-m", () => {
+        exec("uname -m", (error, stdout, stderr) => {
+            ipcLog.info('uname -m >>', { error, stdout, stderr });
+            win.webContents.send("uname-m-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 dpkg -l | grep linglong ******************* */
+    ipcMain.on("dpkg-linyaps", () => {
+        exec("dpkg -l | grep linglong", (error, stdout, stderr) => {
+            ipcLog.info('dpkg -l | grep linglong >>', { error, stdout, stderr });
+            win.webContents.send("dpkg-linyaps-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 apt-cache policy linglong-bin ******************* */
+    ipcMain.on("apt-linyaps-bin", () => {
+        exec("apt-cache policy linglong-bin", (error, stdout, stderr) => {
+            ipcLog.info('apt-cache policy linglong-bin >>', { error, stdout, stderr });
+            win.webContents.send("apt-linyaps-bin-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli --help ******************* */
+    ipcMain.on("linyaps-exist", () => {
+        exec("ll-cli --help", (error, stdout, stderr) => {
+            ipcLog.info('ll-cli --help >>', { error, stdout, stderr });
+            win.webContents.send("linyaps-exist-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli repo show ******************* */
+    ipcMain.on("linyaps-repo", () => {
+        exec("ll-cli repo show", (error, stdout, stderr) => {
+            ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
+            win.webContents.send("linyaps-repo-result", { error, stdout, stderr });
+        });
+    });
+
     /* ********** 通过网络服务获取客户端ip ********** */
     // 使用 ipify API 获取 IPv4/IPv6 地址
     // const response = await axios.get('https://api64.ipify.org?format=json');
