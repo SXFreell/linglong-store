@@ -8,6 +8,13 @@
       </el-checkbox>
     </div>
     <hr>
+    <!-- <li><a class="title">仓库源设置</a></li>
+    <div style="margin-left: 30px;">
+      <el-select v-model="defaultRepo" placeholder="选择仓库源" style="width: 160px">
+        <el-option v-for="item in sourceUrl" :key="item.name" :label="item.name" :value="item.url" />
+      </el-select>
+    </div>
+    <hr> -->
     <li><a class="title">卸载程序</a></li>
     <div style="margin-left: 30px;">
       <el-checkbox v-model="isShowBaseService" size="large" @change="checkedBaseService(isShowBaseService)">
@@ -31,14 +38,17 @@ import { useSystemConfigStore } from "@/store/systemConfig";
 
 const systemConfigStore = useSystemConfigStore();
 
-// 默认玲珑仓库对象
-let defaultRepo = ref('');
 // 自动检测更新
 let autoCheckUpdate = ref(true);
+// 默认玲珑仓库对象
+let defaultRepo = ref('');
+// 仓库源地址
+let sourceUrl = ref<Record<string, any>>();
 // 是否显示基础运行服务
 let isShowBaseService = ref(false);
 // 卸载程序页面同程序合并
 let isMergeApp = ref(true);
+
 
 // 是否显示基础运行服务的变更事件
 const checkedBaseService = (checkStatus: boolean) => {
@@ -64,8 +74,18 @@ const pruneLinyaps = () => {
 
 // 页面启动时加载
 onMounted(() => {
-  defaultRepo.value = systemConfigStore.defaultRepoName;  // 默认仓库
   autoCheckUpdate.value = systemConfigStore.autoCheckUpdate;  // 是否自动检测更新
+  defaultRepo.value = systemConfigStore.defaultRepoName;  // 默认仓库
+  // 仓库源地址
+  let rawSourceUrl = systemConfigStore.sourceUrl;
+  if (Array.isArray(rawSourceUrl)) {
+    sourceUrl.value = rawSourceUrl;
+  } else if (rawSourceUrl && typeof rawSourceUrl === 'object') {
+    // 如果是对象，转换为数组
+    sourceUrl.value = Object.entries(rawSourceUrl).map(([name, url]) => ({ name, url }));
+  } else {
+    sourceUrl.value = [];
+  }
   isShowBaseService.value = systemConfigStore.isShowBaseService;  // 是否显示基础运行服务
   isMergeApp.value = systemConfigStore.isShowMergeApp;  // 卸载程序页面同程序合并
 })
