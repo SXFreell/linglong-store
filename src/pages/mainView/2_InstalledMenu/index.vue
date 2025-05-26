@@ -55,9 +55,10 @@ let isShowBaseService = systemConfigStore.isShowBaseService;
 const commandResult = async (_event: any, res: any) => {
     // 返回命令执行入参参数
     const params = res.param;
+    const command = params.command;
     // 响应异常，则报错直接返回
     if (res.code != 'stdout') {
-        ipcRenderer.send('logger', 'error', `\"${params.command}\"命令执行异常::${res.result}`);
+        ipcRenderer.send('logger', 'error', `\"${command}\"命令执行异常::${res.result}`);
         loading.value = false; // 关闭loading加载动画
         // 弹出提示框
         ElNotification({ title: '错误', message: res.result, type: 'error', duration: 500 });
@@ -65,10 +66,10 @@ const commandResult = async (_event: any, res: any) => {
     }
     // 继续处理业务逻辑
     if (params.type && params.type == 'installedPage') {
-        if (params.command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
+        if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
             await installedItemsStore.initInstalledItemsOld(res.result);
             displayedItems.value = installedItemsStore.installedItemList;
-        } else if (params.command == 'll-cli --json list' || params.command == 'll-cli --json list --type=all') {
+        } else if (command == 'll-cli --json list' || command == 'll-cli --json list --type=all' || command == 'll-cli --json list --type=app') {
             await installedItemsStore.initInstalledItems(res.result);
             const datas = installedItemsStore.installedItemList;
             if (systemConfigStore.isShowMergeApp && datas.length > 0) {
@@ -137,8 +138,18 @@ onMounted(() => {
     let getInstalledItemsCommand = "";
     if (compareVersions(llVersion, "1.3.99") < 0) {
         getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    } else if (compareVersions(linglongBinVersion, "1.5.0") >= 0 && isShowBaseService) {
-        getInstalledItemsCommand = "ll-cli --json list --type=all";
+    } else if (compareVersions(linglongBinVersion, "1.5.0") >= 0 && compareVersions(llVersion, "1.8.3") < 0) {
+        if (isShowBaseService) {
+            getInstalledItemsCommand = "ll-cli --json list --type=all";
+        } else {
+            getInstalledItemsCommand = "ll-cli --json list";
+        }
+    } else if (compareVersions(llVersion, "1.8.3") >= 0) {
+        if (isShowBaseService) {
+            getInstalledItemsCommand = "ll-cli --json list --type=all";
+        } else {
+            getInstalledItemsCommand = "ll-cli --json list --type=app";
+        }
     } else {
         getInstalledItemsCommand = "ll-cli --json list";
     }
