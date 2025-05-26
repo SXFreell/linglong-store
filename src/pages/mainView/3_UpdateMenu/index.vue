@@ -119,9 +119,9 @@ const updateAll = () => {
     // 执行一键更新
     const updateItemList = updateItemsStore.updateItemList;
     updateItemList.forEach((item) => {
-        item.loading = true;
-        item.command = `ll-cli install ${item.appId}/${item.version}`;
-        ipcRenderer.send("command", { ...item });
+        // item.loading = true;
+        // item.command = `ll-cli install ${item.appId}/${item.version}`;
+        // ipcRenderer.send("command", { ...item });
         // 新增到加载中列表
         installingItemsStore.addItem(item as InstalledEntity);
     })
@@ -129,7 +129,30 @@ const updateAll = () => {
 // 页面打开时执行
 onMounted(async () => {
     // 清空页面列表数据
-    updateItemsStore.clearItems(); 
+    updateItemsStore.clearItems();
+    // 版本大于1.8.3，可以使用ll-cli list --upgradable查询更新列表
+    if (compareVersions(systemConfigStore.llVersion, '1.8.3') >= 0) {
+        let getUpdateItemsCommand = "ll-cli --json list --upgradable --type=app";
+        ipcRenderer.send('command', { command: getUpdateItemsCommand });
+        ipcRenderer.once('command-result', (_event: any, res: any) => {
+            const command: string = res.param.command;
+            if (command == 'll-cli --json list --upgradable --type=app') {
+                if ('stdout' == res.code) { 
+                    const result: string = res.result.trim();
+                    const updateItemList: InstalledEntity[] = JSON.parse(result);
+                    updateItemList.forEach(item => {
+                        const thisItem = installedItemsStore.installedItemList.find(installedItem => installedItem.appId == item.id);
+                        if (thisItem) updateItemsStore.addItem(thisItem);
+                    });
+                } else {
+                    ElNotification({ title: '提示', type: 'error', duration: 5000, message: "系统操作异常...", });
+                }
+                loading.value = false;
+                isFirstLoad.value = false;
+            }
+        });
+        return;
+    }
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
     if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
         let getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
