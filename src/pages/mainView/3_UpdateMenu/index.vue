@@ -54,8 +54,10 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
         const { appId, version, module } = uniqueInstalledSet[currentIndex];
         if (compareVersions(systemConfigStore.llVersion, '1.3.99') > 0 && compareVersions(systemConfigStore.llVersion, '1.7.7') < 0) {
             ipcRenderer.send("command", { command: `ll-cli --json search ${appId}`, appId: appId, version: version });
-        } else if (compareVersions(systemConfigStore.llVersion, '1.7.7') >= 0) {
+        } else if (compareVersions(systemConfigStore.llVersion, '1.7.7') >= 0 && compareVersions(systemConfigStore.llVersion, '1.8.3') < 0) {
             ipcRenderer.send("command", { command: `ll-cli --json search ${appId} --all`, appId: appId, version: version });
+        } else if (compareVersions(systemConfigStore.llVersion, '1.8.3') >= 0) {
+            ipcRenderer.send("command", { command: `ll-cli --json search ${appId} --show-all-version`, appId: appId, version: version });
         } else {
             ipcRenderer.send("command", { command: `ll-cli query ${appId}`, appId: appId, version: version });
         }
@@ -126,7 +128,8 @@ const updateAll = () => {
 }
 // 页面打开时执行
 onMounted(async () => {
-    updateItemsStore.clearItems(); // 清空页面列表数据
+    // 清空页面列表数据
+    updateItemsStore.clearItems(); 
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
     if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
         let getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
@@ -149,7 +152,7 @@ onMounted(async () => {
     const uniqueInstalledSet: InstalledEntity[] = [];
     installedItemsStore.installedItemList.forEach(installedItem => {
         const { appId, version, categoryName } = installedItem;
-        if (categoryName != '玲珑组件') {
+        if (categoryName && categoryName != '玲珑组件') {
             const item = uniqueInstalledSet.find(item => item.appId == appId);
             if (item) {
                 // 当循环的版本号大于去重数组中的检测到的版本号时，剔除去重数组中的元素，并将当前循环的元素添加到去重数组中
