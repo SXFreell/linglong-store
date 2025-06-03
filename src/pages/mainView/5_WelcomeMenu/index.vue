@@ -81,18 +81,12 @@ const getWelcomeApp = async (param: AppListParams) => {
 }
 // 分类选择点击事件
 const categoryClick = (item: any) => {
-    let queryParams: LocationQueryRaw = {
-        menuName: '分类推荐',
-        ...item,
-    } as any as unknown as LocationQueryRaw;
+    let queryParams: LocationQueryRaw = { menuName: '分类推荐', ...item } as any as unknown as LocationQueryRaw;
     router.push({ path: '/search', query: queryParams });
 }
 // 打开明细界面
 const openDetail = (item: CardFace) => {
-    let queryParams: LocationQueryRaw = {
-        menuName: '玲珑推荐',
-        ...item,
-    } as OpenDetailParams as unknown as LocationQueryRaw;
+    let queryParams: LocationQueryRaw = { menuName: '玲珑推荐', ...item } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }
 // 页面加载时启动
