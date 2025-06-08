@@ -138,6 +138,9 @@ export interface Result {
     data: any
 }
 
+/**
+ * 分页响应体对象
+ */
 export interface pageResult {
     current: number,
     size: number,

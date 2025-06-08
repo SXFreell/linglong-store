@@ -5,11 +5,7 @@ import request from '@/util/request';
  * 推荐页面-获取轮播图列表
  */
 export const getWelcomeCarouselList = (data: any) => {
-    return request<Result>({
-        method: 'POST',
-        url: '/visit/getWelcomeCarouselList',
-        data
-    })
+    return request<Result>({ method: 'POST', url: '/visit/getWelcomeCarouselList', data })
 }
 
 /**
@@ -18,11 +14,7 @@ export const getWelcomeCarouselList = (data: any) => {
  * @returns 
  */
 export const getWelcomeAppList = (data: AppListParams) => {
-    return request<Result>({
-        method: 'POST',
-        url: '/visit/getWelcomeAppList',
-        data
-    })
+    return request<Result>({ method: 'POST', url: '/visit/getWelcomeAppList', data })
 }
 
 /**
@@ -31,11 +23,7 @@ export const getWelcomeAppList = (data: AppListParams) => {
  * @returns 
  */
 export const getNewAppList = (data: AppListParams) => {
-    return request<Result>({
-        method: 'POST',
-        url: '/visit/getNewAppList',
-        data
-    })
+    return request<Result>({ method: 'POST', url: '/visit/getNewAppList', data })
 }
 
 /**
@@ -44,53 +32,35 @@ export const getNewAppList = (data: AppListParams) => {
  * @returns 
  */
 export const getInstallAppList = (data: AppListParams) => {
-    return request<Result>({
-        method: 'POST',
-        url: '/visit/getInstallAppList',
-        data
-    })
+    return request<Result>({ method: 'POST', url: '/visit/getInstallAppList', data })
 }
 
 /**
  * 获取程序的详细信息
  */
 export const getAppDetails = (data: CardFace[]) => {
-    return request<Result> ({
-        method: 'POST',
-        url: '/visit/getAppDetails',
-        data
-    })
+    return request<Result> ({ method: 'POST', url: '/visit/getAppDetails', data })
 }
+
 /**
  * 根据查询条件名称或者分类获取玲珑列表(分页)
  * @param data 查询条件
  * @returns 
  */
 export const getSearchAppList = (data: AppListParams) => {
-    return request<pageResult>({
-        method: 'POST',
-        url: '/visit/getSearchAppList',
-        data
-    })
+    return request<pageResult>({ method: 'POST', url: '/visit/getSearchAppList', data })
 }
 
 /**
  * 获取应用分类
  */
 export const getDisCategoryList = () => {
-    return request<any[]>({
-        method: 'GET',
-        url: '/visit/getDisCategoryList'
-    })
+    return request<any[]>({ method: 'GET', url: '/visit/getDisCategoryList' })
 }
 
 /**
  * 根据appid获取程序列表
  */
 export const getSearchAppVersionList = (data: GetAppListByAppIdParam) => {
-    return request<Result>({
-        method: 'POST',
-        url: '/visit/getSearchAppVersionList',
-        data
-    })
+    return request<Result>({ method: 'POST', url: '/visit/getSearchAppVersionList', data })
 }

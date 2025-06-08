@@ -56,6 +56,9 @@ import { categoryItem, execEntity } from '@/interface';
 const systemConfigStore = useSystemConfigStore();
 const installedItemsStore = useInstalledItemsStore();
 
+const url = import.meta.env.VITE_SERVER_URL as string;
+const env = process.env.NODE_ENV as string;
+
 // 获取路由对象
 const router = useRouter();
 // 提示信息
@@ -67,19 +70,12 @@ const downloadPercentMsg = ref('');
 const centerDialogVisible = ref(false);
 
 // 提取发送命令的逻辑
-const sendCommand = (command: string) => {
-    ipcRenderer.send('command', { command });
-};
+const sendCommand = (command: string) => ipcRenderer.send('command', { command });
 
 // 提取消息弹窗逻辑
 const showConfirmDialog = async (message: string, confirmText: string, cancelText: string) => {
     try {
-        await ElMessageBox.confirm(message, '提示', {
-            confirmButtonText: confirmText,
-            cancelButtonText: cancelText,
-            type: 'info',
-            center: true,
-        });
+        await ElMessageBox.confirm(message, '提示', { confirmButtonText: confirmText, cancelButtonText: cancelText, type: 'info', center: true });
         return true;
     } catch {
         return false;
@@ -150,9 +146,9 @@ const commandResult = async (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', "加载完成...");
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
-        if (import.meta.env.MODE != "development") {
+        if (env != "development") {
             ipcRenderer.send('appLogin', {
-                url: import.meta.env.VITE_SERVER_URL + "/visit/appLogin",
+                url: url + "/visit/appLogin",
                 llVersion: systemConfigStore.llVersion,
                 linglongBinVersion: systemConfigStore.linglongBinVersion,
                 detailMsg: systemConfigStore.detailMsg,
@@ -279,30 +275,11 @@ const checkLinyapsSomeThing = () => {
             const repos = repoLines.map(line => {
                 // 使用正则或者 split 拆分：假设字段之间用多个空格隔开
                 const parts = line.trim().split(/\s+/);
-                return {
-                    name: parts[0],
-                    url: parts[1],
-                    alias: parts[2],
-                    priority: parts[3]
-                };
+                return { name: parts[0], url: parts[1], alias: parts[2], priority: parts[3] };
             });
             systemConfigStore.changeSourceUrl(repos);
             return { default: defaultRepo, repos };
         }
-        // ElMessageBox.confirm('当前旧数据需要迁移后才能使用，确认开始执行吗？', '提示', {
-        //     confirmButtonText: '确认',
-        //     cancelButtonText: '取消',
-        //     type: 'info',
-        //     center: true,
-        // }).then(async () => {
-        //     ipcRenderer.send('command', { command: 'll-cli migrate' });
-        //     ipcRenderer.send('logger', 'info', "当前旧数据开始执行迁移...");
-        //     // 延时1000毫秒进入
-        //     await new Promise(resolve => setTimeout(resolve, 1000));
-        //     window.close();
-        // }).catch(() => {
-        //     window.close();
-        // })
         message.value = "检测玲珑环境不存在...";
         ipcRenderer.send('logger', 'error', "检测玲珑环境不存在...");
     });
@@ -317,9 +294,8 @@ const checkLinyapsSomeThing = () => {
 // 退出按钮点击事件
 const exitBtnClick = () => {
     ElMessageBox.confirm('确定退出吗？', '提示', {
-        confirmButtonText: '确认', cancelButtonText: '取消',
-        type: 'info', center: true,
-    }).then(() => window.close())
+        confirmButtonText: '确认', cancelButtonText: '取消', type: 'info', center: true,
+    }).then(() => window.close());
 }
 // 手动安装点击事件
 const manualInstallBtnClick = () => {
@@ -328,9 +304,8 @@ const manualInstallBtnClick = () => {
 }
 // 自动安装点击事件
 const autoInstallBtnClick = () => {
-    const baseURL = import.meta.env.VITE_SERVER_URL as string;
     centerDialogVisible.value = false
-    ipcRenderer.send('to_install_linglong', baseURL); // 执行脚本文件
+    ipcRenderer.send('to_install_linglong', url); // 执行脚本文件
 }
 // 设置ipc监听器
 const setupIpcListeners = () => {
@@ -363,14 +338,14 @@ onMounted(async () => {
         }
         localStorage.setItem('categories', JSON.stringify(categories));
     })
-    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
+    ipcRenderer.send('ipc-categories', { url });
     // 判断是否是开发模式，跳出版本检测
-    if (process.env.NODE_ENV != "development" && systemConfigStore.autoCheckUpdate) {
+    if (env != "development" && systemConfigStore.autoCheckUpdate) {
         message.value = "正在检测商店版本号...";
         ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
         ipcRenderer.send('checkForUpdate');
         return;
-    } else if (process.env.NODE_ENV == "development") {
+    } else if (env == "development") {
         message.value = "开发模式，跳过商店版本号检测...";
         ipcRenderer.send('logger', 'info', "开发模式，跳过商店版本号检测...");
     } else {

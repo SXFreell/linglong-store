@@ -249,6 +249,46 @@ const IPCHandler = (win: BrowserWindow) => {
         });
     });
 
+    /* ****************** 命令 ll-cli install xxx ******************* */
+    ipcMain.on("linyaps-install", (_event, installApp) => {
+        // exec(`ll-cli install ${installApp}`, (error, stdout, stderr) => {
+        //     ipcLog.info(`ll-cli install ${installApp} >>`, { error, stdout, stderr });
+        //     win.webContents.send(`install-${installApp}-result`, { error, stdout, stderr });
+        // });
+        // const currentProcess = exec(`ll-cli install ${installApp}`);
+        // currentProcess.stdout.on('data', (data) => {
+        //     console.log(`标准输出: ${data}`);
+        // });
+        // currentProcess.stderr.on('data', (data) => {
+        //     console.log(`错误输出: ${data}`);
+        // });
+        // currentProcess.on('error', (data) => {
+        //     console.log(`异常输出: ${data}`);
+        // });
+        // currentProcess.on('close', (data) => {
+        //     console.log(`关闭: ${data}`);
+        // });
+        console.log('installApp', installApp);
+        const child = spawn('node');
+        // 监听子进程的标准输出
+        child.stdout.on('data', (data) => {
+            console.log(`子进程输出: ${data}`);
+
+            // 当子进程输出特定结果时，发送下一条指令
+            if (data.toString().includes('1')) {
+            console.log('收到 1，发送第二次输入');
+            child.stdin.write('console.log("第二次交互")\n');
+            }
+
+            if (data.toString().includes('第二次交互')) {
+            console.log('收到第二次输出，结束交互');
+            child.stdin.end(); // 结束输入流，关闭子进程
+            }
+        });
+        // 发送第一次输入
+        child.stdin.write('console.log("第一次交互")\n');
+    });
+
     /* ********** 通过网络服务获取客户端ip ********** */
     // 使用 ipify API 获取 IPv4/IPv6 地址
     // const response = await axios.get('https://api64.ipify.org?format=json');
