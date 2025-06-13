@@ -1,22 +1,20 @@
 <template>
-    <div class="containner">
+    <div class="start-containner">
         <a href="https://www.linglong.space/" target="_blank">
             <img src="/logo.svg" class="logo" alt="玲珑商店" />
         </a>
         <h1>玲珑应用商店</h1>
         <h3>{{ message }}</h3>
         <h3>{{ downloadPercentMsg }}</h3>
-        <div class="tips">
-            <div style="text-align: left;">
-                <h3 style="color: chocolate;">注意：</h3>
-                <p>1.刚程序运行时，会检测当前系统是否满足玲珑环境;如果环境不满足则弹出提示，程序不会进入到后续界面;这里需要您手动安装玲珑环境方可使用。</p>
-                <p>2.点击安装时，受网速和程序包大小(本体+依赖)的影响，程序安装比较缓慢甚至可能会没反应，此时请耐心等待一下下。</p>
-                <p>3.执行操作时，若出现长时间卡住无反应，或者报错提示时，请使用官方命令行方式进行操作，尝试玲珑基础环境组件是否异常，如无异常，请重启商店重试。</p>
-                <p>4.如出现特殊现象，请在商店内-关于程序-意见反馈，进行反馈，或者进入作者gitee仓库提交issue。</p>
-            </div>
+        <div style="text-align: left;">
+            <h3 style="color: chocolate;">注意：</h3>
+            <p>1.刚程序运行时，会检测当前系统是否满足玲珑环境;如果环境不满足则弹出提示，程序不会进入到后续界面;这里需要您手动安装玲珑环境方可使用。</p>
+            <p>2.点击安装时，受网速和程序包大小(本体+依赖)的影响，程序安装比较缓慢甚至可能会没反应，此时请耐心等待一下下。</p>
+            <p>3.执行操作时，若出现长时间卡住无反应，或者报错提示时，请使用官方命令行方式进行操作，尝试玲珑基础环境组件是否异常，如无异常，请重启商店重试。</p>
+            <p>4.如出现特殊现象，请在商店内-关于程序-意见反馈，进行反馈，或者进入作者gitee仓库提交issue。</p>
         </div>
     </div>
-    <div class="footer" v-if="downloadPercent > 0">
+    <div class="download-footer" v-if="downloadPercent > 0">
         <el-progress :percentage="downloadPercent" :stroke-width="10" status="success" striped striped-flow
             :duration="10" :show-text="false" />
     </div>
@@ -57,6 +55,7 @@ const systemConfigStore = useSystemConfigStore();
 const installedItemsStore = useInstalledItemsStore();
 
 const url = import.meta.env.VITE_SERVER_URL as string;
+const env1 = import.meta.env.MODE as string; // 获取环境变量
 const env = process.env.NODE_ENV as string;
 
 // 获取路由对象
@@ -147,17 +146,15 @@ const commandResult = async (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
         if (env != "development") {
-            ipcRenderer.send('appLogin', {
-                url: url + "/visit/appLogin",
-                llVersion: systemConfigStore.llVersion,
-                linglongBinVersion: systemConfigStore.linglongBinVersion,
-                detailMsg: systemConfigStore.detailMsg,
-                osVersion: systemConfigStore.osVersion,
-                defaultRepoName: systemConfigStore.defaultRepoName,
-                appVersion: pkg.version,
-                visitorId: systemConfigStore.visitorId,
-                clientIp: systemConfigStore.clientIP
-            })
+            const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP} = systemConfigStore;
+            const loginPayload = {
+                url: `${url}/visit/appLogin`, appVersion: pkg.version, clientIp: clientIP,
+                llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId
+            };
+
+            console.log("发送APP登陆信息：", loginPayload);
+            
+            ipcRenderer.send('appLogin', loginPayload);
         }
         // 延时1000毫秒进入
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -307,24 +304,23 @@ const autoInstallBtnClick = () => {
     centerDialogVisible.value = false
     ipcRenderer.send('to_install_linglong', url); // 执行脚本文件
 }
-// 设置ipc监听器
-const setupIpcListeners = () => {
-    ipcRenderer.on('command-result', commandResult);
-    ipcRenderer.on('update-message', updateMessage);
-};
 
 // 加载前执行
 onMounted(async () => {
-    setupIpcListeners();
+    // 设置ipc监听器
+    ipcRenderer.on('command-result', commandResult);
+    ipcRenderer.on('update-message', updateMessage);
     // 开启系统参数中的网络标识
     systemConfigStore.changeNetworkRunStatus(true);
     // 获取指纹码
-    const fp = await FingerprintJS.load()
-    const result = await fp.get()
+    const result = await (await FingerprintJS.load()).get();
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
     // 获取客户端ip
-    ipcRenderer.once('fetchClientIP-result', (_event: any, res: any) => systemConfigStore.changeClientIP(res.data.query));
+    ipcRenderer.once('fetchClientIP-result', (_event: any, res: any) => {
+        const clientIP = res.data.query || '';
+        systemConfigStore.changeClientIP(clientIP)
+    });
     ipcRenderer.send('fetchClientIP');
     // 获取分类列表
     ipcRenderer.once('categories-result', (_event: any, res: any) => {
@@ -361,40 +357,3 @@ onBeforeUnmount(() => {
     ipcRenderer.removeAllListeners('downloadProgress');
 });
 </script>
-<style scoped>
-.containner {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-    width: 90%;
-}
-
-.logo {
-    height: 6em;
-    padding: 1.5em;
-    will-change: filter;
-    transition: filter 300ms;
-}
-
-.logo:hover {
-    filter: drop-shadow(0 0 2em #646cffaa);
-}
-
-.tips {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-
-.footer {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-}
-
-.dialog-footer button:first-child {
-    margin-right: 150px;
-}
-</style>
