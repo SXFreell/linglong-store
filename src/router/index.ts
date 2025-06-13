@@ -94,6 +94,11 @@ const router = createRouter({
                     component: () => import("../components/details.vue")
                 },
                 {
+                    path: '/terminalOutput',
+                    name: 'TerminalOutput',
+                    component: () => import("../components/TerminalOutput.vue")
+                },
+                {
                     path: '/search',
                     name: 'Search',
                     component: () => import("../pages/mainView/7_SearchMenu/index.vue"),
