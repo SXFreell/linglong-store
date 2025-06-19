@@ -46,16 +46,12 @@ import { ipcRenderer } from "electron";
 import { useRouter } from 'vue-router';
 import pkg from '../../package.json';
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
-import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { useInstalledItemsStore } from "@/store/installedItems";
 import { categoryItem, execEntity } from '@/interface';
 
 const systemConfigStore = useSystemConfigStore();
-const installedItemsStore = useInstalledItemsStore();
 
 const url = import.meta.env.VITE_SERVER_URL as string;
-const env1 = import.meta.env.MODE as string; // 获取环境变量
 const env = process.env.NODE_ENV as string;
 
 // 获取路由对象
@@ -115,35 +111,8 @@ const commandResult = async (_event: any, res: any) => {
             ipcRenderer.send('logger', 'error', "异常返回！1.4.X以前旧版，检测不到版本号，设置默认1.3.8");
         }
         message.value = "玲珑环境版本检测完毕...";
-        ipcRenderer.send('logger', 'info', "玲珑环境版本检测完毕...");
-        message.value = "正在检测系统已安装的玲珑程序...";
-        ipcRenderer.send('logger', 'info', "正在检测系统已安装的玲珑程序...");
-        if (compareVersions(systemConfigStore.llVersion, '1.4.0') < 0) {
-            ipcRenderer.send("command", { command: "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'" });
-        } else {
-            ipcRenderer.send("command", { command: "ll-cli --json list" });
-        }
-    }
-    // 执行命令获取已安装的玲珑程序
-    if (command == 'll-cli --json list' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
-        if (code == 'stdout') {
-            if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
-                installedItemsStore.initInstalledItemsOld(result);
-            }
-            if (command == 'll-cli --json list') {
-                installedItemsStore.initInstalledItems(result);
-            }
-            message.value = "已安装的玲珑程序检测完成...";
-            ipcRenderer.send('logger', 'info', "已安装的玲珑程序检测完成...");
-        } else {
-            // 网络异常，变更标识
-            systemConfigStore.changeNetworkRunStatus(false);
-            message.value = "已安装的玲珑程序检测异常...";
-            ipcRenderer.send('logger', 'error', "已安装的玲珑程序检测异常...");
-        }
-        message.value = "加载完成...";
         downloadPercentMsg.value = "";
-        ipcRenderer.send('logger', 'info', "加载完成...");
+        ipcRenderer.send('logger', 'info', "玲珑环境版本检测完毕...");
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
         if (env != "development") {
@@ -152,9 +121,6 @@ const commandResult = async (_event: any, res: any) => {
                 url: `${url}/visit/appLogin`, appVersion: pkg.version, clientIp: clientIP,
                 llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId
             };
-
-            console.log("发送APP登陆信息：", loginPayload);
-            
             ipcRenderer.send('appLogin', loginPayload);
         }
         // 延时1000毫秒进入
