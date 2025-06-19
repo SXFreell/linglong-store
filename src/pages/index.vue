@@ -83,9 +83,9 @@ const showConfirmDialog = async (message: string, confirmText: string, cancelTex
 
 // 命令执行返回结果
 const commandResult = async (_event: any, res: any) => {
-    const code: string = res.code;
-    const result: any = res.result;
-    const command: string = res.param.command;
+    const { param: params, result, code } = res;
+    const command: string = params.command;
+    // 执行命令获取版本号
     if (command == 'll-cli --json --version') {
         if (code == 'stdout') {
             const tempVersion = result.trim();
@@ -124,6 +124,7 @@ const commandResult = async (_event: any, res: any) => {
             ipcRenderer.send("command", { command: "ll-cli --json list" });
         }
     }
+    // 执行命令获取已安装的玲珑程序
     if (command == 'll-cli --json list' || command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
         if (code == 'stdout') {
             if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
@@ -146,7 +147,7 @@ const commandResult = async (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
         if (env != "development") {
-            const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP} = systemConfigStore;
+            const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP } = systemConfigStore;
             const loginPayload = {
                 url: `${url}/visit/appLogin`, appVersion: pkg.version, clientIp: clientIP,
                 llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId
