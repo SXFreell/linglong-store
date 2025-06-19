@@ -27,15 +27,14 @@
 import { onMounted, ref } from "vue";
 import { ipcRenderer } from "electron";
 import { ElNotification } from 'element-plus'
-import { CardFace,InstalledEntity } from "@/interface";
-import updateCard from "@/components/updateCard.vue";
-import string2card from "@/util/string2card";
+import { InstalledEntity } from "@/interface";
 import { compareVersions } from "@/util/checkVersion";
-import defaultImage from '@/assets/logo.svg';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useUpdateItemsStore } from "@/store/updateItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstallingItemsStore } from "@/store/installingItems";
+import updateCard from "@/components/updateCard.vue";
+import defaultImage from '@/assets/logo.svg';
 
 const installedItemsStore = useInstalledItemsStore();
 const updateItemsStore = useUpdateItemsStore();
@@ -51,59 +50,44 @@ let currentIndex = 0;
 // 嵌套循环获取所有已安装的玲珑程序是否有更新版本
 const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
     if (currentIndex < uniqueInstalledSet.length) {
-        const { appId, version, module } = uniqueInstalledSet[currentIndex];
-        if (compareVersions(systemConfigStore.llVersion, '1.3.99') > 0 && compareVersions(systemConfigStore.llVersion, '1.7.7') < 0) {
-            ipcRenderer.send("command", { command: `ll-cli --json search ${appId}`, appId: appId, version: version });
-        } else if (compareVersions(systemConfigStore.llVersion, '1.7.7') >= 0 && compareVersions(systemConfigStore.llVersion, '1.8.3') < 0) {
-            ipcRenderer.send("command", { command: `ll-cli --json search ${appId} --all`, appId: appId, version: version });
+        const { appId, version } = uniqueInstalledSet[currentIndex];
+        let command = `ll-cli --json search ${appId}`;
+        if (compareVersions(systemConfigStore.llVersion, '1.7.7') >= 0 && compareVersions(systemConfigStore.llVersion, '1.8.3') < 0) {
+            command = `ll-cli --json search ${appId} --all`;
         } else if (compareVersions(systemConfigStore.llVersion, '1.8.3') >= 0) {
-            ipcRenderer.send("command", { command: `ll-cli --json search ${appId} --show-all-version`, appId: appId, version: version });
-        } else {
-            ipcRenderer.send("command", { command: `ll-cli query ${appId}`, appId: appId, version: version });
+            command = `ll-cli --json search ${appId} --show-all-version`;
         }
+        ipcRenderer.send("command", { command, appId, version });
         ipcRenderer.once('command-result', (_event: any, res: any) => {
-            const command: string = res.param.command;
+            const { param, code, result } = res;
+            const command: string = param.command;
+            const appId: string = param.appId;
             // 返回异常判定为网络异常
-            if ('stdout' != res.code) {
-                ElNotification({
-                    title: '提示', type: 'error', duration: 5000,
-                    message: "系统操作异常...",
-                });
+            if ('stdout' != code) {
+                ElNotification({ title: '提示', type: 'error', duration: 5000, message: "系统操作异常..." });
                 return;
             }
-            const appId: string = res.param.appId;
-            const result: string = res.result;
             // 用于存放不同版本的玲珑集合
             let searchVersionItemList: InstalledEntity[] = [];
-            if (command.startsWith('ll-cli query')) {  // 1.4版本以前的命令
-                const apps: string[] = result.split('\n');
-                if (apps.length > 2) {
-                    for (let index = 2; index < apps.length - 1; index++) {
-                        const card: CardFace | null = string2card(apps[index]);
-                        if (card && appId == card.appId && module != 'devel') {
-                            searchVersionItemList.push(card as InstalledEntity);
-                        }
-                    }
-                }
-            } else if (command.startsWith('ll-cli --json search')) {  // 1.4版本以后的命令
+            if (command.startsWith('ll-cli --json search')) {  // 1.4版本以后的命令
                 searchVersionItemList = result.trim() ? JSON.parse(result.trim()) : [];
                 // 过滤不同appId和时devel的数据
                 if (searchVersionItemList.length > 0) {
                     searchVersionItemList = searchVersionItemList.filter(item => item && item.module != 'devel' && item.id == appId);
                 }
-            }
-            // 当版本数组数量大于2时才进行比较
-            if (searchVersionItemList.length > 1) {
-                // 版本号从大到小排序
-                searchVersionItemList = searchVersionItemList.sort((a, b) => compareVersions(b.version, a.version));
-                const entity: InstalledEntity = searchVersionItemList[0];
-                if (compareVersions(entity.version, res.param.version) > 0) {
-                    updateItemsStore.addItem(entity);
+                // 当版本数组数量大于2时才进行比较
+                if (searchVersionItemList.length > 1) {
+                    // 版本号从大到小排序
+                    searchVersionItemList = searchVersionItemList.sort((a, b) => compareVersions(b.version, a.version));
+                    const entity: InstalledEntity = searchVersionItemList[0];
+                    if (compareVersions(entity.version, res.param.version) > 0) {
+                        updateItemsStore.addItem(entity);
+                    }
                 }
+                // 执行下一个循环
+                currentIndex++;
+                searchLingLongHasUpdate(uniqueInstalledSet);
             }
-            // 执行下一个循环
-            currentIndex++;
-            searchLingLongHasUpdate(uniqueInstalledSet);
         });
     } else {
         // 查询结束，标记值归零并且停止加载
@@ -132,20 +116,16 @@ onMounted(async () => {
     updateItemsStore.clearItems();
     // 版本大于1.8.3，可以使用ll-cli list --upgradable查询更新列表
     if (compareVersions(systemConfigStore.llVersion, '1.8.3') >= 0) {
-        let getUpdateItemsCommand = "ll-cli --json list --upgradable --type=app";
-        ipcRenderer.send('command', { command: getUpdateItemsCommand });
+        ipcRenderer.send('command', { command: "ll-cli --json list --upgradable --type=app" });
         ipcRenderer.once('command-result', (_event: any, res: any) => {
-            const command: string = res.param.command;
-            if (command == 'll-cli --json list --upgradable --type=app') {
-                if ('stdout' == res.code) { 
-                    const result: string = res.result.trim();
-                    const updateItemList: InstalledEntity[] = JSON.parse(result);
+            const { param, code, result } = res;
+            if (param.command == 'll-cli --json list --upgradable --type=app') {
+                if ('stdout' == code) { 
+                    const updateItemList: InstalledEntity[] = JSON.parse(result.trim());
                     updateItemList.forEach(item => {
                         const thisItem = installedItemsStore.installedItemList.find(installedItem => installedItem.appId == item.id);
                         if (thisItem) updateItemsStore.addItem(thisItem);
                     });
-                } else {
-                    ElNotification({ title: '提示', type: 'error', duration: 5000, message: "系统操作异常...", });
                 }
                 loading.value = false;
                 isFirstLoad.value = false;
@@ -153,16 +133,6 @@ onMounted(async () => {
         });
         return;
     }
-    // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-    let getInstalledItemsCommand = 'll-cli --json list';
-    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        if (systemConfigStore.isShowBaseService) {
-            getInstalledItemsCommand = "ll-cli --json list --type=all";
-        }
-    }
-    ipcRenderer.send('command', { command: getInstalledItemsCommand });
-    // 2.延时1000毫秒进入
-    await new Promise(resolve => setTimeout(resolve, 1000));
     // 3.初始化一个数组用于存储去重后当前已安装程序列表
     const uniqueInstalledSet: InstalledEntity[] = [];
     installedItemsStore.installedItemList.forEach(installedItem => {
@@ -172,7 +142,7 @@ onMounted(async () => {
             if (item) {
                 // 当循环的版本号大于去重数组中的检测到的版本号时，剔除去重数组中的元素，并将当前循环的元素添加到去重数组中
                 if (compareVersions(version, item.version) > 0) {
-                    const index = uniqueInstalledSet.findIndex((item) => item.appId == appId);
+                    const index = uniqueInstalledSet.findIndex(item => item.appId == appId);
                     uniqueInstalledSet.splice(index, 1);
                     uniqueInstalledSet.push(installedItem);
                 }

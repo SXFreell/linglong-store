@@ -192,9 +192,7 @@ const difVersionItemsCommand = async (_event: any, res: any) => {
         ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
         return;
     }
-    if (command.startsWith("ll-cli query")) {
-        difVersionItemsStore.initDifVersionItemsOld(res.result, query);
-    } else if (command.startsWith("ll-cli --json search")) {
+    if (command.startsWith("ll-cli --json search")) {
         await difVersionItemsStore.initDifVersionItems(res.result, query);
     }
     loading.value = false;
@@ -204,21 +202,13 @@ const reflushVersionList = (_event: any, res: any) => {
     // 1.清除表单数据
     difVersionItemsStore.clearItems();
     // 2.调用查询方法
-    let itemsCommand = ``;
-    if (compareVersions(llVersion, '1.3.99') < 0) {
-        itemsCommand = `ll-cli query ${res.appId}`;
-    } else if (compareVersions(llVersion, '1.3.99') >= 0 && compareVersions(llVersion, '1.5.0') < 0) {
-        itemsCommand = `ll-cli --json search ${res.appId}`;
-    } else if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
-        let showBaseFlag = systemConfigStore.isShowBaseService;
-        itemsCommand = showBaseFlag ? `ll-cli --json search ${res.appId} --type=all` : `ll-cli --json search ${res.appId}`;
+    let itemsCommand = `ll-cli --json search ${res.appId}`;
+    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
+        itemsCommand = systemConfigStore.isShowBaseService ? `ll-cli --json search ${res.appId} --type=all` : itemsCommand;
     } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
         itemsCommand = `ll-cli --json search ${res.appId} --all`;
     } else if (compareVersions(llVersion, '1.8.3') >= 0) {
         itemsCommand = `ll-cli --json search ${res.appId} --show-all-version`;
-    } else {
-        ElNotification({ title: '提示', message: "当前玲珑版本不支持查询", type: 'info', duration: 500 });
-        return;
     }
     ipcRenderer.send("command", { 'command': itemsCommand });
 }
