@@ -17,7 +17,8 @@
     <hr> -->
     <li><a class="title">卸载程序</a></li>
     <div style="margin-left: 30px;">
-      <el-checkbox v-model="isShowBaseService" size="large" @change="checkedBaseService(isShowBaseService)">
+      <el-checkbox v-model="isShowBaseService" size="large"
+        @change="systemConfigStore.changeIsShowBaseService(isShowBaseService)">
         显示基础运行服务
       </el-checkbox>
       <el-checkbox v-model="isMergeApp" size="large" @change="systemConfigStore.changeIsShowMergeApp(isMergeApp)">
@@ -48,14 +49,6 @@ let sourceUrl = ref<Record<string, any>>();
 let isShowBaseService = ref(false);
 // 卸载程序页面同程序合并
 let isMergeApp = ref(true);
-
-
-// 是否显示基础运行服务的变更事件
-const checkedBaseService = (checkStatus: boolean) => {
-  // 修改系统配置文件，记录状态
-  systemConfigStore.changeIsShowBaseService(checkStatus);
-  ipcRenderer.send('command', { command: "ll-cli --json list", type: "refreshInstalledApps" });
-}
 
 // 清除无用组件
 const pruneLinyaps = () => {
