@@ -66,10 +66,7 @@ const commandResult = async (_event: any, res: any) => {
     }
     // 继续处理业务逻辑
     if (params.type && params.type == 'installedPage') {
-        if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
-            await installedItemsStore.initInstalledItemsOld(res.result);
-            displayedItems.value = installedItemsStore.installedItemList;
-        } else if (command == 'll-cli --json list' || command == 'll-cli --json list --type=all' || command == 'll-cli --json list --type=app') {
+        if (command == 'll-cli --json list' || command == 'll-cli --json list --type=all' || command == 'll-cli --json list --type=app') {
             await installedItemsStore.initInstalledItems(res.result);
             const datas = installedItemsStore.installedItemList;
             if (systemConfigStore.isShowMergeApp && datas.length > 0) {
@@ -135,14 +132,10 @@ watchEffect(() => {
 // 组件初始化时加载
 onMounted(() => {
     // 根据版本环境获取安装程序列表发送命令
-    let getInstalledItemsCommand = "";
-    if (compareVersions(llVersion, "1.3.99") < 0) {
-        getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    } else if (compareVersions(linglongBinVersion, "1.5.0") >= 0 && compareVersions(llVersion, "1.8.3") < 0) {
+    let getInstalledItemsCommand = "ll-cli --json list";
+    if (compareVersions(linglongBinVersion, "1.5.0") >= 0 && compareVersions(llVersion, "1.8.3") < 0) {
         if (isShowBaseService) {
             getInstalledItemsCommand = "ll-cli --json list --type=all";
-        } else {
-            getInstalledItemsCommand = "ll-cli --json list";
         }
     } else if (compareVersions(llVersion, "1.8.3") >= 0) {
         if (isShowBaseService) {
@@ -150,8 +143,6 @@ onMounted(() => {
         } else {
             getInstalledItemsCommand = "ll-cli --json list --type=app";
         }
-    } else {
-        getInstalledItemsCommand = "ll-cli --json list";
     }
     ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'installedPage' });
     ipcRenderer.once('command-result', commandResult);

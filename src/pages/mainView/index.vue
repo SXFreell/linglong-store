@@ -119,9 +119,6 @@ const handleCommandResult = (_event: any, res: any) => {
     }
     // 监听获取玲珑列表的命令
     if (params.type == 'refreshInstalledApps') {
-        if (command == 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'') {
-          installedItemsStore.initInstalledItemsOld(result);
-        }
         if (command.startsWith('ll-cli --json list')) {
           installedItemsStore.initInstalledItems(result);
         }
@@ -169,9 +166,7 @@ function handleInstallUninstall(params: any, command: string, result: string) {
     });
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
     let getInstalledItemsCommand = "ll-cli --json list";
-    if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
-        getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-    } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
+    if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
         getInstalledItemsCommand = "ll-cli --json list --type=all";
     }
     ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
@@ -180,7 +175,7 @@ function handleInstallUninstall(params: any, command: string, result: string) {
 }
 
 const handleLinglongResult = (_event: any, res: any) => {
-    const { param: params, code, command, result } = res;
+    const { params, code, result } = res;
     downloadLogMsg += result + '<br>';
     if (code == 'close') {
         // 1.从加载列表中移除
@@ -191,7 +186,7 @@ const handleLinglongResult = (_event: any, res: any) => {
         difVersionItemsStore.updateItemLoadingStatus(params, false);
         if (flag.value) {
             // 3.获取安装/卸载状态
-            params.isInstalled = command.startsWith('ll-cli install');
+            params.isInstalled = params.command.startsWith('ll-cli install');
             // 4.更新各个列表中的安装状态
             if (params.isInstalled) {
                 installedItemsStore.addItem(params);
@@ -221,9 +216,7 @@ const handleLinglongResult = (_event: any, res: any) => {
             });
             // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
             let getInstalledItemsCommand = "ll-cli --json list";
-            if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
-                getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-            } else if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
+            if (compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") >= 0 && systemConfigStore.isShowBaseService) {
                 getInstalledItemsCommand = "ll-cli --json list --type=all";
             }
             ipcRenderer.send('command', { command: getInstalledItemsCommand, type: 'refreshInstalledApps' });
@@ -263,10 +256,10 @@ const cancelInstall = (row: InstalledEntity) => {
 
 const checkInstalledApps = () => {
     // 检查当前系统有哪些应用
-    if (compareVersions(systemConfigStore.linglongBinVersion, '1.5.0') >= 0) {
+    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
         ipcRenderer.send('command', { command: 'll-cli --json list --type=all', type: 'refreshInstalledApps' });
     } else {
-        ipcRenderer.send('command', { command: 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'', type: 'refreshInstalledApps' });
+        console.log('当前版本不支持获取应用列表，请使用最新版本的玲珑！');
     }
 }
 

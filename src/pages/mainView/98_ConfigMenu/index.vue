@@ -54,12 +54,7 @@ let isMergeApp = ref(true);
 const checkedBaseService = (checkStatus: boolean) => {
   // 修改系统配置文件，记录状态
   systemConfigStore.changeIsShowBaseService(checkStatus);
-  // 检测版本，执行不同的命令
-  let getInstalledItemsCommand = "ll-cli --json list";
-  if (compareVersions(systemConfigStore.llVersion, "1.3.99") < 0) {
-    getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'"; // 1.4.0版本之前的命令
-  }
-  ipcRenderer.send('command', { command: getInstalledItemsCommand, type: "refreshInstalledApps" });
+  ipcRenderer.send('command', { command: "ll-cli --json list", type: "refreshInstalledApps" });
 }
 
 // 清除无用组件

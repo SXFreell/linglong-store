@@ -154,21 +154,13 @@ onMounted(async () => {
         return;
     }
     // 1.刷新一下已安装列表，根据版本环境获取安装程序列表发送命令
-    if (compareVersions(systemConfigStore.llVersion, '1.3.99') < 0) {
-        let getInstalledItemsCommand = "ll-cli list | sed 's/\x1b\[[0-9;]*m//g'";
-        ipcRenderer.send('command', { command: getInstalledItemsCommand});
-    } else if (compareVersions(systemConfigStore.llVersion, '1.3.99') >= 0 && compareVersions(systemConfigStore.llVersion, '1.5.0') < 0) {
-        let getInstalledItemsCommand = "ll-cli --json list";
-        ipcRenderer.send('command', { command: getInstalledItemsCommand});
-    } else if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
+    let getInstalledItemsCommand = 'll-cli --json list';
+    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
         if (systemConfigStore.isShowBaseService) {
-            let getInstalledItemsCommand = "ll-cli --json list --type=all";
-            ipcRenderer.send('command', { command: getInstalledItemsCommand});
-        } else {
-            let getInstalledItemsCommand = "ll-cli --json list";
-            ipcRenderer.send('command', { command: getInstalledItemsCommand});
+            getInstalledItemsCommand = "ll-cli --json list --type=all";
         }
     }
+    ipcRenderer.send('command', { command: getInstalledItemsCommand });
     // 2.延时1000毫秒进入
     await new Promise(resolve => setTimeout(resolve, 1000));
     // 3.初始化一个数组用于存储去重后当前已安装程序列表

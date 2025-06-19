@@ -153,17 +153,17 @@ const IPCHandler = (win: BrowserWindow) => {
 
         currentProcess.stdout.on('data', (data) => {
             ipcLog.info(`stdout: ${data}`);
-            win.webContents.send("linglong-result", { code: 'stdout', param: params, result: data });
+            win.webContents.send("linglong-result", { code: 'stdout', params, result: data });
         });
 
         currentProcess.stderr.on('data', (data) => {
             ipcLog.info(`stderr: ${data}`);
-            win.webContents.send("linglong-result", { code: 'stderr', param: params, result: data });
+            win.webContents.send("linglong-result", { code: 'stderr', params, result: data });
         });
 
         currentProcess.on('close', (code) => {
             ipcLog.info(`child process exited with code ${code}`);
-            win.webContents.send("linglong-result", { code: 'close', param: params, result: code });
+            win.webContents.send("linglong-result", { code: 'close', params, result: code });
             isRunning = false;
             currentProcess = null;
             executeNextCommand();
@@ -171,7 +171,7 @@ const IPCHandler = (win: BrowserWindow) => {
 
         currentProcess.on('error', (err) => {
             ipcLog.error(`child process encountered an error: ${err}`);
-            win.webContents.send("linglong-result", { code: 'error', param: params, result: err });
+            win.webContents.send("linglong-result", { code: 'error', params, result: err });
             isRunning = false;
             currentProcess = null;
             executeNextCommand();

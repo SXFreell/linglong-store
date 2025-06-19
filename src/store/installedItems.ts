@@ -1,6 +1,5 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import string2card from "@/util/string2card";
 import { CardFace,InstalledEntity } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { getAppDetails } from "@/api";
@@ -14,32 +13,6 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
 
     let installedItemList = ref<InstalledEntity[]>([]);
 
-    /**
-     * 初始化已安装程序数组(1.4以前的版本)
-     * @param data 待处理的数据
-     * @returns 将数据放入后的对象数组
-     */
-    const initInstalledItemsOld = (data: string) => {
-        const apps: string[] = data.split('\n');
-        if (apps.length < 2) { // 第一行是标题，第二行开始是数据
-            clearItems();
-            return installedItemList;
-        }
-        let tempList = [];
-        for (let index = 1; index < apps.length - 1; index++) {
-            const card: CardFace | null = string2card(apps[index]);
-            if (!card) {
-                continue; // 如果转换失败，则跳过
-            }
-            tempList.push(card);
-        }
-        let result = installedItemList.value.filter((item) => {
-            return tempList.some((temp) => {
-                return item.appId === temp.appId && item.name === temp.name && item.version === temp.version;
-            });
-        });
-        return result;
-    }
     /**
      * 初始化已安装程序数组(1.4以后的版本)
      * @param data 待处理的数据
@@ -145,7 +118,6 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
     
     return {
         installedItemList,
-        initInstalledItemsOld,
         initInstalledItems,
         updateInstalledItemsIcons,
         addItem,
