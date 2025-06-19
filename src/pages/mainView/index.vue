@@ -261,15 +261,20 @@ const cancelInstall = (row: InstalledEntity) => {
     allAppItemsStore.updateItemLoadingStatus(row, false);
 }
 
-// let timer = setInterval(() => {
-//     console.log('定时器执行，检查是否有需要更新的应用...');
-//     // 检查当前系统有哪些应用
-//     if (compareVersions(systemConfigStore.linglongBinVersion, '1.5.0') >= 0) {
-//         ipcRenderer.send('command', { command: 'll-cli --json list --type=all', type: 'refreshInstalledApps' });
-//     } else {
-//         ipcRenderer.send('command', { command: 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'', type: 'refreshInstalledApps' });
-//     }
-// }, 3000);
+const checkInstalledApps = () => {
+    // 检查当前系统有哪些应用
+    if (compareVersions(systemConfigStore.linglongBinVersion, '1.5.0') >= 0) {
+        ipcRenderer.send('command', { command: 'll-cli --json list --type=all', type: 'refreshInstalledApps' });
+    } else {
+        ipcRenderer.send('command', { command: 'll-cli list | sed \'s/\x1b\[[0-9;]*m//g\'', type: 'refreshInstalledApps' });
+    }
+}
+
+// 定时器每8秒检查一次当前系统有哪些应用
+let timer = setInterval(() => {
+    console.log('定时器执行，检查当前系统有哪些应用...');
+    checkInstalledApps();
+}, 8000);
 
 // 页面初始化时执行
 onMounted(() => {
@@ -282,12 +287,13 @@ onMounted(() => {
         // 在应用中间弹出通知，接收到了自定义协议的消息
         ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
     });
+    checkInstalledApps();
 });
 // 页面销毁前执行
 onUnmounted(() => {
     ipcRenderer.removeListener('command-result', handleCommandResult);
     ipcRenderer.removeListener('linglong-result', handleLinglongResult);
-    // clearInterval(timer);
+    clearInterval(timer);
 });
 </script>
 <style>
