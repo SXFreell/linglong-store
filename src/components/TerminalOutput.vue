@@ -4,12 +4,12 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, watchEffect, onMounted, nextTick } from 'vue'
 import AnsiToHtml from 'ansi-to-html'
 
 const ansiConverter = new AnsiToHtml()
-const terminalRef = ref(null)
+const terminalRef = ref<HTMLElement>()
 
 // 模拟实时日志输入（可以替换为 WebSocket 接收）
 const rawLogs = ref([
@@ -18,7 +18,7 @@ const rawLogs = ref([
 ])
 
 // 用于显示的已解析行
-const parsedLines = ref([])
+const parsedLines = ref<string[]>([])
 
 onMounted(() => {
   // 模拟日志追加
@@ -36,6 +36,7 @@ watchEffect(() => {
   parsedLines.value = rawLogs.value.map(log => ansiConverter.toHtml(log))
   // 滚动到底部
   nextTick(() => {
+    if (!terminalRef.value) return
     terminalRef.value.scrollTop = terminalRef.value.scrollHeight
   })
 })
