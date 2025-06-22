@@ -171,8 +171,6 @@ const changeStatus = async (item: any, flag: string) => {
     // 根据flag判断是安装还是卸载,发送命令并弹出提示框
     if (flag == 'install') {
         installingItemsStore.addItem(item); // 新增到加载中列表
-        let commandType = compareVersions(systemConfigStore.linglongBinVersion, "1.5.0") < 0 ? 'command' : 'linglong';
-        ipcRenderer.send(commandType, { ...item, command: `ll-cli install ${item.appId}/${item.version}`, loading: false });
         ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
     } else {
         ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli uninstall ${item.appId}/${item.version}` });
@@ -185,6 +183,7 @@ const handleRunApp = (item: CardFace) => {
     ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
     ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
 }
+
 // 监听命令结果
 const difVersionItemsCommand = async (_event: any, res: any) => {
     const command: string = res.param.command;

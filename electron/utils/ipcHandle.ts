@@ -1,5 +1,6 @@
-import { BrowserWindow, ipcMain, shell } from "electron";
-import { exec, spawn } from "child_process";
+import { BrowserWindow, ipcMain } from "electron";
+import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
+import stripAnsi from 'strip-ansi';
 import axios from "axios";
 import fs from "fs-extra";
 import log, { ipcLog, mainLog } from "../logger";
@@ -12,26 +13,6 @@ const path = require('path');
 const IPCHandler = (win: BrowserWindow) => {
     /* ************************************************* ipcMain ********************************************** */
     
-    /* **** 启动程序 **** */
-    ipcMain.on('run-app', (event, arg) => {
-        console.log('Message from run-app:', arg);
-        exec(arg, (error, stdout, stderr) => {
-            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
-        })
-    });
-
-    /* ****** 托盘 ***** */
-    ipcMain.on('message-from-renderer', (event, arg) => {
-        console.log('Message from Renderer:', arg);
-        exec(arg, (error, stdout, stderr) => {
-            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
-            if (stdout) {
-                // 发送响应消息回渲染进程
-                event.reply('message-from-main', stdout);
-            }
-        })
-    });
-
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
         ipcLog.info('to_install_linglong', url);
@@ -45,7 +26,29 @@ const IPCHandler = (win: BrowserWindow) => {
                 fs.writeFileSync(scriptPath, scriptContent); // 2. 将内容写入 .sh 文件
                 fs.chmodSync(scriptPath, '755'); // 3. 赋予 .sh 文件执行权限
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
-                const result = await runScript(scriptPath);
+                const result = await new Promise((resolve, reject) => {
+                    const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
+                    let stdoutData = '';
+                    let stderrData = '';
+                    // 监听标准输出流
+                    child.stdout.on('data', (data) => {
+                        stdoutData += data;
+                    });
+                    // 监听标准错误输出流
+                    child.stderr.on('data', (data) => {
+                        stderrData += data;
+                    });
+                    ipcLog.info('runScript stdoutData', stdoutData);
+                    ipcLog.info('runScript stderrData', stderrData);
+                    // 监听子进程关闭事件
+                    child.on('close', (code) => {
+                        if (code === 0) {
+                            resolve(stdoutData);
+                        } else {
+                            reject(new Error(`Child process exited with code ${code}: ${stderrData}`));
+                        }
+                    });
+                });
                 ipcLog.info('Script Output:', result);
             } else {
                 ipcLog.info('服务暂不可用！', response.data.data);
@@ -58,42 +61,6 @@ const IPCHandler = (win: BrowserWindow) => {
             // win.reload();  // 重启服务
             win.close();
         });
-    })
-
-    function runScript(scriptPath) {
-        return new Promise((resolve, reject) => {
-            const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
-            let stdoutData = '';
-            let stderrData = '';
-            // 监听标准输出流
-            child.stdout.on('data', (data) => {
-                stdoutData += data;
-            });
-            // 监听标准错误输出流
-            child.stderr.on('data', (data) => {
-                stderrData += data;
-            });
-            ipcLog.info('runScript stdoutData', stdoutData);
-            ipcLog.info('runScript stderrData', stderrData);
-            // 监听子进程关闭事件
-            child.on('close', (code) => {
-                if (code === 0) {
-                    resolve(stdoutData);
-                } else {
-                    reject(new Error(`Child process exited with code ${code}: ${stderrData}`));
-                }
-            });
-        });
-    }
-
-    /* ********** 执行脚本命令 ********** */
-    ipcMain.on("command_only_stdout", (_event, code: string) => {
-        ipcLog.info('command_only_stdout：', code);
-        // 在主进程中执行命令，并将结果返回到渲染进程
-        exec(code, (error, stdout, stderr) => {
-            ipcLog.info('error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
-            win.webContents.send("command_only_stdout_result", { stdout, stderr, error });
-        })
     })
 
     /* ********** 执行脚本命令 ********** */
@@ -113,70 +80,6 @@ const IPCHandler = (win: BrowserWindow) => {
             win.webContents.send("command-result", { code: 'stdout', param: data, result: stdout });
         });
     });
-
-    /* ****************** 监听命令动态返回结果 ******************* */
-    let isRunning = false;
-    let commandQueue = [];
-    let currentProcess = null;
-    let installingApp = null;
-
-    ipcMain.on('linglong', (_event, params) => {
-        ipcLog.info('linglong：', JSON.stringify(params));
-        commandQueue.push(params);
-        if (!isRunning) {
-            executeNextCommand();
-        }
-    });
-
-    ipcMain.on('stop-linglong', async (_event, params) => {
-        if (currentProcess && installingApp.appId === params.appId && installingApp.name == params.name && installingApp.version == params.version) {
-            currentProcess.kill();
-            executeNextCommand();
-        } else {
-            const index = commandQueue.findIndex((i) => i.appId === params.appId && i.name === params.name && i.version === params.version);
-            if (index !== -1) {
-                commandQueue.splice(index, 1);
-            }
-        }
-    });
-
-    function executeNextCommand() {
-        if (commandQueue.length === 0) {
-            isRunning = false;
-            return;
-        }
-
-        isRunning = true;
-        const params = commandQueue.shift();
-        installingApp = params;
-        currentProcess = exec(params.command, { encoding: 'utf8' });
-
-        currentProcess.stdout.on('data', (data) => {
-            ipcLog.info(`stdout: ${data}`);
-            win.webContents.send("linglong-result", { code: 'stdout', params, result: data });
-        });
-
-        currentProcess.stderr.on('data', (data) => {
-            ipcLog.info(`stderr: ${data}`);
-            win.webContents.send("linglong-result", { code: 'stderr', params, result: data });
-        });
-
-        currentProcess.on('close', (code) => {
-            ipcLog.info(`child process exited with code ${code}`);
-            win.webContents.send("linglong-result", { code: 'close', params, result: code });
-            isRunning = false;
-            currentProcess = null;
-            executeNextCommand();
-        });
-
-        currentProcess.on('error', (err) => {
-            ipcLog.error(`child process encountered an error: ${err}`);
-            win.webContents.send("linglong-result", { code: 'error', params, result: err });
-            isRunning = false;
-            currentProcess = null;
-            executeNextCommand();
-        });
-    }
 
     /* ****************** 强制退出程序 ******************* */
     ipcMain.on('kill-app', (_event, params) => {
@@ -250,43 +153,44 @@ const IPCHandler = (win: BrowserWindow) => {
     });
 
     /* ****************** 命令 ll-cli install xxx ******************* */
-    ipcMain.on("linyaps-install", (_event, installApp) => {
-        // exec(`ll-cli install ${installApp}`, (error, stdout, stderr) => {
-        //     ipcLog.info(`ll-cli install ${installApp} >>`, { error, stdout, stderr });
-        //     win.webContents.send(`install-${installApp}-result`, { error, stdout, stderr });
-        // });
-        // const currentProcess = exec(`ll-cli install ${installApp}`);
-        // currentProcess.stdout.on('data', (data) => {
-        //     console.log(`标准输出: ${data}`);
-        // });
-        // currentProcess.stderr.on('data', (data) => {
-        //     console.log(`错误输出: ${data}`);
-        // });
-        // currentProcess.on('error', (data) => {
-        //     console.log(`异常输出: ${data}`);
-        // });
-        // currentProcess.on('close', (data) => {
-        //     console.log(`关闭: ${data}`);
-        // });
-        console.log('installApp', installApp);
-        const child = spawn('node');
-        // 监听子进程的标准输出
-        child.stdout.on('data', (data) => {
-            console.log(`子进程输出: ${data}`);
-
-            // 当子进程输出特定结果时，发送下一条指令
-            if (data.toString().includes('1')) {
-            console.log('收到 1，发送第二次输入');
-            child.stdin.write('console.log("第二次交互")\n');
-            }
-
-            if (data.toString().includes('第二次交互')) {
-            console.log('收到第二次输出，结束交互');
-            child.stdin.end(); // 结束输入流，关闭子进程
-            }
+    ipcMain.on("linyaps-install", (_event, params) => {
+        const { password, appId, version } = params;
+        let currentProcess: ChildProcessWithoutNullStreams;
+        if (!password) {
+            log.error('linyaps-install：密码为空, 使用非 sudo 安装应用');
+            currentProcess = spawn("ll-cli", ["install", `${appId}/${version}`]);
+        } else {
+            log.info('linyaps-install：使用 sudo 安装应用');
+            currentProcess = spawn("sudo", ["-S", "ll-cli", "install", `${appId}/${version}`]);
+            // 自动输入密码到 sudo 的标准输入
+            currentProcess.stdin.write(password + "\n");
+        }
+        // 捕获标准输出
+        currentProcess.stdout.on("data", (data) => {
+            log.info(`linyaps-install stdout: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-install-result`, { code: 'stdout', params, result });
         });
-        // 发送第一次输入
-        child.stdin.write('console.log("第一次交互")\n');
+        // 捕获标准错误
+        currentProcess.stderr.on("data", (data) => {
+            log.error(`linyaps-install stderr: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-install-result`, { code: 'stderr', params, result });
+        });
+        // 捕获错误事件
+        currentProcess.on('error', (data) => {
+            log.error(`linyaps-install error: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-install-result`, { code: 'error', params, result });
+        });
+        // 子进程退出
+        currentProcess.on("close", (code) => {
+            log.info(`linyaps-install child process exited with code ${code}`);
+            win.webContents.send(`linyaps-install-result`, { code: 'close', params, result: code });
+        });
     });
 
     /* ********** 通过网络服务获取客户端ip ********** */
