@@ -81,14 +81,9 @@ const handleCommandResult = (_event: any, res: any) => {
         ipcRenderer.send('logger', 'error', `"${command}"命令执行异常::${result}`);
         return;
     }
-    // 监听获取玲珑列表的命令
-    if (command.startsWith('ll-cli --json list')) {
-        installedItemsStore.initInstalledItems(result);
-    }
     // 监听卸载命令
     if (command.startsWith('ll-cli uninstall')) {
         installingItemsStore.removeItem(params);
-        installedItemsStore.removeItem(params);
         difVersionItemsStore.updateItemLoadingStatus(params, false);
         difVersionItemsStore.updateItemInstallStatus(params);
         allAppItemsStore.updateItemLoadingStatus(params, false);
@@ -100,17 +95,12 @@ const handleCommandResult = (_event: any, res: any) => {
         }
         // 移除需要更新的应用
         updateItemsStore.removeItem(params);
-        // 非开发环境发送发送操作命令！
-        if (import.meta.env.MODE != "development") {
-            params.url = `${import.meta.env.VITE_SERVER_URL}/visit/save`;
-            params.visitorId = systemConfigStore.visitorId;
-            params.clientIp = systemConfigStore.clientIP;
-            ipcRenderer.send('visit', params);
-        }
-        // 安装或卸载成功后，弹出通知
-        ElNotification({ title: '卸载成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功卸载!`});
+        // 刷新已安装的应用列表
+        reflushInstalledItems();
         // 刷新版本列表
         ipcRenderer.send('reflush-version-list', params.appId);
+        // 安装或卸载成功后，弹出通知
+        ElNotification({ title: '卸载成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功卸载!`});
     }
 }
 
@@ -149,10 +139,12 @@ const handleLinyapsInstallResult = (_event: any, res: any) => {
                 allAppItemsStore.updateItemInstallStatus(params);
             }
             difVersionItemsStore.updateItemInstallStatus(params);
-            // 安装或卸载成功后，弹出通知
-            ElNotification({ title: '安装成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功安装'!` });
+            // 刷新已安装的应用列表
+            reflushInstalledItems();
             // 刷新版本列表
             ipcRenderer.send('reflush-version-list', params.appId);
+            // 安装或卸载成功后，弹出通知
+            ElNotification({ title: '安装成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功安装'!` });
         } else {
             ElNotification({ title: '操作异常!', message: downloadLogMsg, type: 'error', duration: 5000, dangerouslyUseHTMLString: true });
         }
@@ -160,13 +152,41 @@ const handleLinyapsInstallResult = (_event: any, res: any) => {
     }
 }
 
+const reflushInstalledItems = () => {
+    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
+        ipcRenderer.send('command', { command: 'll-cli --json list --type=all' });
+        ipcRenderer.once('command-result', async (_event: any, res: any) => {
+            const { param: params, result, code } = res;
+            if (code == 'stdout') {
+                let { addedItems, removedItems} = await installedItemsStore.initInstalledItems(result);
+                console.log('当前系统新增的应用', addedItems);
+                console.log('当前系统移除的应用', removedItems);
+                // 非开发环境发送发送操作命令！
+                if (import.meta.env.MODE != "development") {
+                    if (addedItems.length > 0) {
+                        let addList = {
+                            url: `${import.meta.env.VITE_SERVER_URL}/visit/save11`,
+                            visitorId: systemConfigStore.visitorId,
+                            clientIp: systemConfigStore.clientIP,
+                            items: addedItems
+                        };
+                        ipcRenderer.send('visit', addList);
+                    }
+                }
+            } else {
+                ipcRenderer.send('logger', 'error', `"ll-cli --json list --type=all"命令执行异常::${result}`);
+            }
+        });
+    } else {
+        console.log('当前版本不支持获取应用列表，请使用最新版本的玲珑！');
+    }
+}
+
 // 定时器每8秒检查一次当前系统有哪些应用
 let timer = setInterval(() => {
     console.log('定时器执行，检查当前系统有哪些应用...');
-    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        ipcRenderer.send('command', { command: 'll-cli --json list --type=all' });
-    }
-}, 8000);
+    reflushInstalledItems();
+}, 5000);
 
 // 监听安装队列
 watch(() => installingItemsStore.installingItemList, 
@@ -193,12 +213,7 @@ onMounted(() => {
         // 在应用中间弹出通知，接收到了自定义协议的消息
         ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
     });
-    // 检查已安装的应用
-    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        ipcRenderer.send('command', { command: 'll-cli --json list --type=all' });
-    } else {
-        console.log('当前版本不支持获取应用列表，请使用最新版本的玲珑！');
-    }
+    reflushInstalledItems();
 });
 // 页面销毁前执行
 onUnmounted(() => {

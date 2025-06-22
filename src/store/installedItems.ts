@@ -1,6 +1,6 @@
-import { defineStore } from "pinia";
 import { ref } from "vue";
-import { CardFace,InstalledEntity } from "@/interface";
+import { defineStore } from "pinia";
+import { InstalledEntity } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { getAppDetails } from "@/api";
 
@@ -21,8 +21,9 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
     const initInstalledItems = async (data: string) => {
         const datas: any[] = data.trim() ? JSON.parse(data.trim()) : [];
         if (datas.length < 1) {
+            const removedItems = [...installedItemList.value]; // 全部被移除
             clearItems(); // 清空已安装列表
-            return installedItemList; // 如果没有数据，直接返回空列表
+            return { installedItemList, addedItems: [], removedItems };
         }
         // 拆解并处理数据
         datas.forEach(item => {
@@ -31,16 +32,27 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
             item.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
             item.size = item.size ? item.size.toString() : '0'; // 设定文件大小
         });
+
+        // 记录旧列表
+        let addedItems: InstalledEntity[] = [];
+        let removedItems: InstalledEntity[] = [];
+        // 如果已安装列表不为空，则进行对比
         if (installedItemList.value.length > 0) {
-            const aMap = installedItemList.value;
-            installedItemList.value = installedItemList.value.filter(aItem => datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
+            const aMap = installedItemList.value;  // 已安装列表
+            const newList = installedItemList.value.filter(aItem => datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
+            // 找出被移除的元素
+            removedItems = installedItemList.value.filter(aItem => !datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
+            installedItemList.value = newList;
+            // 找出新增的元素
             datas.forEach(bItem => {
                 if (!aMap.some(aItem => bItem.appId === aItem.appId && bItem.version === aItem.version)) {
                     installedItemList.value.push(bItem);
+                    addedItems.push(bItem);
                 }
             });
         } else {
             installedItemList.value = datas as InstalledEntity[]; // 如果已安装列表为空，则直接赋值
+            addedItems = [...installedItemList.value];
         }
         let response = await getAppDetails(installedItemList.value);
         if(response.code == 200) {
@@ -62,23 +74,7 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
         } else {
             console.log(response.msg);
         }
-        return installedItemList;
-    }
-    /**
-     * 更新已安装程序列表的图标
-     * @param allItems 所有程序对象数组
-     * @returns 处理后的对象列表
-     */
-    const updateInstalledItemsIcons = (allItems: CardFace[]) => {
-        // 从所有程序列表中更新已安装程序的icon
-        for (let index = 0; index < installedItemList.value.length; index++) {
-            const element = installedItemList.value[index];
-            const findItem = allItems.find(item => item.appId == element.appId && item.name == element.name);
-            if (findItem && findItem.icon) {
-                element.icon = findItem.icon;
-            }
-        }
-        return installedItemList;
+        return { installedItemList, addedItems, removedItems };
     }
     /**
      * 新增对象
@@ -119,10 +115,15 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
     return {
         installedItemList,
         initInstalledItems,
-        updateInstalledItemsIcons,
         addItem,
         removeItem,
         clearItems,
         updateItemLoadingStatus,
     };
+},{
+    persist: {
+        key: "installedItems",
+        storage: localStorage,
+        paths: ["installedItemList"],
+    },
 });

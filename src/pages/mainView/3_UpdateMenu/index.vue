@@ -16,11 +16,11 @@
             </div>
             <h1>暂无数据</h1>
         </div>
-        <!-- <transition name="el-zoom-in-bottom">
+        <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0 && !loading" class="transition-update-btn">
                 <el-button type="primary" @click="updateAll" :disabled="systemConfigStore.updateStatus">一键更新</el-button>
             </div>
-        </transition> -->
+        </transition>
     </div>
 </template>
 <script setup lang="ts">
@@ -103,9 +103,6 @@ const updateAll = () => {
     // 执行一键更新
     const updateItemList = updateItemsStore.updateItemList;
     updateItemList.forEach((item) => {
-        // item.loading = true;
-        // item.command = `ll-cli install ${item.appId}/${item.version}`;
-        // ipcRenderer.send("command", { ...item });
         // 新增到加载中列表
         installingItemsStore.addItem(item as InstalledEntity);
     })
@@ -114,8 +111,8 @@ const updateAll = () => {
 onMounted(async () => {
     // 清空页面列表数据
     updateItemsStore.clearItems();
-    // 版本大于1.8.3，可以使用ll-cli list --upgradable查询更新列表
-    if (compareVersions(systemConfigStore.llVersion, '1.8.3') >= 0) {
+    // 版本大于1.8.2，可以使用ll-cli list --upgradable查询更新列表
+    if (compareVersions(systemConfigStore.llVersion, '1.8.2') >= 0) {
         ipcRenderer.send('command', { command: "ll-cli --json list --upgradable --type=app" });
         ipcRenderer.once('command-result', (_event: any, res: any) => {
             const { param, code, result } = res;
