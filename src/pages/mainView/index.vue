@@ -32,32 +32,23 @@ import { ipcRenderer } from 'electron';
 import { onUnmounted, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import DownloadQueue from '@/components/DownloadQueue.vue'
-import { compareVersions } from '@/util/checkVersion';
 import { ElNotification } from 'element-plus'
-import { InstalledEntity } from '@/interface';
 // 引入网络组件 获取网络接口信息 获取实时网速
 import { useNetworkSpeed } from '@/util/network'; 
-
-import { useAllAppItemsStore } from "@/store/allAppItems";
-import { useInstalledItemsStore } from "@/store/installedItems";
-import { useDifVersionItemsStore } from "@/store/difVersionItems";
+import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
+import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
+import { installingItems,onLinyapsInstallResult,offLinyapsInstallResult,onCommandResult,offCommandResult } from "@/util/IpcInstalled";
 import { useInstallingItemsStore } from "@/store/installingItems";
-import { useUpdateItemsStore } from "@/store/updateItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
+import { useUpdateStatusStore } from "@/store/updateStatus";
 
 const { uploadSpeed, downloadSpeed } = useNetworkSpeed();
-const allAppItemsStore = useAllAppItemsStore();
-const installedItemsStore = useInstalledItemsStore();
-const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
-const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
+const updateStatusStore = useUpdateStatusStore();
 
 const router = useRouter();
 let show = ref(false); // 显示下载队列框
-let installingItems = installingItemsStore.installingItemList; // 安装队列
-let downloadLogMsg = ""; // 下载日志
-let isProcessing = false; // 是否正在处理安装队列
 
 // 菜单项配置
 const menuItems = [
@@ -73,132 +64,19 @@ const menuItems = [
   { index: "999", label: "返回首页", icon: "Loading", action: () => router.push({ path: '/' }), style: "display: none;" }
 ];
 
-// 命令执行响应函数
-const handleCommandResult = (_event: any, res: any) => {
-    const { param: params, result, code } = res;
-    const command: string = params.command;  // 返回执行的命令
-    if (code != 'stdout') {
-        ipcRenderer.send('logger', 'error', `"${command}"命令执行异常::${result}`);
-        return;
-    }
-    // 监听卸载命令
-    if (command.startsWith('ll-cli uninstall')) {
-        installingItemsStore.removeItem(params);
-        difVersionItemsStore.updateItemLoadingStatus(params, false);
-        difVersionItemsStore.updateItemInstallStatus(params);
-        allAppItemsStore.updateItemLoadingStatus(params, false);
-        // 全部应用列表(判断当前应用安装版本个数小于两个，才进行状态更新)
-        let installedItems = installedItemsStore.installedItemList;
-        let filteredItems = installedItems.filter((item: InstalledEntity) => item.appId === params.appId);
-        if (filteredItems.length < 2) {
-            allAppItemsStore.updateItemInstallStatus(params);
-        }
-        // 移除需要更新的应用
-        updateItemsStore.removeItem(params);
-        // 刷新已安装的应用列表
-        reflushInstalledItems();
-        // 刷新版本列表
-        ipcRenderer.send('reflush-version-list', params.appId);
-        // 安装或卸载成功后，弹出通知
-        ElNotification({ title: '卸载成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功卸载!`});
-    }
-}
-
-const handleLinyapsInstallResult = (_event: any, res: any) => {
-    let { params, code, result } = res;
-    if (code == 'stdout') {
-        // 安装信息
-        downloadLogMsg += result + '<br>';
-        // 处理安装进度
-        let schedule = result.substring(result.lastIndexOf(':') + 1, result.lastIndexOf('%') + 1);
-        if (compareVersions(systemConfigStore.llVersion,'1.7.0') < 0) {
-            schedule = result.split(' ')[0];
-        }
-        console.log(`安装进度: ${schedule}`);
-        const index = installingItems.findIndex(it => it.name === params.name && it.version === params.version && it.appId === params.appId);
-        if (index !== -1) {
-            const aItem = installingItems[index];
-            aItem.schedule = schedule;
-            installingItems.splice(index, 1, aItem);
-        }
-    } else if (code == 'stderr') {
-        // 错误信息
-        downloadLogMsg += `<span style="color: red;">${result}</span><br>`;
-    } else if (code == 'close') {
-        isProcessing = false; // 标记为未处理
-        installingItemsStore.removeItem(params); // 1.从加载列表中移除
-        // 2.关闭各个列表中的加载状态
-        allAppItemsStore.updateItemLoadingStatus(params, false);
-        installedItemsStore.updateItemLoadingStatus(params, false);
-        difVersionItemsStore.updateItemLoadingStatus(params, false);
-        if (result == '0') {
-            // 全部应用列表(判断当前应用安装版本个数小于两个，才进行状态更新)
-            let installedItems = installedItemsStore.installedItemList;
-            let filteredItems = installedItems.filter((item: InstalledEntity) => item.appId === params.appId);
-            if (filteredItems.length < 2) {
-                allAppItemsStore.updateItemInstallStatus(params);
-            }
-            difVersionItemsStore.updateItemInstallStatus(params);
-            // 刷新已安装的应用列表
-            reflushInstalledItems();
-            // 刷新版本列表
-            ipcRenderer.send('reflush-version-list', params.appId);
-            // 安装或卸载成功后，弹出通知
-            ElNotification({ title: '安装成功!', type: 'success', duration: 500, message: `${params.name}(${params.version})被成功安装'!` });
-        } else {
-            ElNotification({ title: '操作异常!', message: downloadLogMsg, type: 'error', duration: 5000, dangerouslyUseHTMLString: true });
-        }
-        downloadLogMsg = ""; // 清除当前程序安装的日志记录
-    }
-}
-
-const reflushInstalledItems = () => {
-    if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        ipcRenderer.send('command', { command: 'll-cli --json list --type=all' });
-        ipcRenderer.once('command-result', async (_event: any, res: any) => {
-            const { param: params, result, code } = res;
-            if (code == 'stdout') {
-                let { addedItems, removedItems} = await installedItemsStore.initInstalledItems(result);
-                // 非开发环境发送发送操作命令！
-                if (process.env.NODE_ENV != "development") {
-                    if (addedItems.length > 0 || removedItems.length > 0) {
-                        // 转换为普通对象数组
-                        const plainAddedItems = addedItems.map(item => ({ ...item }));
-                        const plainRemovedItems = removedItems.map(item => ({ ...item }));
-                        let addList = {
-                            url: `${import.meta.env.VITE_SERVER_URL}/app/saveInstalledRecord`,
-                            visitorId: systemConfigStore.visitorId,
-                            clientIp: systemConfigStore.clientIP,
-                            addedItems: plainAddedItems, 
-                            removedItems: plainRemovedItems
-                        };
-                        ipcRenderer.send('visit', addList);
-                    }
-                }
-            } else {
-                ipcRenderer.send('logger', 'error', `"ll-cli --json list --type=all"命令执行异常::${result}`);
-            }
-        });
-    } else {
-        console.log('当前版本不支持获取应用列表，请使用最新版本的玲珑！');
-    }
-}
-
-// 定时器每8秒检查一次当前系统有哪些应用
-let timer = setInterval(() => {
-    console.log('定时器执行，检查当前系统有哪些应用...');
-    reflushInstalledItems();
-}, 5000);
 
 // 监听安装队列
 watch(() => installingItemsStore.installingItemList, 
     async (newQueue) => {
-        if (isProcessing) return; // 如果正在处理，则不再处理新的队列变化
+        console.log('安装队列变化:', newQueue);
+        if (updateStatusStore.downloadQueueStatus) return; // 如果正在处理，则不再处理新的队列变化
         if (newQueue.length > 0) {
             const item = newQueue[0];
-            isProcessing = true; // 设置为正在处理状态
+            updateStatusStore.downloadQueueStatus = true; // 设置为正在处理状态
             let password = localStorage.getItem('linyaps-password'); // 获取密码
             ipcRenderer.send('linyaps-install', { password, ...item });
+        } else {
+            systemConfigStore.changeUpdateStatus(false); // 如果队列为空，设置安装状态为false
         }
     },
     { deep: true, immediate: true }
@@ -207,8 +85,8 @@ watch(() => installingItemsStore.installingItemList,
 // 页面初始化时执行
 onMounted(() => {
     // 监听命令执行结果
-    ipcRenderer.on('command-result', handleCommandResult);
-    ipcRenderer.on(`linyaps-install-result`, handleLinyapsInstallResult);
+    onLinyapsInstallResult();
+    onCommandResult();
     // 监听自定义协议
     ipcRenderer.on('custom-protocol', (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
@@ -216,12 +94,14 @@ onMounted(() => {
         ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
     });
     reflushInstalledItems();
+    reflushUpdateItems();
 });
 // 页面销毁前执行
 onUnmounted(() => {
-    ipcRenderer.removeListener('command-result', handleCommandResult);
-    ipcRenderer.removeListener(`linyaps-install-result`, handleLinyapsInstallResult);
-    clearInterval(timer);
+    offLinyapsInstallResult();
+    offCommandResult();
+    cancelInstalledTimer(); // 取消安装队列的定时器
+    cancelUpdateTimer(); // 取消更新队列的定时器
 });
 </script>
 <style>

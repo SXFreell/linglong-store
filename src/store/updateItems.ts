@@ -1,66 +1,62 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { CardFace } from "@/interface";
-import { useSystemConfigStore } from "@/store/systemConfig";
-import { getAppDetails } from "@/api";
+import { InstalledEntity } from "@/interface";
+import { useInstalledItemsStore } from "@/store/installedItems";
 
-const systemConfigStore = useSystemConfigStore();
+const installedItemsStore = useInstalledItemsStore();
+
 /**
  * 可更新的全部应用
  */
 export const useUpdateItemsStore = defineStore("updateItems", () => {
 
-    let updateItemList = ref<CardFace[]>([]);
+    let updateItemList = ref<InstalledEntity[]>([]);
+
+    /**
+     * 初始化更新列表
+     */
+    const initUpdateItems = (data: string) => {
+        const datas: any[] = data.trim() ? JSON.parse(data.trim()) : [];
+        if (datas.length < 1) {
+            clearItems(); // 清空更新列表
+            return;
+        }
+        let addedItems: InstalledEntity[] = [];
+        datas.forEach(item => {
+            const { id, old_version, new_version } = item;
+            const thisItem = installedItemsStore.installedItemList.find(installedItem => installedItem.appId == id);
+            if (thisItem && !addedItems.find(updateItem => updateItem.appId == thisItem.appId)) {
+                thisItem.version = new_version; // 更新版本号
+                addedItems.push(thisItem);
+            }
+        });
+        if (updateItemList.value.length > 0) {
+            // 如果更新列表不为空，则进行对比
+            const newList = updateItemList.value.filter(aItem => addedItems.some(bItem => bItem.appId === aItem.appId));
+            updateItemList.value = newList;
+            // 找出新增的元素
+            addedItems.forEach(bItem => {
+                if (!newList.some(aItem => bItem.appId === aItem.appId && bItem.version === aItem.version)) {
+                    updateItemList.value.push(bItem);
+                }
+            });
+        } else {
+            updateItemList.value = addedItems as InstalledEntity[]; // 如果更新列表为空，则直接赋值
+        }
+    }
     /**
      * 新增对象
      * @param item 要新增的对象
      */
-    const addItem = async (item: CardFace) => {
+    const addItem = async (item: InstalledEntity) => {
         updateItemList.value.push(item);
-        // 格式转化
-        updateItemList.value = updateItemList.value.map(item => {
-            return {
-                ...item,
-                // 设定appId
-                appId: item.id ? item.id : item.appId,
-                // 设定arch架构
-                arch: typeof item.arch === 'string' ? item.arch : Array.isArray(item.arch) ? item.arch[0] : '',
-                // 设定仓库源
-                repoName: systemConfigStore.defaultRepoName,
-                // 设定文件大小
-                size: item.size ? item.size.toString() : '0'
-            };
-        });
-        let response = await getAppDetails(updateItemList.value);
-            if(response.code == 200) {
-                const datass: CardFace[] = response.data as unknown as CardFace[];
-                if(datass.length > 0) {
-                    for(let i = 0; i < updateItemList.value.length; i++) {
-                        const item = updateItemList.value[i];
-                        const findItem = datass.find(it => it.appId == item.appId && it.name == item.name && it.version == item.version);
-                        if (findItem) {
-                            // 设定arch架构
-                            findItem.arch = typeof findItem.arch === 'string' ? findItem.arch : Array.isArray(findItem.arch) ? findItem.arch[0] : '';
-                            // 设定仓库源
-                            findItem.repoName = systemConfigStore.defaultRepoName;
-                            // 设定文件大小
-                            findItem.size = findItem.size ? findItem.size.toString() : '0';
-                            updateItemList.value[i] = findItem;
-                            continue;
-                        }
-                        updateItemList.value[i] = item;
-                    }
-                }
-            } else {
-                console.log(response.msg);
-            }
     };
     /**
      * 从对象数组中移除对象
      * @param item 要移除的对象
      */
-    const removeItem = (item: CardFace) => {
-        const index = updateItemList.value.findIndex((i) => i.appId === item.appId && i.name === item.name && i.version === item.version);
+    const removeItem = (item: InstalledEntity) => {
+        const index = updateItemList.value.findIndex((i) => i.appId === item.appId);
         if (index !== -1) {
             updateItemList.value.splice(index, 1);
         }
@@ -74,6 +70,7 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
 
     return {
         updateItemList,
+        initUpdateItems,
         addItem,
         removeItem,
         clearItems,

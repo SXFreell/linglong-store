@@ -152,6 +152,30 @@ const IPCHandler = (win: BrowserWindow) => {
         });
     });
 
+    /* ****************** 命令 ll-cli list ******************* */
+    ipcMain.on("linyaps-list", (event, params) => {
+        exec(params.command, (error, stdout, stderr) => {
+            // ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-list-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli search ******************* */
+    ipcMain.on("linyaps-search", (event, params) => {
+        exec(params.command, (error, stdout, stderr) => {
+            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-update-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli update ******************* */
+    ipcMain.on("linyaps-update", (event, params) => {
+        exec(params.command, (error, stdout, stderr) => {
+            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-update-result", { error, stdout, stderr });
+        });
+    });
+
     /* ****************** 命令 ll-cli install xxx ******************* */
     ipcMain.on("linyaps-install", (_event, params) => {
         const { password, appId, version } = params;
