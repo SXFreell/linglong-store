@@ -159,16 +159,18 @@ const reflushInstalledItems = () => {
             const { param: params, result, code } = res;
             if (code == 'stdout') {
                 let { addedItems, removedItems} = await installedItemsStore.initInstalledItems(result);
-                console.log('当前系统新增的应用', addedItems);
-                console.log('当前系统移除的应用', removedItems);
                 // 非开发环境发送发送操作命令！
-                if (import.meta.env.MODE != "development") {
-                    if (addedItems.length > 0) {
+                if (process.env.NODE_ENV != "development") {
+                    if (addedItems.length > 0 || removedItems.length > 0) {
+                        // 转换为普通对象数组
+                        const plainAddedItems = addedItems.map(item => ({ ...item }));
+                        const plainRemovedItems = removedItems.map(item => ({ ...item }));
                         let addList = {
-                            url: `${import.meta.env.VITE_SERVER_URL}/visit/save11`,
+                            url: `${import.meta.env.VITE_SERVER_URL}/app/saveInstalledRecord`,
                             visitorId: systemConfigStore.visitorId,
                             clientIp: systemConfigStore.clientIP,
-                            items: addedItems
+                            addedItems: plainAddedItems, 
+                            removedItems: plainRemovedItems
                         };
                         ipcRenderer.send('visit', addList);
                     }

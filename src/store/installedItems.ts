@@ -54,26 +54,30 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
             installedItemList.value = datas as InstalledEntity[]; // 如果已安装列表为空，则直接赋值
             addedItems = [...installedItemList.value];
         }
-        let response = await getAppDetails(installedItemList.value);
-        if(response.code == 200) {
-            const datass: InstalledEntity[] = response.data as unknown as InstalledEntity[];
-            if(datass.length > 0) {
-                for(let i = 0; i < installedItemList.value.length; i++) {
-                    const item = installedItemList.value[i];
-                    const findItem = datass.find(it => it.appId == item.appId && it.name == item.name && it.version == item.version);
-                    if (findItem) {
-                        findItem.arch = typeof findItem.arch === 'string' ? findItem.arch : Array.isArray(findItem.arch) ? findItem.arch[0] : ''; // 设定arch架构
-                        findItem.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
-                        findItem.size = findItem.size ? findItem.size.toString() : '0'; // 设定文件大小
-                        installedItemList.value[i] = findItem;
-                    } else {
-                        installedItemList.value[i] = item;
+        // 只在有新增时才获取新增应用详情
+        if (addedItems.length > 0) {
+            const response = await getAppDetails(addedItems);
+            if (response.code == 200) {
+                const details: InstalledEntity[] = response.data as unknown as InstalledEntity[];
+                for (let i = 0; i < addedItems.length; i++) {
+                    const item = addedItems[i];
+                    const detail = details.find(it => it.appId == item.appId && it.name == item.name && it.version == item.version);
+                    if (detail) {
+                        detail.arch = typeof detail.arch === 'string' ? detail.arch : Array.isArray(detail.arch) ? detail.arch[0] : ''; // 设定arch架构
+                        detail.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
+                        detail.size = detail.size ? detail.size.toString() : '0'; // 设定文件大小
+                        // 更新 installedItemList 中的对应项
+                        const idx = installedItemList.value.findIndex(it => it.appId == detail.appId && it.name == detail.name && it.version == detail.version);
+                        if (idx !== -1) {
+                            installedItemList.value[idx] = detail;
+                        }
                     }
                 }
+            } else {
+                console.log(response.msg);
             }
-        } else {
-            console.log(response.msg);
         }
+        // 返回结果
         return { installedItemList, addedItems, removedItems };
     }
     /**

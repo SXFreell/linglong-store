@@ -51,9 +51,6 @@ import { categoryItem, execEntity } from '@/interface';
 
 const systemConfigStore = useSystemConfigStore();
 
-const url = import.meta.env.VITE_SERVER_URL as string;
-const env = process.env.NODE_ENV as string;
-
 // 获取路由对象
 const router = useRouter();
 // 提示信息
@@ -115,11 +112,11 @@ const commandResult = async (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', "玲珑环境版本检测完毕...");
         ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
         // 检测当前环境(非开发环境发送通知APP登陆！)
-        if (env != "development") {
-            const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP } = systemConfigStore;
+        if (process.env.NODE_ENV != "development") {
+            const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP, arch } = systemConfigStore;
             const loginPayload = {
-                url: `${url}/visit/appLogin`, appVersion: pkg.version, clientIp: clientIP,
-                llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId
+                url: `${import.meta.env.VITE_SERVER_URL}/app/saveVisitRecord`, appVersion: pkg.version, clientIp: clientIP, arch,
+                llVersion, llBinVersion: linglongBinVersion, detailMsg, osVersion, repoName: defaultRepoName, visitorId
             };
             ipcRenderer.send('appLogin', loginPayload);
         }
@@ -269,7 +266,7 @@ const manualInstallBtnClick = () => {
 // 自动安装点击事件
 const autoInstallBtnClick = () => {
     centerDialogVisible.value = false
-    ipcRenderer.send('to_install_linglong', url); // 执行脚本文件
+    ipcRenderer.send('to_install_linglong', import.meta.env.VITE_SERVER_URL); // 执行脚本文件
 }
 
 // 加载前执行
@@ -301,14 +298,14 @@ onMounted(async () => {
         }
         localStorage.setItem('categories', JSON.stringify(categories));
     })
-    ipcRenderer.send('ipc-categories', { url });
+    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     // 判断是否是开发模式，跳出版本检测
-    if (env != "development" && systemConfigStore.autoCheckUpdate) {
+    if (process.env.NODE_ENV != "development" && systemConfigStore.autoCheckUpdate) {
         message.value = "正在检测商店版本号...";
         ipcRenderer.send('logger', 'info', "正在检测商店版本号...");
         ipcRenderer.send('checkForUpdate');
         return;
-    } else if (env == "development") {
+    } else if (process.env.NODE_ENV == "development") {
         message.value = "开发模式，跳过商店版本号检测...";
         ipcRenderer.send('logger', 'info', "开发模式，跳过商店版本号检测...");
     } else {
