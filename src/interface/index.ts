@@ -9,44 +9,30 @@ export interface InstalledEntity {
     appId: string, // 1.4.x版本玲珑id
     appid?: string, // 1.5.0版本玲珑id
     id?: string, // 1.5.1版本玲珑id
+    icon: string, // 玲珑图标
     name: string, // 玲珑名称
-    version: string, // 玲珑版本
+    zhName?: string, // 玲珑名称
     arch: string, // 架构
     channel: string, // 玲珑渠道
-    description: string, // 玲珑描述
-    icon: string, // 玲珑图标
     kind?: string, // 玲珑类型
     module: string, // 玲珑模块
-    zhName?: string, // 玲珑名称
     repoName: string, // 来源仓库
     runtime: string, // 运行依赖
     size: string, // 文件大小
+    categoryName?: string, // 分类名称
+    version: string, // 玲珑版本
+    description: string, // 玲珑描述
     createTime?: string, // 上架时间
     installCount?: number, // 安装次数
     uninstallCount?: number, // 卸载次数
     uabUrl?: string, // 玲珑地址
     user?: string, // 用户名
-    categoryName?: string, // 分类名称
+    newVersion?: string, // 最新版本
+    occurrenceNumber?: number, // 同appId安装个数
     /* ********** 非命令传递字段 ********* */
     isInstalled?: boolean, // 是否已安装
     loading?: boolean,  // 是否正在安装
     schedule?: string,  // 安装进度
-    occurrenceNumber?: number, // 同appId安装个数
-}
-
-/**
- * 卡片信息传递到明细页面的路由传递的字段
- */
-export interface OpenDetailParams {
-    menuName: string,
-    appId: string,
-    name: string,
-    version: string,
-    description: string,
-    arch: string,
-    icon?: string,
-    zhName?: string,
-    size?: string,
 }
 
 /**
@@ -62,35 +48,6 @@ export interface AppListParams {
     arch?: string,
     pageNo: number,
     pageSize: number,
-}
-
-/**
- * 玲珑详细信息对象
- */
-export interface AppMain {
-    id: string,
-    appId: string,
-    icon: string,
-    zhName: string,
-    categoryId: string,
-    name: string,
-    channel: string,
-    arch: string,
-    description: string,
-    kind: string,
-    module: string,
-    repoName: string,
-    runtime: string,
-    size: string,
-    uabUrl: string,
-    user: string,
-    version: string,
-    installCount: number,
-    uninstallCount: number,
-    flag: string,
-    createTime: string,
-    updateTime: string,
-    isDelete: string
 }
 
 /**
@@ -123,30 +80,6 @@ export interface pageResult {
     total: number,
     records: any[]
     pages: number
-}
-
-/**
- * 请求参数
- * @param page 页码
- * @param size 每页条数
- */
-export interface Pagination {
-    page: number;
-    size: number;
-}
-
-/**
- * 运行时对象
- */
-export interface RunTime {
-    app: string,
-    containerId: string,
-    pid: string,
-    Path: string,
-    version: string,
-    arch: string,
-    channel: string,
-    repo: string,
 }
 
 /**

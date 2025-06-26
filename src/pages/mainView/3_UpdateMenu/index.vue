@@ -5,8 +5,8 @@
             <div class="card-items" v-for="(item, index) in updateItemsStore.updateItemList" :key="index">
                 <Card :tabName="`更新程序`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
                     :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
-                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
-                    :isInstalled="true" :loading="item.loading"/>
+                    :newVersion="item.newVersion" :description="item.description" :createTime="item.createTime" 
+                    :installCount="item.installCount" :isInstalled="true" :loading="item.loading"/>
             </div>
         </div>
         <div class="no-data-container" v-else>
@@ -48,9 +48,7 @@ const updateAll = () => {
     })
 }
 // 页面打开时执行
-onMounted(async () => {
-    reflushUpdateItems();
-});
+onMounted(async () => reflushUpdateItems());
 </script>
 <style scoped>
 .transition-update-btn {

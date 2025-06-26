@@ -21,12 +21,22 @@
 import { onMounted, onBeforeUnmount, ref } from 'vue';
 import { ipcRenderer } from "electron";
 import { ElNotification } from 'element-plus'
-import { RunTime } from "@/interface";
 import { parseRef } from "@/util/refParam";
 import { compareVersions } from '@/util/checkVersion';
 import { useSystemConfigStore } from "@/store/systemConfig";
 
 const systemConfigStore = useSystemConfigStore();
+
+interface RunTime {
+    app: string,
+    containerId: string,
+    pid: string,
+    Path: string,
+    version: string,
+    arch: string,
+    channel: string,
+    repo: string,
+}
 
 let runtimeList = ref<RunTime[]>([]);
 

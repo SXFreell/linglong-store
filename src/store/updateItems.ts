@@ -26,12 +26,12 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
             const { id, old_version, new_version } = item;
             const thisItem = installedItemsStore.installedItemList.find(installedItem => installedItem.appId == id);
             if (thisItem && !addedItems.find(updateItem => updateItem.appId == thisItem.appId)) {
-                thisItem.version = new_version; // 更新版本号
+                thisItem.version = old_version; // 设置旧版本号
+                thisItem.newVersion = new_version; // 更新版本号
                 addedItems.push(thisItem);
             }
         });
-        if (updateItemList.value.length > 0) {
-            // 如果更新列表不为空，则进行对比
+        if (updateItemList.value.length > 0) { // 如果更新列表不为空，则进行对比
             const newList = updateItemList.value.filter(aItem => addedItems.some(bItem => bItem.appId === aItem.appId));
             updateItemList.value = newList;
             // 找出新增的元素

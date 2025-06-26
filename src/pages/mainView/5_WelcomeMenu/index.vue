@@ -33,12 +33,11 @@
 import { onMounted, ref } from "vue";
 import Card from "@/components/Card.vue";
 import defaultImage from '@/assets/logo.svg';
-import { AppListParams, InstalledEntity, OpenDetailParams, pageResult } from "@/interface";
+import { AppListParams, InstalledEntity, pageResult } from "@/interface";
 import { getWelcomeAppList, getWelcomeCarouselList } from "@/api";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import router from "@/router";
-import { LocationQueryRaw } from "vue-router";
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
@@ -82,22 +81,27 @@ const getWelcomeApp = async (param: AppListParams) => {
 }
 // 分类选择点击事件
 const categoryClick = (item: any) => {
-    let queryParams: LocationQueryRaw = { menuName: '分类推荐', ...item } as any as unknown as LocationQueryRaw;
-    router.push({ path: '/search', query: queryParams });
+    router.push({ path: '/search', query: { 
+        menuName: '分类推荐', 
+        ...Object.fromEntries(
+            Object.entries(item).map(([k, v]) => [k, v != null ? String(v) : ''])
+        ) 
+    }});
 }
 // 打开明细界面
 const openDetail = (item: InstalledEntity) => {
-    let queryParams: LocationQueryRaw = { menuName: '玲珑推荐', ...item } as OpenDetailParams as unknown as LocationQueryRaw;
-    router.push({ path: '/details', query: queryParams });
+    router.push({ path: '/details', query: { 
+        menuName: '玲珑推荐', 
+        ...Object.fromEntries(
+            Object.entries(item).map(([k, v]) => [k, v != null ? String(v) : ''])
+        ) 
+    }});
 }
 // 页面加载时启动
 onMounted(async () => {
-    // 轮播图推荐程序
-    carouselChart();
-    // 分类推荐程序
-    groupedItems();
-    // 获取最受欢迎的前十名程序
-    getWelcomeApp(params.value);
+    carouselChart(); // 轮播图推荐程序
+    groupedItems(); // 分类推荐程序
+    getWelcomeApp(params.value); // 获取最受欢迎的前十名程序
 })
 </script>
 <style scoped>

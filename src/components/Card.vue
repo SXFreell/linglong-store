@@ -8,12 +8,9 @@
         <div ref="containerRef" class="text-container">
             <span ref="textRef" class="text-content">{{ displayName }}</span>
         </div>
-        <span class="card-version">{{ version }}</span>
-        <div class="card-bottom" v-if="tabName == '玲珑推荐'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
-            <el-button class="card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
-            <el-button class="card-btn" v-else @click="openDetails">安装</el-button>
-        </div>
-        <div class="card-bottom" v-if="tabName == '分类推荐'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+        <span v-if="tabName == '更新程序'" class="card-version">{{ newVersion }}</span>
+        <span v-else class="card-version">{{ version }}</span>
+        <div class="card-bottom" v-if="tabName == '玲珑推荐' || tabName == '分类推荐' || tabName == '全部程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
             <el-button class="card-btn" v-else @click="openDetails">安装</el-button>
         </div>
@@ -22,10 +19,6 @@
             <div class="card-arch" v-else-if="tabName == '排行榜(最新上架)'">{{ displayTime }}</div>
             <el-button class="p-card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
             <el-button class="p-card-btn" v-else @click="openDetails">安装</el-button>
-        </div>
-        <div class="card-bottom" v-if="tabName == '全部程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
-            <el-button class="card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
-            <el-button class="card-btn" v-else @click="openDetails">安装</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '卸载程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="card-btn" @click="changeStatus(props)">卸载</el-button>
@@ -63,6 +56,7 @@ const props = defineProps({
     channel: { type: String, default: '' },
     categoryName: { type: String, default: '其他' },
     version: { type: String, default: '0.0.0.1' },
+    newVersion: { type: String, default: '0.0.0.1' },
     module: { type: String, default: '' },
     repoName: { type: String, default: '' },
     runtime: { type: String, default: '' },
