@@ -3,10 +3,10 @@
         <div class="card-items-container"
             v-if="updateItemsStore.updateItemList && updateItemsStore.updateItemList.length > 0">
             <div class="card-items" v-for="(item, index) in updateItemsStore.updateItemList" :key="index">
-                <updateCard :name="item.name" :version="item.version" :description="item.description"
-                    :arch="item.arch" :isInstalled="true" :appId="item.appId" :icon="item.icon"
-                    :loading="item.loading" :zhName="item.zhName" :size="item.size"
-                    :categoryName="item.categoryName" />
+                <Card :tabName="`更新程序`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
+                    :isInstalled="true" :loading="item.loading"/>
             </div>
         </div>
         <div class="no-data-container" v-else>
@@ -24,9 +24,9 @@
 </template>
 <script setup lang="ts">
 import { onMounted } from "vue";
-import { InstalledEntity } from "@/interface";
-import updateCard from "@/components/updateCard.vue";
+import Card from "@/components/Card.vue";
 import defaultImage from '@/assets/logo.svg';
+import { InstalledEntity } from "@/interface";
 import { reflushUpdateItems } from "@/util/WorkerUpdate";
 
 import { useUpdateItemsStore } from "@/store/updateItems";

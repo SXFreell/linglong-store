@@ -164,7 +164,7 @@ const IPCHandler = (win: BrowserWindow) => {
     ipcMain.on("linyaps-search", (event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
-            win.webContents.send("linyaps-update-result", { error, stdout, stderr });
+            win.webContents.send("linyaps-search-result", { error, stdout, stderr });
         });
     });
 

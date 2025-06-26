@@ -169,11 +169,32 @@ html, body {
   background: radial-gradient(circle at 50% 50%, transparent, var(--base-color));
 }
 
+.no-data-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+/* 卡片上面元素样式 */
 .card-container {
   width: 100%;
   border: none;
   position: relative;
   background: radial-gradient(circle at 50% 20%, var(--base-color), transparent);
+}
+
+.tag-diagonal {
+    transform: rotate(-40deg);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: middle;
+    margin-left: -30px;
+    margin-bottom: -6px;
+    color: #6E6E6E;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .card-icon {
@@ -198,6 +219,30 @@ html, body {
   color: var(--menu-base-font-color);
 }
 
+.text-container {
+    width: 100%;
+    background-color: var(--base-background-color);
+    color: var(--menu-base-font-color);
+    border-radius: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    overflow: hidden; /* 超出部分隐藏 */
+    white-space: nowrap; /* 保持文字在一行显示 */
+    position: relative; /* 相对定位，便于定位悬浮框 */
+    text-align: center; /* 默认情况下文字居中显示 */
+}
+
+.text-content {
+    display: inline-block;
+    /* 动画由JS动态控制 */
+}
+
+.text-container:hover .text-content {
+    /* 鼠标悬停时暂停滚动 */
+    /* animation-play-state: paused; */
+    animation: scroll-name 10s linear infinite;
+}
+
 .card-version {
   display: flex;
   justify-content: center;
@@ -208,7 +253,7 @@ html, body {
 
 .card-bottom {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
 }
 
@@ -217,14 +262,22 @@ html, body {
   color: var(--menu-base-font-color);
 }
 
-.no-data-container {
+.p-card-bottom {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  height: 100%;
 }
 
-.install-btn {
+.card-btn {
+  height: 24px;
+  width: 75%;
+  background-color: var(--base-background-color);
+  color: var(--menu-base-font-color);
+  border: none;
+  padding: 6px;
+}
+
+.p-card-btn {
   height: 24px;
   width: 58px;
   background-color: var(--base-background-color);
@@ -232,33 +285,25 @@ html, body {
   border: none;
 }
 
-.install-btn:hover {
+.card-btn:hover, .p-card-btn:hover {
   background-color: #999999;
   color: var(--menu-base-font-color);
 }
-
-.uninstall-btn {
-  height: 24px;
-  width: 58px;
-  background-color: var(--base-background-color);
-  color: var(--menu-base-font-color);
-  border: none;
-}
-
-.uninstall-btn:hover {
-  background-color: #999999;
-  color: var(--menu-base-font-color);
-}
-
 
 @keyframes scroll-text {
-  0% {
-    /* 从右侧开始 */
+  0% { /* 从右侧开始 */
     transform: translateX(100%);
   }
+  100% {  /* 向左滚动 */
+    transform: translateX(-100%);
+  }
+}
 
-  100% {
-    /* 向左滚动 */
+@keyframes scroll-name {
+  0% { /* 从右侧开始 */
+    transform: translateX(0);
+  }
+  100% { /* 向左滚动 */
     transform: translateX(-100%);
   }
 }
@@ -289,4 +334,9 @@ html, body {
   .card-container {
     border: 1px solid #ccc;
   }
+      
+  .tag-diagonal {
+    color: #E2AB5F;
+  }
+
 }

@@ -72,7 +72,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ipcRenderer } from 'electron';
-import { CardFace } from '@/interface';
+import { InstalledEntity } from '@/interface';
 import { onBeforeRouteLeave } from 'vue-router';
 import { ElNotification, TableColumnCtx } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
@@ -179,43 +179,42 @@ const changeStatus = async (item: any, flag: string) => {
 }
 
 // 运行按钮(发送操作命令,并弹出提示框)
-const handleRunApp = (item: CardFace) => {
+const handleRunApp = (item: InstalledEntity) => {
     ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
     ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
 }
 
-// 监听命令结果
-const difVersionItemsCommand = async (_event: any, res: any) => {
-    const command: string = res.param.command;
-    if (res.code != 'stdout') {
-        ElNotification({ title: '提示', message: "操作异常请联系管理员", type: 'error', duration: 500 });
-        return;
+const searchLinyapsByAppId = (appId: string) => {
+    // 2.调用查询方法
+    let itemsCommand = `ll-cli --json search ${appId}`;
+    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
+        itemsCommand = systemConfigStore.isShowBaseService ? `ll-cli --json search ${appId} --type=all` : itemsCommand;
+    } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
+        itemsCommand = `ll-cli --json search ${appId} --all`;
+    } else if (compareVersions(llVersion, '1.8.3') >= 0) {
+        itemsCommand = `ll-cli --json search ${appId} --show-all-version`;
     }
-    if (command.startsWith("ll-cli --json search")) {
-        await difVersionItemsStore.initDifVersionItems(res.result, query);
-    }
-    loading.value = false;
+    ipcRenderer.send("linyaps-search", { 'command': itemsCommand });
+    ipcRenderer.once('linyaps-search-result', (_event: any, res: any) => {
+        const { error, stdout, stderr } = res;
+        if (error || stderr) {
+            loading.value = false;
+            ipcRenderer.send('logger', 'error', `获取版本列表失败: ${error || stderr}`);
+            ElNotification({ title: '提示', message: "获取版本列表失败，请稍后重试", type: 'error', duration: 500 });
+            return;
+        }
+        difVersionItemsStore.initDifVersionItems(stdout, query.appId as string);
+        loading.value = false;
+    });
 }
+
 // 监听版本刷新结果
 const reflushVersionList = (_event: any, res: any) => {
-    // 1.清除表单数据
-    difVersionItemsStore.clearItems();
-    // 2.调用查询方法
-    let itemsCommand = `ll-cli --json search ${res.appId}`;
-    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
-        itemsCommand = systemConfigStore.isShowBaseService ? `ll-cli --json search ${res.appId} --type=all` : itemsCommand;
-    } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
-        itemsCommand = `ll-cli --json search ${res.appId} --all`;
-    } else if (compareVersions(llVersion, '1.8.3') >= 0) {
-        itemsCommand = `ll-cli --json search ${res.appId} --show-all-version`;
-    }
-    ipcRenderer.send("command", { 'command': itemsCommand });
+    searchLinyapsByAppId(res.appId);
 }
 
 // 页面启动时加载
 onMounted(async () => {
-    // 监听获取版本列表结果
-    ipcRenderer.on('command-result', difVersionItemsCommand);
     // 监听安装结果后版本刷新
     ipcRenderer.on('reflush-version-list-result', reflushVersionList);
     // 刷新版本列表
@@ -223,7 +222,6 @@ onMounted(async () => {
 })
 // 页面销毁前执行
 onBeforeUnmount(() => {
-    ipcRenderer.removeListener('command-result', difVersionItemsCommand);
     ipcRenderer.removeListener('reflush-version-list-result', reflushVersionList);
 });
 

@@ -19,7 +19,9 @@ const TrayMenu = (mainWindow: BrowserWindow) => {
         },
         // { 
         //     label: '基础设置', 
-        //     type: 'radio' 
+        //     click: () => {
+        //         mainWindow.webContents.send('openSettings');
+        //     },
         // },
         { 
             label: '退出', 
@@ -28,7 +30,6 @@ const TrayMenu = (mainWindow: BrowserWindow) => {
     ]);
     
     tray.setToolTip('玲珑应用商店')
-    // tray.setTitle('This is my title')
 
     // 为托盘图标设置上下文菜单
     tray.setContextMenu(contextMenu);

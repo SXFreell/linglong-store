@@ -53,13 +53,10 @@ export const reflushUpdateItems = () => {
             const { error, stdout, stderr } = res;
             if (stdout) {
                 updateItemsStore.initUpdateItems(stdout); // 初始化更新列表
-                console.log('更新列表 >> ', updateItemsStore.updateItemList);
-                return;
             } else {
                 ipcRenderer.send('logger', 'error', `ll-cli --json list --upgradable --type=app命令执行异常::${error || stderr}`);
             }
         });
-        return;
     }
 }
 

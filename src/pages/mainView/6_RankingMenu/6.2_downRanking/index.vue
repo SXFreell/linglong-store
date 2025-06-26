@@ -6,9 +6,10 @@
         element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="displayedItems && displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
-                <rankingServCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch" :channel="`downRanking`"
-                    :isInstalled="item.isInstalled" :appId="item.appId" :icon="item.icon" :loading="item.loading" :installCount="item.installCount"
-                    :zhName = "item.zhName" :size="item.size" :categoryName = "item.categoryName"/>
+                <Card :tabName="`排行榜(下载量)`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
+                    :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
         <div class="no-data-container" v-else>
@@ -22,12 +23,12 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import defaultImage from '@/assets/logo.svg';
-import rankingServCard from '@/components/rankingServCard.vue';
-import { AppListParams, CardFace, pageResult } from '@/interface';
-import { getInstallAppList } from '@/api';
+import Card from "@/components/Card.vue";
+import { AppListParams, InstalledEntity, pageResult } from '@/interface';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { onBeforeRouteLeave } from 'vue-router';
+import { getInstallAppList } from '@/api';
 import router from '@/router';
 
 const installedItemsStore = useInstalledItemsStore();
@@ -44,7 +45,7 @@ let params = ref<AppListParams>({
     pageSize: 100 
 })
 
-let displayedItems = ref<CardFace[]>([]);
+let displayedItems = ref<InstalledEntity[]>([]);
 // 页面启动时加载
 onMounted(async () => {
     let res = await getInstallAppList(params.value);

@@ -21,19 +21,20 @@
         <div v-for="(group, groupIndex) in result" :key="groupIndex" class="items-container">
             <!-- 每五个一组的项目 -->
             <div v-for="(item, itemIndex) in group" :key="itemIndex" class="card-items">
-                <WelcomeCard :name="item.name" :zhName="item.zhName" :version="item.version"
-                    :description="item.description" :arch="item.arch" :isInstalled="item.isInstalled"
-                    :appId="item.appId" :icon="item.icon" :loading="item.loading" :categoryName="item.categoryName"/>
+                <Card :tabName="`玲珑推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName"
+                    :version="item.version" :description="item.description" :createTime="item.createTime"
+                    :installCount="item.installCount" :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
     </div>
 </template>
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { getWelcomeAppList, getWelcomeCarouselList } from "@/api";
+import Card from "@/components/Card.vue";
 import defaultImage from '@/assets/logo.svg';
-import WelcomeCard from "@/components/welcomeCard.vue";
-import { AppListParams, CardFace, OpenDetailParams, pageResult } from "@/interface";
+import { AppListParams, InstalledEntity, OpenDetailParams, pageResult } from "@/interface";
+import { getWelcomeAppList, getWelcomeCarouselList } from "@/api";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import router from "@/router";
@@ -42,9 +43,9 @@ import { LocationQueryRaw } from "vue-router";
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
-const welcomeItemList = ref<CardFace[]>([]);
+const welcomeItemList = ref<InstalledEntity[]>([]);
 const categoryList = ref<any[]>([]);
-const result = ref<CardFace[][]>([]);
+const result = ref<InstalledEntity[][]>([]);
 
 let params = ref<AppListParams>({
     repoName: systemConfigStore.defaultRepoName,
@@ -55,7 +56,7 @@ let params = ref<AppListParams>({
 // 轮播图推荐程序
 const carouselChart = async () => {
     let res = await getWelcomeCarouselList({ repoName: systemConfigStore.defaultRepoName, arch: systemConfigStore.arch });
-    welcomeItemList.value = res.data as unknown as CardFace[];
+    welcomeItemList.value = res.data as unknown as InstalledEntity[];
 }
 // 分类推荐程序
 const groupedItems = () => {
@@ -85,7 +86,7 @@ const categoryClick = (item: any) => {
     router.push({ path: '/search', query: queryParams });
 }
 // 打开明细界面
-const openDetail = (item: CardFace) => {
+const openDetail = (item: InstalledEntity) => {
     let queryParams: LocationQueryRaw = { menuName: '玲珑推荐', ...item } as OpenDetailParams as unknown as LocationQueryRaw;
     router.push({ path: '/details', query: queryParams });
 }

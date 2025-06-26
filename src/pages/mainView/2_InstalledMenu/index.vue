@@ -3,16 +3,16 @@
         <div class="card-items-container" v-if="displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
                 <el-badge v-if="item.occurrenceNumber || item.occurrenceNumber as number <= 1" class="item">
-                    <InstalledCard :name="item.name" :version="item.version" :description="item.description"
-                        :arch="item.arch" :isInstalled="true" :appId="item.appId" :icon="item.icon"
-                        :loading="item.loading" :zhName="item.zhName" :size="item.size"
-                        :categoryName="item.categoryName" />
+                    <Card :tabName="`卸载程序`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                        :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
+                        :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
+                        :isInstalled="true" :loading="item.loading"/>
                 </el-badge>
                 <el-badge v-else :value="item.occurrenceNumber" :max="99" class="item">
-                    <InstalledCard :name="item.name" :version="item.version" :description="item.description"
-                        :arch="item.arch" :isInstalled="true" :appId="item.appId" :icon="item.icon"
-                        :loading="item.loading" :zhName="item.zhName" :size="item.size"
-                        :categoryName="item.categoryName" />
+                    <Card :tabName="`卸载程序`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                        :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
+                        :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
+                        :isInstalled="true" :loading="item.loading"/>
                 </el-badge>
             </div>
         </div>
@@ -32,7 +32,7 @@ import { InstalledEntity, GroupedItem } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { compareVersions } from "@/util/checkVersion";
-import InstalledCard from "@/components/installCard.vue";
+import Card from "@/components/Card.vue";
 import defaultImage from '@/assets/logo.svg';
 
 const installedItemsStore = useInstalledItemsStore();

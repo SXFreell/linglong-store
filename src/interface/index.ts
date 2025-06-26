@@ -3,30 +3,6 @@
  */
 
 /**
- * 卡片信息
- */
-export interface CardFace {
-    id?: string,
-    appId: string,
-    name: string,
-    version: string,
-    description?: string,
-    arch: string,
-    icon?: string,
-    channel?: string,
-    module?: string,
-    command?:string,
-    isInstalled?: boolean,
-    loading?: boolean,
-    createTime?: string,
-    installCount?: number,
-    zhName?: string,
-    size?: string,
-    repoName?: string,
-    categoryName?: string,
-}
-
-/**
  * 安装对象
  */
 export interface InstalledEntity {

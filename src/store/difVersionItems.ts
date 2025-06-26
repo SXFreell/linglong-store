@@ -1,12 +1,11 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import string2card from "@/util/string2card";
 import { LocationQuery } from "vue-router";
-import hasUpdateVersion, { compareVersions } from "@/util/checkVersion";
+import { compareVersions } from "@/util/checkVersion";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { CardFace, InstalledEntity } from "@/interface";
+import { InstalledEntity } from "@/interface";
 import { getSearchAppVersionList } from "@/api";
 
 const installedItemsStore = useInstalledItemsStore();
@@ -16,6 +15,7 @@ const systemConfigStore = useSystemConfigStore();
 let repoName = systemConfigStore.defaultRepoName;
 let arch = systemConfigStore.arch;
 let linglongBinVersion = systemConfigStore.linglongBinVersion;
+let llVersion = systemConfigStore.llVersion;
 /**
  * 不同版本列表
  */
@@ -28,41 +28,19 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @param data 待处理的数据
      * @returns 将数据放入后的对象数组
      */
-    const initDifVersionItemsOld = (data: string, query: LocationQuery) => {
-        clearItems(); // 清空原始对象
-        let searchVersionItemList: InstalledEntity[] = [];
-        const apps: string[] = data.split('\n');
-        if (apps.length > 2) {
-            for (let index = 1; index < apps.length - 1; index++) {
-                const card: CardFace | null = string2card(apps[index]);
-                if (card) {
-                    const item: InstalledEntity = card as InstalledEntity;
-                    if (item.appId == query.appId && item.module != 'devel') {
-                        // 处理当前版本是否已安装状态
-                        item.isInstalled = installedItemsStore.installedItemList.some((it) => it.appId === item.appId && it.name === item.name && it.version === item.version);
-                        // 处理当前版本是否加载中状态
-                        item.loading = installingItemsStore.installingItemList.some((it) => it.appId === item.appId && it.name === item.name && it.version === item.version);
-                        searchVersionItemList.push(item);
-                    }
-                }
-            }
-            difVersionItemList.value = searchVersionItemList.sort((a, b) => hasUpdateVersion(a.version, b.version));
-        }
-        return difVersionItemList;
-    }
-
-    /**
-     * 初始化已安装程序数组
-     * @param data 待处理的数据
-     * @returns 将数据放入后的对象数组
-     */
-    const initDifVersionItems = async (data: string, query: LocationQuery) => {
+    const initDifVersionItems = async (data: string, appId: string) => {
         // 清空原始对象
-        clearItems();
-        // 命令查询返回
-        let appId = query.appId as string;
-        let searchVersionItemList: any[] = data.trim() ? JSON.parse(data.trim()) : [];
-
+        difVersionItemList.value.splice(0, difVersionItemList.value.length);
+        // 字符串转换成对象
+        const items = data ? JSON.parse(data) : null;
+        // 创建一个数组集合
+        let searchVersionItemList: any[] = [];
+        // 版本小于1.9.0时
+        if (compareVersions(llVersion, '1.9.0') < 0) {
+            searchVersionItemList = items ? items : [];
+        } else {
+            searchVersionItemList = Object.keys(items).length > 0 ? items.stable : [];
+        }
         // 1.获取服务器端数据
         let result: InstalledEntity[] = [];
         let response = await getSearchAppVersionList({ appId, arch, repoName });
@@ -101,18 +79,14 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
         for (const item of searchVersionItemList) {
             // 处理主键id标识
             item.appId = item.id ? item.id : item.appid ? item.appid : item.appId;
-
             // 过滤非该标识的记录
             if (item.appId != appId) {
                 continue;
             }
-
             // 处理arch架构
             item.arch = typeof item.arch === 'string' ? item.arch : Array.isArray(item.arch) ? item.arch[0] : '';
-
             // 来源仓库
             item.repoName = repoName
-
             // 安装卸载次数
             let app = result.find(it => {
                 return it.appId === item.appId && it.name === item.name && it.version === item.version
@@ -121,17 +95,14 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
             item.installCount = app ? app.installCount : 0;
             item.uninstallCount = app ? app.uninstallCount : 0;
             item.createTime = app ? app.createTime : '';
-
             // 处理当前版本是否已安装状态
             item.isInstalled = installedItemsStore.installedItemList.some(it =>
                 it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module
                 && it.channel === item.channel && it.kind === item.kind && it.repoName === repoName);
-
             // 处理当前版本是否加载中状态
             item.loading = installingItemsStore.installingItemList.some(it =>
                 it.appId === item.appId && it.name === item.name && it.version === item.version && it.module === item.module
                 && it.channel === item.channel && it.kind === item.kind && it.repoName === repoName);
-
             // 去重
             if (tempList.some(it => it.appId === item.appId && it.name === item.name && it.version === item.version)) {
                 const index = tempList.findIndex(it => it.name === item.name && it.version === item.version && it.appId === item.appId);
@@ -140,7 +111,6 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
                 tempList.splice(index, 1, aItem);
                 continue;
             }
-
             // 类型为“本地安装”的直接填充默认值
             if (item.kind == '本地安装') {
                 item.installCount = 1;
@@ -148,7 +118,6 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
                 item.isInstalled = true;
                 item.loading = false;
             }
-            
             tempList.push(item);
         }
         difVersionItemList.value = tempList.sort((a, b) => compareVersions(b.version, a.version));
@@ -209,7 +178,6 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
 
     return {
         difVersionItemList,
-        initDifVersionItemsOld,
         initDifVersionItems,
         addItem,
         removeItem,

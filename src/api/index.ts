@@ -1,4 +1,4 @@
-import { AppListParams, CardFace, GetAppListByAppIdParam, pageResult, Result } from '@/interface';
+import { AppListParams, InstalledEntity, GetAppListByAppIdParam, pageResult, Result } from '@/interface';
 import request from '@/util/request';
 
 /**
@@ -38,7 +38,7 @@ export const getInstallAppList = (data: AppListParams) => {
 /**
  * 获取程序的详细信息
  */
-export const getAppDetails = (data: CardFace[]) => {
+export const getAppDetails = (data: InstalledEntity[]) => {
     return request<Result> ({ method: 'POST', url: '/visit/getAppDetails', data })
 }
 

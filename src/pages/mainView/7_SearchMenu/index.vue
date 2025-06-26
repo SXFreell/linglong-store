@@ -6,9 +6,10 @@
     <div ref="appsContainer" class="apps-container" @scroll="handleScroll">
         <div class="card-items-container" v-if="allAppItemList && allAppItemList.length > 0">
             <div class="card-items" v-for="(item, index) in allAppItemList" :key="index">
-                <SearchCard :name="item.name" :version="item.version" :description="item.description" :arch="item.arch"
-                    :isInstalled="item.isInstalled" :appId="item.appId" :icon="item.icon" :loading="item.loading"
-                    :zhName="item.zhName" :size="item.size" />
+                <Card :tabName="`分类推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
+                    :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
         <div class="no-data-container" v-else>
@@ -26,7 +27,7 @@
 import { nextTick, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import { ArrowRight } from '@element-plus/icons-vue'
-import SearchCard from "@/components/searchCard.vue";
+import Card from '@/components/Card.vue';
 import { useSystemConfigStore } from '@/store/systemConfig';
 import { useAllAppItemsStore } from '@/store/allAppItems';
 import { useInstalledItemsStore } from '@/store/installedItems';
