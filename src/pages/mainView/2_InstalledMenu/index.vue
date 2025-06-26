@@ -16,12 +16,7 @@
                 </el-badge>
             </div>
         </div>
-        <div class="no-data-container" v-else>
-            <div style="width: 180px;height: 300px;">
-                <img class="image" :src="defaultImage" alt="Image" />
-            </div>
-            <h1>暂无数据</h1>
-        </div>
+        <NoData v-else />
     </div>
 </template>
 
@@ -33,7 +28,7 @@ import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { compareVersions } from "@/util/checkVersion";
 import Card from "@/components/Card.vue";
-import defaultImage from '@/assets/logo.svg';
+import NoData from "@/components/NoData.vue";
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();

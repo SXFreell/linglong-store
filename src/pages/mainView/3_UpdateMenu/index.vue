@@ -9,12 +9,7 @@
                     :installCount="item.installCount" :isInstalled="true" :loading="item.loading"/>
             </div>
         </div>
-        <div class="no-data-container" v-else>
-            <div style="width: 180px;height: 300px">
-                <img class="image" :src="defaultImage" alt="Image" />
-            </div>
-            <h1>暂无数据</h1>
-        </div>
+        <NoData v-else />
         <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0" class="transition-update-btn">
                 <el-button type="primary" @click="updateAll" :disabled="systemConfigStore.updateStatus">一键更新</el-button>
@@ -25,7 +20,7 @@
 <script setup lang="ts">
 import { onMounted } from "vue";
 import Card from "@/components/Card.vue";
-import defaultImage from '@/assets/logo.svg';
+import NoData from "@/components/NoData.vue";
 import { InstalledEntity } from "@/interface";
 import { reflushUpdateItems } from "@/util/WorkerUpdate";
 

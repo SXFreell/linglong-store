@@ -12,18 +12,13 @@
                     :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
-        <div class="no-data-container" v-else>
-            <div style="width: 180px;height: 300px">
-                <img class="image" :src="defaultImage" alt="Image" />
-            </div>
-            <h1>查无数据</h1>
-        </div>
+        <NoData v-else />
     </div>
 </template>
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
-import defaultImage from '@/assets/logo.svg';
 import Card from "@/components/Card.vue";
+import NoData from "@/components/NoData.vue";
 import { AppListParams, InstalledEntity, pageResult } from '@/interface';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
@@ -54,7 +49,6 @@ onMounted(async () => {
         displayedItems.value = (res.data as unknown as pageResult).records;
         displayedItems.value.forEach(item => {
             item.isInstalled = installedItemsStore.installedItemList.find(it => it.appId == item.appId) ? true : false;
-            item.icon = item.icon?.includes("application-x-executable.svg") ? defaultImage : item.icon;
         })
     }
     // 等待下一次 DOM 更新

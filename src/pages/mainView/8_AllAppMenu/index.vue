@@ -26,12 +26,7 @@
                     :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
-        <div class="no-data-container" v-else>
-            <div style="width: 180px;height: 300px;">
-                <img class="image" :src="defaultImage" alt="Image" />
-            </div>
-            <h1>暂无数据</h1>
-        </div>
+        <NoData v-else />
     </div>
     <div class="loading-bottom" :class="{ 'show': isLoading }">
         <img :src="loadingGIF" width="100%" height="100%" style="border-radius: 15px;" />
@@ -41,11 +36,11 @@
 import { nextTick, onMounted, ref } from 'vue';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
 import Card from "@/components/Card.vue";
+import NoData from "@/components/NoData.vue";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { getSearchAppList } from '@/api';
-import defaultImage from '@/assets/logo.svg';
 import loadingGIF from "@/assets/loading.gif";
 
 // 通过路由router对象获取相关数据
@@ -79,7 +74,6 @@ const loadMore = async () => {
         if (res.code == 200) {
             res.data.records.forEach(item => {
                 item.isInstalled = installedItemsStore.installedItemList.find(it => it.appId == item.appId) ? true : false;
-                item.icon = !item.icon || item.icon.includes("application-x-executable.svg") ? defaultImage : item.icon;
                 allAppItemsStore.addItem(item);
             })
             params.value.pageNo++;
