@@ -1,4 +1,4 @@
-const { app, Tray, Menu } = require('electron');
+import { app, Tray, Menu } from "electron";
 import { BrowserWindow } from "electron";
 import { join } from "node:path";
 

@@ -4,7 +4,7 @@ import stripAnsi from 'strip-ansi';
 import axios from "axios";
 import fs from "fs-extra";
 import log, { ipcLog, mainLog } from "../logger";
-const path = require('path');
+import path from "path";
 
 /**
  * 主窗口对象所有涉及的渲染线程和主线程之间的交互

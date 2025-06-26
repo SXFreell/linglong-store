@@ -33,7 +33,7 @@
 import router from '@/router';
 import defaultImage from '@/assets/logo.svg';
 import { ipcRenderer } from 'electron';
-import { computed, defineProps, nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { InstalledEntity } from '@/interface';
 
 import { useInstalledItemsStore } from "@/store/installedItems";
