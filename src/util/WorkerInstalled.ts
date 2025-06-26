@@ -9,7 +9,7 @@ const systemConfigStore = useSystemConfigStore();
 
 // 定时器每8秒检查一次当前系统有哪些应用
 let installedTimer = setInterval(() => {
-    console.log('定时器执行，检查当前系统有哪些应用...');
+    // console.log('定时器执行，检查当前系统有哪些应用...');
     reflushInstalledItems();
 }, 5000);
 

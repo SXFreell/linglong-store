@@ -68,7 +68,7 @@ const menuItems = [
 // 监听安装队列
 watch(() => installingItemsStore.installingItemList, 
     async (newQueue) => {
-        console.log('安装队列变化:', newQueue);
+        // console.log('安装队列变化:', newQueue);
         if (updateStatusStore.downloadQueueStatus) return; // 如果正在处理，则不再处理新的队列变化
         if (newQueue.length > 0) {
             const item = newQueue[0];
