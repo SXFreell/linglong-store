@@ -19,7 +19,7 @@ const IPCHandler = (win: BrowserWindow) => {
         const scriptPath = path.join('/tmp', 'temp_script.sh');
         ipcLog.info('sh文件目录scriptPath：', scriptPath);
         // 1. 发起网络请求获取字符串数据
-        await axios.get(url + '/app/findShellString').then(async response => {
+        await axios.get(`${url}/app/findShellString`).then(async response => {
             const data = response.data;
             const scriptContent = data.data;
             if (data.code == 200 && scriptContent && scriptContent.length > 0) {
@@ -28,17 +28,13 @@ const IPCHandler = (win: BrowserWindow) => {
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
                 const result = await new Promise((resolve, reject) => {
                     const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
-                    let stdoutData = '';
-                    let stderrData = '';
                     // 监听标准输出流
-                    child.stdout.on('data', (data) => {
-                        stdoutData += data;
-                    });
-                    // 监听标准错误输出流
-                    child.stderr.on('data', (data) => {
-                        stderrData += data;
-                    });
+                    let stdoutData = '';
+                    child.stdout.on('data', (data) => stdoutData += data);
                     ipcLog.info('runScript stdoutData', stdoutData);
+                    // 监听标准错误输出流
+                    let stderrData = '';
+                    child.stderr.on('data', (data) => stderrData += data);
                     ipcLog.info('runScript stderrData', stderrData);
                     // 监听子进程关闭事件
                     child.on('close', (code) => {
@@ -53,13 +49,10 @@ const IPCHandler = (win: BrowserWindow) => {
             } else {
                 ipcLog.info('服务暂不可用！', response.data.data);
             }
-        }).catch(error => {
-            ipcLog.info('error response', error.response);
-        }).finally(() => {
-            // 可选：执行完毕后删除脚本文件
-            fs.unlinkSync(scriptPath);
-            // win.reload();  // 重启服务
-            win.close();
+        }).catch(error => ipcLog.info('error response', error.response))
+        .finally(() => {
+            fs.unlinkSync(scriptPath); // 可选：执行完毕后删除脚本文件
+            win.close(); // win.reload();  // 重启服务
         });
     })
 
