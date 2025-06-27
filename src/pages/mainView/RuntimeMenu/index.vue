@@ -45,11 +45,9 @@ let removeIndex = ref<number>(-1);
 const stopPross = (item: RunTime) => {
     const { containerId, channel, app, version, arch } = item;
     if (compareVersions(systemConfigStore.llVersion,'1.7.0') >= 0) {
-        // 查找该item在 runtimeList 中的索引
         removeIndex.value = runtimeList.value.findIndex(r => r.channel === channel && r.app === app && r.version === version && r.arch === arch);
         ipcRenderer.send('linyaps-kill', { command: `ll-cli kill ${channel}:${app}/${version}/${arch}` });
     } else {
-        // 查找该item在 runtimeList 中的索引
         removeIndex.value = runtimeList.value.findIndex(r => r.containerId === containerId);
         ipcRenderer.send('linyaps-kill', { command: `ll-cli kill ${containerId}` });
     }

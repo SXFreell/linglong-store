@@ -3,8 +3,11 @@
         <el-container>
             <el-aside>
                 <el-menu :default-active="activeMenu" @select="handleMenuSelect">
-                    <el-menu-item v-for="item in menuItems" :key="item.index" :index="item.index" @click="item.action" :style="item.style">
-                        <el-icon><component :is="item.icon" /></el-icon>
+                    <el-menu-item v-for="item in menuItems" :key="item.index" :index="item.index" @click="item.action"
+                        :style="item.style">
+                        <el-icon>
+                            <component :is="item.icon" />
+                        </el-icon>
                         <span>{{ item.label }}</span>
                     </el-menu-item>
                 </el-menu>
@@ -17,7 +20,7 @@
             <el-main class="views">
                 <router-view></router-view>
             </el-main>
-            <DownloadQueue :show="show" :installingItems="installingItems"/>
+            <DownloadQueue :show="show" :installingItems="installingItems" />
         </el-container>
     </div>
 </template>
@@ -29,7 +32,7 @@ import NetworkSpeed from '@/components/NetworkSpeed.vue';
 import DownloadQueue from '@/components/DownloadQueue.vue'
 import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
 import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
-import { installingItems,setupIpcListeners,cleanupIpcListeners } from "@/util/IpcInstalled";
+import { installingItems, setupIpcListeners, cleanupIpcListeners } from "@/util/IpcInstalled";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useUpdateStatusStore } from "@/store/updateStatus";
@@ -44,16 +47,16 @@ let show = ref(false); // 显示下载队列框
 
 // 菜单项配置
 const menuItems = [
-  { index: "1", label: "玲珑推荐", icon: "Star", action: () => router.push({ path: '/welcome_menu' }) },
-  { index: "6", label: "排行榜", icon: "Histogram", action: () => router.push({ path: '/ranking_menu' }) },
-  { index: "2", label: "全部程序", icon: "HomeFilled", action: () => router.push({ path: '/all_app_menu' }) },
-  { index: "3", label: "卸载程序", icon: "GobletSquareFull", action: () => router.push({ path: '/installed_menu' }) },
-  { index: "4", label: "更新程序", icon: "UploadFilled", action: () => router.push({ path: '/update_menu' }) },
-  { index: "5", label: "玲珑进程", icon: "Odometer", action: () => router.push({ path: '/runtime_menu' }) },
-  { index: "98", label: "基础设置", icon: "setting", action: () => router.push({ path: '/config_menu' }) },
-  { index: "99", label: "关于程序", icon: "InfoFilled", action: () => router.push({ path: '/about_menu' }) },
-//   { index: "998", label: "终端页面", icon: "InfoFilled", action: () => router.push({ path: '/terminalOutput' }) },
-  { index: "999", label: "返回首页", icon: "Loading", action: () => router.push({ path: '/' }), style: "display: none;" }
+    { index: "1", label: "玲珑推荐", icon: "Star", action: () => router.push({ path: '/welcome_menu' }) },
+    { index: "6", label: "排行榜", icon: "Histogram", action: () => router.push({ path: '/ranking_menu' }) },
+    { index: "2", label: "全部程序", icon: "HomeFilled", action: () => router.push({ path: '/all_app_menu' }) },
+    { index: "3", label: "更新程序", icon: "UploadFilled", action: () => router.push({ path: '/update_menu' }) },
+    { index: "4", label: "卸载程序", icon: "GobletSquareFull", action: () => router.push({ path: '/installed_menu' }) },
+    { index: "5", label: "玲珑进程", icon: "Odometer", action: () => router.push({ path: '/runtime_menu' }) },
+    { index: "6", label: "基础设置", icon: "setting", action: () => router.push({ path: '/config_menu' }) },
+    { index: "7", label: "关于程序", icon: "InfoFilled", action: () => router.push({ path: '/about_menu' }) },
+    //   { index: "998", label: "终端页面", icon: "InfoFilled", action: () => router.push({ path: '/terminalOutput' }) },
+    { index: "8", label: "返回首页", icon: "Loading", action: () => router.push({ path: '/' }), style: "display: none;" }
 ];
 
 const handleMenuSelect = (index: string) => {
@@ -70,7 +73,7 @@ const showQueue = () => {
 };
 
 // 监听安装队列
-watch(() => installingItemsStore.installingItemList, 
+watch(() => installingItemsStore.installingItemList,
     async (newQueue) => {
         // console.log('安装队列变化:', newQueue);
         if (updateStatusStore.downloadQueueStatus) return; // 如果正在处理，则不再处理新的队列变化
@@ -177,5 +180,4 @@ onUnmounted(() => {
     position: relative;
     background-color: var(--base-background-color);
 }
-
 </style>
