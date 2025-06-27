@@ -26,7 +26,9 @@
         <div class="card-bottom" v-if="tabName == '更新程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="card-btn" @click="openDetails">升级</el-button>
         </div>
-        
+        <div class="card-bottom" v-if="tabName == '我的应用'">
+            <el-button class="card-btn" @click="handleRunApp(props)">启动</el-button>
+        </div>
     </el-card>
 </template>
 <script lang="ts" setup>
@@ -77,7 +79,7 @@ const displayName = computed(() => props.zhName ? props.zhName : props.name);
 // 打开玲珑明细页面
 const openDetails = () => {
     // 如果程序处于加载中状态，则不允许点击
-    if (props.loading) return;
+    if (props.loading || props.tabName === '卸载程序' || props.tabName === '我的应用') return;
     // 跳转到明细页面
     router.push({ path: '/details', query: { 
         menuName: props.tabName,
@@ -89,29 +91,25 @@ const openDetails = () => {
 // 按钮点击操作事件
 const changeStatus = (item: InstalledEntity) => {
     ElMessageBox.confirm('确定要卸载当前程序已安装的最新版本吗？<br> 如若卸载当前应用其他版本，请点击图标查看详情进行操作', '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning', center: true,
         dangerouslyUseHTMLString: true,  // 允许使用 HTML 标签
-        type: 'warning',
-        center: true,
     }).then(() => {
         // 启用加载框
         installedItemsStore.updateItemLoadingStatus(item as InstalledEntity, true);
         difVersionItemsStore.updateItemLoadingStatus(item as InstalledEntity, true);
         // 发送操作命令
         ipcRenderer.send('command', {
-            icon: item.icon,
-            appId: item.appId,
-            name: item.name,
-            arch: item.arch,
-            version: item.version,
-            description: item.description,
-            isInstalled: item.isInstalled,
-            loading: false,
+            icon: item.icon, appId: item.appId, name: item.name, arch: item.arch, version: item.version,
+            description: item.description, isInstalled: item.isInstalled, loading: false,
             command: `ll-cli uninstall ${item.appId}/${item.version}`,
         });
     })
 };
+// 运行按钮(发送操作命令,并弹出提示框)
+const handleRunApp = (item: InstalledEntity) => {
+    ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
+    ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
+}
 // 滚动动画逻辑
 const applyScrollAnimation = () => {
     nextTick(() => {
@@ -134,5 +132,4 @@ onMounted(() => applyScrollAnimation());
     padding-top: 0px;
     padding-bottom: 5px;
 }
-
 </style>

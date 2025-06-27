@@ -13,7 +13,7 @@ interface IRefParam {
     arch: string
 }
 
-export function parseRef(ref: string) {
+export function ParseRef(ref: string) {
     let repo = '',channel = '',appId = '',version = '',arch = '';
     if (!ref) {
         return { repo, channel, appId, version, arch } as IRefParam;

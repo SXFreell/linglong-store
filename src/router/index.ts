@@ -15,9 +15,47 @@ const router = createRouter({
             component: () => import("../pages/mainView/index.vue"),
             children: [
                 {
+                    path: '/welcome_menu',
+                    name: 'WelcomeMenu',
+                    component: () => import("../pages/mainView/WelcomeMenu/index.vue")
+                },
+                {
+                    path: '/search',
+                    name: 'Search',
+                    component: () => import("../pages/mainView/SearchMenu/index.vue"),
+                    beforeEnter: (to, from, next) => {
+                        // 在路由进入时执行的操作(非明细页面重置元数据)
+                        if (from.name != 'Detail') {
+                            to.meta.savedCategoryId = ''; // 将分类ID保存到路由元数据中
+                            to.meta.savedPageNo = 0; // 将页码保存到路由元数据中
+                            to.meta.savedPageSize = 0; // 将每页条数保存到路由元数据中
+                            to.meta.savedPosition = 0;
+                        }
+                        // 如果需要继续导航，调用 next()
+                        next();
+                    },
+                },
+                {
+                    path: '/ranking_menu',
+                    name: 'RankingMenu',
+                    component: () => import("../pages/mainView/RankingMenu/index.vue"),
+                    children: [
+                        {
+                            path: '/new_ranking',
+                            name: 'NewRanking',
+                            component: () => import("../pages/mainView/RankingMenu/NewRanking/index.vue"),
+                        },
+                        {
+                            path: '/down_ranking',
+                            name: 'DownRanking',
+                            component: () => import("../pages/mainView/RankingMenu/DownRanking/index.vue")
+                        }
+                    ]
+                },
+                {
                     path: '/all_app_menu',
                     name: 'AllAppMenu',
-                    component: () => import("../pages/mainView/8_AllAppMenu/index.vue"),
+                    component: () => import("../pages/mainView/AllAppMenu/index.vue"),
                     beforeEnter: (to, from, next) => {
                         // 在路由进入时执行的操作(非明细页面重置元数据)
                         if (from.name != 'Detail') {
@@ -32,61 +70,34 @@ const router = createRouter({
                     },
                 },
                 {
-                    path: '/installed_menu',
-                    name: 'InstalledMenu',
-                    component: () => import("../pages/mainView/2_InstalledMenu/index.vue"),
-                    beforeEnter: (to, from, next) => {
-                        // 在路由进入时执行的操作(非明细页面重置元数据)
-                        if (from.name != 'Detail') {
-                            to.meta.savedPosition = 0;
-                            to.meta.savedPageNo = 0; // 将页码保存到路由元数据中
-                            to.meta.savedPageSize = 0; // 将每页条数保存到路由元数据中
-                        }
-                        // 如果需要继续导航，调用 next()
-                        next();
-                    },
-                },
-                {
                     path: '/update_menu',
                     name: 'UpdateMenu',
-                    component: () => import("../pages/mainView/3_UpdateMenu/index.vue")
+                    component: () => import("../pages/mainView/UpdateMenu/index.vue")
+                },
+                {
+                    path: '/installed_menu',
+                    name: 'InstalledMenu',
+                    component: () => import("../pages/mainView/InstalledMenu/index.vue"),
                 },
                 {
                     path: '/runtime_menu',
                     name: 'RuntimeMenu',
-                    component: () => import("../pages/mainView/4_RuntimeMenu/index.vue")
-                },
-                {
-                    path: '/welcome_menu',
-                    name: 'WelcomeMenu',
-                    component: () => import("../pages/mainView/5_WelcomeMenu/index.vue")
-                },
-                {
-                    path: '/ranking_menu',
-                    name: 'RankingMenu',
-                    component: () => import("../pages/mainView/6_RankingMenu/index.vue"),
-                    children: [
-                        {
-                            path: '/new_ranking',
-                            name: 'NewRanking',
-                            component: () => import("../pages/mainView/6_RankingMenu/6.1_NewRanking/index.vue"),
-                        },
-                        {
-                            path: '/down_ranking',
-                            name: 'DownRanking',
-                            component: () => import("../pages/mainView/6_RankingMenu/6.2_downRanking/index.vue")
-                        }
-                    ]
+                    component: () => import("../pages/mainView/RuntimeMenu/index.vue")
                 },
                 {
                     path: '/config_menu',
                     name: 'ConfigMenu',
-                    component: () => import("../pages/mainView/98_ConfigMenu/index.vue")
+                    component: () => import("../pages/mainView/ConfigMenu/index.vue")
                 },
                 {
                     path: '/about_menu',
                     name: 'AboutMenu',
-                    component: () => import("../pages/mainView/99_AboutMenu/index.vue")
+                    component: () => import("../pages/mainView/AboutMenu/index.vue")
+                },
+                {
+                    path: '/my_app_menu',
+                    name: 'MyAppMenu',
+                    component: () => import("../pages/mainView/MyAppMenu/index.vue"),
                 },
                 {
                     path: '/details',
@@ -97,22 +108,6 @@ const router = createRouter({
                     path: '/terminalOutput',
                     name: 'TerminalOutput',
                     component: () => import("../components/TerminalOutput.vue")
-                },
-                {
-                    path: '/search',
-                    name: 'Search',
-                    component: () => import("../pages/mainView/7_SearchMenu/index.vue"),
-                    beforeEnter: (to, from, next) => {
-                        // 在路由进入时执行的操作(非明细页面重置元数据)
-                        if (from.name != 'Detail') {
-                            to.meta.savedCategoryId = ''; // 将分类ID保存到路由元数据中
-                            to.meta.savedPageNo = 0; // 将页码保存到路由元数据中
-                            to.meta.savedPageSize = 0; // 将每页条数保存到路由元数据中
-                            to.meta.savedPosition = 0;
-                        }
-                        // 如果需要继续导航，调用 next()
-                        next();
-                    },
                 },
             ],
         },

@@ -106,18 +106,12 @@ const handleCommandResult = (_event: any, res: any) => {
     }
 }
 
-export const onLinyapsInstallResult = () => {
+export const setupIpcListeners = () => {
+    ipcRenderer.on('command-result', handleCommandResult);
     ipcRenderer.on('linyaps-install-result', handleLinyapsInstallResult);
 }
 
-export const offLinyapsInstallResult = () => {
-    ipcRenderer.removeListener('linyaps-install-result', handleLinyapsInstallResult);
-}
-
-export const onCommandResult = () => {
-    ipcRenderer.on('command-result', handleCommandResult);
-}
-
-export const offCommandResult = () => {
+export const cleanupIpcListeners = () => {
     ipcRenderer.removeListener('command-result', handleCommandResult);
+    ipcRenderer.removeListener('linyaps-install-result', handleLinyapsInstallResult);
 }

@@ -287,6 +287,7 @@ onMounted(async () => {
     });
     ipcRenderer.send('fetchClientIP');
     // 获取分类列表
+    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     ipcRenderer.once('categories-result', (_event: any, res: any) => {
         const categories = [{ "categoryId": "", "categoryName": "全部程序" }] as categoryItem[];
         if (res.code == 200) {
@@ -298,7 +299,6 @@ onMounted(async () => {
         }
         localStorage.setItem('categories', JSON.stringify(categories));
     })
-    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     // 判断是否是开发模式，跳出版本检测
     if (process.env.NODE_ENV != "development" && systemConfigStore.autoCheckUpdate) {
         message.value = "正在检测商店版本号...";

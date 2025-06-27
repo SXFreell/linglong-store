@@ -39,7 +39,6 @@ const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
-
 defineProps({
     show: {
         type: Boolean,

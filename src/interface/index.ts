@@ -28,7 +28,6 @@ export interface InstalledEntity {
     uabUrl?: string, // 玲珑地址
     user?: string, // 用户名
     newVersion?: string, // 最新版本
-    occurrenceNumber?: number, // 同appId安装个数
     /* ********** 非命令传递字段 ********* */
     isInstalled?: boolean, // 是否已安装
     loading?: boolean,  // 是否正在安装
@@ -80,15 +79,6 @@ export interface pageResult {
     total: number,
     records: any[]
     pages: number
-}
-
-/**
- * 角标记录对象
- */
-export interface GroupedItem {
-    highestVersion: string;
-    occurrenceNumber: number;
-    record: InstalledEntity; // 记录的完整数据
 }
 
 /**

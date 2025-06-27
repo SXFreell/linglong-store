@@ -3,7 +3,7 @@ import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import stripAnsi from 'strip-ansi';
 import axios from "axios";
 import fs from "fs-extra";
-import log, { ipcLog, mainLog } from "../logger";
+import { ipcLog, mainLog } from "../logger";
 import path from "path";
 
 /**
@@ -73,24 +73,6 @@ const IPCHandler = (win: BrowserWindow) => {
             win.webContents.send("command-result", { code: 'stdout', param: data, result: stdout });
         });
     });
-
-    /* ****************** 强制退出程序 ******************* */
-    ipcMain.on('kill-app', (_event, params) => {
-        ipcLog.info('kill-app：', JSON.stringify(params));
-        const installProcess = exec(params.command, { encoding: 'utf8' });
-        installProcess.stdout.on('data', (data) => {
-            ipcLog.info(`stdout: ${data}`);
-            win.webContents.send("kill-app-result", { code: 'stdout', param: params, result: data });
-        })
-        installProcess.stderr.on('data', (data) => {
-            ipcLog.info(`stderr: ${data}`);
-            win.webContents.send("kill-app-result", { code: 'stderr', param: params, result: data });
-        })
-        installProcess.on('close', (code) => {
-            ipcLog.info(`child process exited with code ${code}`);
-            win.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
-        })
-    })
 
     ipcMain.on('reflush-version-list', (_event, appId) => {
         ipcLog.info('reflush-version-list：', appId);
@@ -174,41 +156,100 @@ const IPCHandler = (win: BrowserWindow) => {
         const { password, appId, version } = params;
         let currentProcess: ChildProcessWithoutNullStreams;
         if (!password) {
-            log.error('linyaps-install：密码为空, 使用非 sudo 安装应用');
+            ipcLog.error('linyaps-install：密码为空, 使用非 sudo 安装应用');
             currentProcess = spawn("ll-cli", ["install", `${appId}/${version}`]);
         } else {
-            log.info('linyaps-install：使用 sudo 安装应用');
+            ipcLog.info('linyaps-install：使用 sudo 安装应用');
             currentProcess = spawn("sudo", ["-S", "ll-cli", "install", `${appId}/${version}`]);
             // 自动输入密码到 sudo 的标准输入
             currentProcess.stdin.write(password + "\n");
         }
         // 捕获标准输出
         currentProcess.stdout.on("data", (data) => {
-            log.info(`linyaps-install stdout: ${data}`);
+            ipcLog.info(`linyaps-install stdout: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
             win.webContents.send(`linyaps-install-result`, { code: 'stdout', params, result });
         });
         // 捕获标准错误
         currentProcess.stderr.on("data", (data) => {
-            log.error(`linyaps-install stderr: ${data}`);
+            ipcLog.error(`linyaps-install stderr: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
             win.webContents.send(`linyaps-install-result`, { code: 'stderr', params, result });
         });
         // 捕获错误事件
         currentProcess.on('error', (data) => {
-            log.error(`linyaps-install error: ${data}`);
+            ipcLog.error(`linyaps-install error: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
             win.webContents.send(`linyaps-install-result`, { code: 'error', params, result });
         });
         // 子进程退出
         currentProcess.on("close", (code) => {
-            log.info(`linyaps-install child process exited with code ${code}`);
+            ipcLog.info(`linyaps-install child process exited with code ${code}`);
             win.webContents.send(`linyaps-install-result`, { code: 'close', params, result: code });
         });
     });
+
+    /* ****************** 命令 ll-cli uninstall xxx ******************* */
+    ipcMain.on("linyaps-uninstall", (_event, params) => {
+        const { password, appId, version } = params;
+        if (!appId || !version) {
+            ipcLog.error('linyaps-uninstall：应用ID或版本号为空，无法卸载应用');
+            win.webContents.send("linyaps-uninstall-result", { error: '应用ID或版本号不能为空' });
+            return;
+        }
+        if (!password) {
+            ipcLog.error('linyaps-uninstall：密码为空, 使用非 sudo 卸载应用');
+        }
+        exec(`ll-cli uninstall ${appId}/${version}`, (error, stdout, stderr) => {
+            ipcLog.info(`linyaps-uninstall >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-uninstall-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli prune ******************* */
+    ipcMain.on("linyaps-prune", () => {
+        exec('ll-cli prune', (error, stdout, stderr) => {
+            ipcLog.info(`linyaps-prune >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-prune-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli --json ps ******************* */
+    ipcMain.on("linyaps-ps", () => {
+        exec('ll-cli --json ps', (error, stdout, stderr) => {
+            ipcLog.info(`linyaps-ps >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-ps-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 命令 ll-cli kill ******************* */
+    ipcMain.on("linyaps-kill", (event, params) => {
+        exec(params.command, (error, stdout, stderr) => {
+            ipcLog.info(`linyaps-kill >> `, { error, stdout, stderr });
+            win.webContents.send("linyaps-kill-result", { error, stdout, stderr });
+        });
+    });
+
+    /* ****************** 强制退出程序 ******************* */
+    ipcMain.on('kill-app', (_event, params) => {
+        ipcLog.info('kill-app：', JSON.stringify(params));
+        const installProcess = exec(params.command, { encoding: 'utf8' });
+        installProcess.stdout.on('data', (data) => {
+            ipcLog.info(`stdout: ${data}`);
+            win.webContents.send("kill-app-result", { code: 'stdout', param: params, result: data });
+        })
+        installProcess.stderr.on('data', (data) => {
+            ipcLog.info(`stderr: ${data}`);
+            win.webContents.send("kill-app-result", { code: 'stderr', param: params, result: data });
+        })
+        installProcess.on('close', (code) => {
+            ipcLog.info(`child process exited with code ${code}`);
+            win.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
+        })
+    })
 
     /* ********** 通过网络服务获取客户端ip ********** */
     // 使用 ipify API 获取 IPv4/IPv6 地址

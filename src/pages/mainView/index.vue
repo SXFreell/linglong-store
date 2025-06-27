@@ -2,21 +2,16 @@
     <div class="common-layout">
         <el-container>
             <el-aside>
-                <el-menu :default-active="`1`">
+                <el-menu :default-active="activeMenu" @select="handleMenuSelect">
                     <el-menu-item v-for="item in menuItems" :key="item.index" :index="item.index" @click="item.action" :style="item.style">
                         <el-icon><component :is="item.icon" /></el-icon>
                         <span>{{ item.label }}</span>
                     </el-menu-item>
                 </el-menu>
                 <!-- 更多菜单项 -->
-                <div class="download-queue" @click="show = !show">
-                    <div class="download-btn">下载队列</div>
-                </div>
-                <div class="network-info">
-                    <div class="network-info-title">当前实时网速</div>
-                    <el-icon><Top /></el-icon>上传速度: {{ uploadSpeed }}<br>
-                    <el-icon><Bottom /></el-icon>下载速度: {{ downloadSpeed }}
-                </div>
+                <div class="fixed-button my-apps" @click="goMyApps">我的应用</div>
+                <div class="fixed-button download-queue" @click="showQueue">下载队列</div>
+                <NetworkSpeed />
             </el-aside>
             <!-- 这里将动态显示不同的功能页面 -->
             <el-main class="views">
@@ -30,24 +25,21 @@
 <script setup lang="ts">
 import { ipcRenderer } from 'electron';
 import { onUnmounted, onMounted, ref, watch } from 'vue';
-import { useRouter } from 'vue-router';
+import NetworkSpeed from '@/components/NetworkSpeed.vue';
 import DownloadQueue from '@/components/DownloadQueue.vue'
-import { ElNotification } from 'element-plus'
-// 引入网络组件 获取网络接口信息 获取实时网速
-import { useNetworkSpeed } from '@/util/network'; 
 import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
 import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
-import { installingItems,onLinyapsInstallResult,offLinyapsInstallResult,onCommandResult,offCommandResult } from "@/util/IpcInstalled";
+import { installingItems,setupIpcListeners,cleanupIpcListeners } from "@/util/IpcInstalled";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useUpdateStatusStore } from "@/store/updateStatus";
+import router from '@/router';
 
-const { uploadSpeed, downloadSpeed } = useNetworkSpeed();
 const installingItemsStore = useInstallingItemsStore();
 const systemConfigStore = useSystemConfigStore();
 const updateStatusStore = useUpdateStatusStore();
 
-const router = useRouter();
+let activeMenu = ref('1'); // 当前激活的菜单项
 let show = ref(false); // 显示下载队列框
 
 // 菜单项配置
@@ -64,6 +56,18 @@ const menuItems = [
   { index: "999", label: "返回首页", icon: "Loading", action: () => router.push({ path: '/' }), style: "display: none;" }
 ];
 
+const handleMenuSelect = (index: string) => {
+    activeMenu.value = index; // 设置当前激活的菜单项
+};
+
+const goMyApps = () => {
+    router.push({ path: '/my_app_menu' });
+    activeMenu.value = 'my-apps'; // 设置当前激活的菜单项
+};
+
+const showQueue = () => {
+    show.value = !show.value; // 切换下载队列的显示状态
+};
 
 // 监听安装队列
 watch(() => installingItemsStore.installingItemList, 
@@ -84,9 +88,7 @@ watch(() => installingItemsStore.installingItemList,
 
 // 页面初始化时执行
 onMounted(() => {
-    // 监听命令执行结果
-    onLinyapsInstallResult();
-    onCommandResult();
+    setupIpcListeners(); // 设置IPC监听器
     // 监听自定义协议
     ipcRenderer.on('custom-protocol', (_event: any, res: any) => {
         ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
@@ -98,8 +100,7 @@ onMounted(() => {
 });
 // 页面销毁前执行
 onUnmounted(() => {
-    offLinyapsInstallResult();
-    offCommandResult();
+    cleanupIpcListeners(); // 清理IPC监听器
     cancelInstalledTimer(); // 取消安装队列的定时器
     cancelUpdateTimer(); // 取消更新队列的定时器
 });
@@ -139,51 +140,33 @@ onUnmounted(() => {
     background-color: var(--menu-base-color);
 }
 
-.download-queue {
+.fixed-button {
     position: fixed;
-    bottom: 99px;
     margin: 5px;
+    width: 140px;
+    height: 30px;
+    font-size: 14px;
+    font-weight: bold;
+    text-align: center;
+    color: var(--menu-base-font-color);
+    background-color: var(--menu-base-color);
     border-radius: 10px;
     display: flex;
     justify-content: center;
-    text-align: center;
-    width: 140px;
-    height: 30px;
-    background-color: var(--menu-base-color);
-}
-
-.download-queue:hover {
-    background-color: #999999;
+    flex-direction: column;
     cursor: pointer;
 }
 
-.download-btn {
-    font-size: 14px;
-    font-weight: bold;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-    color: var(--menu-base-font-color);
+.fixed-button:hover {
+    background-color: #999999;
 }
 
-.network-info {
-    position: fixed;
-    border-radius: 15px;
-    text-align: center;
-    margin: 5px;
-    bottom: 12px;
-    font-size: 12px;
-    height: 75px;
-    width: 140px;
-    color: var(--menu-base-font-color);
-    background-color: var(--menu-base-color);
+.my-apps {
+    bottom: 140px;
 }
 
-.network-info-title {
-    font-size: 14px;
-    font-weight: bold;
-    margin: 3px;
-    color: var(--menu-base-font-color);
+.download-queue {
+    bottom: 99px;
 }
 
 .views {
