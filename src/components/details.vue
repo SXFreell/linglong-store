@@ -77,7 +77,7 @@ import { onBeforeRouteLeave } from 'vue-router';
 import { ElNotification, TableColumnCtx } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
-import { parseRef } from "@/util/refParam";
+import { ParseRef } from "@/util/refParam";
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
@@ -135,7 +135,7 @@ function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: an
 function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
     const runtime = row.runtime;
     if (!runtime) return '';
-    let packs = parseRef(runtime);
+    let packs = ParseRef(runtime);
     return `${packs.appId}/${packs.version}`; // 做一些格式化处理并返回字符串
 };
 
@@ -218,7 +218,7 @@ onMounted(async () => {
     // 监听安装结果后版本刷新
     ipcRenderer.on('reflush-version-list-result', reflushVersionList);
     // 刷新版本列表
-    ipcRenderer.send('reflush-version-list', query.appId as string);
+    searchLinyapsByAppId(query.appId as string);
 })
 // 页面销毁前执行
 onBeforeUnmount(() => {
@@ -229,9 +229,7 @@ onBeforeUnmount(() => {
 onBeforeRouteLeave((to: any, from: any, next: any) => {
     const { meta: toMeta } = to;
     const { meta: fromMeta } = from;
-    Object.keys(fromMeta).forEach((key) => {
-        toMeta[key] = fromMeta[key];
-    });
+    Object.keys(fromMeta).forEach((key) => toMeta[key] = fromMeta[key]);
     next();
 })
 </script>
