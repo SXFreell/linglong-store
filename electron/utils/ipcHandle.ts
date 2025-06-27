@@ -1,6 +1,7 @@
 import { BrowserWindow, ipcMain } from "electron";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import stripAnsi from 'strip-ansi';
+import os from 'os'
 import axios from "axios";
 import fs from "fs-extra";
 import { ipcLog, mainLog } from "../logger";
@@ -249,6 +250,31 @@ const IPCHandler = (win: BrowserWindow) => {
             ipcLog.info(`child process exited with code ${code}`);
             win.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
         })
+    })
+
+    /* ****************** 打开终端并执行命令 ******************* */
+    ipcMain.on('open-terminal', (_event, params) => {
+        const platform = os.platform()
+        if (platform === 'win32') { // Windows - 打开 cmd
+            spawn('cmd.exe', { stdio: 'inherit', shell: true })
+        } else if (platform === 'darwin') { // macOS - 打开 Terminal
+            spawn('open', ['-a', 'Terminal'], { stdio: 'inherit' })
+        } else if (platform === 'linux') { // Linux - 根据常用终端之一打开
+            const terminals = ['deepin-terminal', 'gnome-terminal', 'konsole', 'xfce4-terminal', 'xterm']
+            const terminal = terminals.find(term => {
+                try {
+                    spawn(term, ['--version']) // 简单验证可用性
+                    return true
+                } catch {
+                    return false
+                }
+            })
+            if (terminal) {
+                spawn(terminal, params.code, { stdio: 'inherit' })
+            } else {
+                console.error('No supported terminal found.')
+            }
+        }
     })
 
     /* ********** 通过网络服务获取客户端ip ********** */

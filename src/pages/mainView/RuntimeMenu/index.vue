@@ -1,17 +1,18 @@
 <template>
     <div class="apps-container" >
         <el-table :data="runtimeList" border stripe height="100%" style="width: 100%;border-radius: 5px;">
-            <el-table-column prop="app" label="包名" width="180" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="app" label="包名" width="210" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="version" label="版本号" width="120" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="arch" label="架构" width="80" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="channel" label="渠道" width="80" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="repo" label="来源" width="80" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="pid" label="进程ID" width="100" header-align="center" align="center" show-overflow-tooltip/>
-            <el-table-column prop="containerId" label="容器ID" width="500" header-align="center" align="center" show-overflow-tooltip/>
+            <el-table-column prop="containerId" label="容器ID" width="200" header-align="center" align="center" show-overflow-tooltip/>
             <el-table-column prop="Path" min-width="300" label="玲珑目录" header-align="center" align="center" show-overflow-tooltip/>
-            <el-table-column fixed="right" label="操作" width="100" header-align="center" align="center">
+            <el-table-column fixed="right" label="操作" width="160" header-align="center" align="center">
                 <template #default="scope">
-                    <el-button class="uninstall_btn" @click="stopPross(scope.row)">停止</el-button>
+                    <el-button class="runtime-btn stop" @click="stopPross(scope.row)">停止</el-button>
+                    <el-button class="runtime-btn into" @click="intoDom(scope.row)">进入容器</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -43,16 +44,18 @@ let removeIndex = ref<number>(-1);
 
 // 停止服务按钮点击事件
 const stopPross = (item: RunTime) => {
-    const { containerId, channel, app, version, arch } = item;
+    const { containerId, app } = item;
+    let command = `ll-cli kill `;
     if (compareVersions(systemConfigStore.llVersion,'1.7.0') >= 0) {
-        removeIndex.value = runtimeList.value.findIndex(r => r.channel === channel && r.app === app && r.version === version && r.arch === arch);
-        ipcRenderer.send('linyaps-kill', { command: `ll-cli kill ${channel}:${app}/${version}/${arch}` });
+        removeIndex.value = runtimeList.value.findIndex(r => r.app === app);
+        command += `${app}`;
     } else {
         removeIndex.value = runtimeList.value.findIndex(r => r.containerId === containerId);
-        ipcRenderer.send('linyaps-kill', { command: `ll-cli kill ${containerId}` });
+        command += `${containerId}`;
     }
+    ipcRenderer.send('linyaps-kill', { command });
     ipcRenderer.on('linyaps-kill-result', async (_event: any, res: any) => {
-        const { error, stdout, stderr } = res;
+        const { error, stderr } = res;
         if (error || stderr) {
             ElNotification({ title: '提示', message: error || stderr, type: 'error', duration: 500 });
             return;
@@ -69,6 +72,21 @@ const stopPross = (item: RunTime) => {
     });
 }
 
+// 进入容器按钮点击事件,调用系统的终端窗口
+const intoDom = (item: RunTime) => {
+    const { containerId, app } = item;
+    // ll-cli exec com.tencent.wechat.linyaps /bin/bash
+    let code = ['ll-cli', 'exec'];
+    if (compareVersions(systemConfigStore.llVersion,'1.7.0') >= 0) {
+        code.push(app);
+    } else {
+        code.push(containerId);
+    }
+    code.push('/bin/bash');
+    ipcRenderer.send('open-terminal', { code });
+}
+
+// 获取进程列表
 const getProcessList = () => {
     ipcRenderer.send('linyaps-ps');
     ipcRenderer.once('linyaps-ps-result', (_event: any, res: any) =>{
@@ -79,21 +97,18 @@ const getProcessList = () => {
         }
         const apps: any[] = JSON.parse(stdout);
         for (let item of apps) {
-            let containerId = item.id;
-            let pid = item.pid;
-            let pack = item.package;
-            let packs = ParseRef(pack);
+            let linyapsRef = ParseRef(item.package); // 应用包信息
             const runtimeEntity = {
-                app: packs.appId,
-                containerId: containerId,
-                pid: pid,
-                version: packs.version,
-                arch: packs.arch,
-                channel: packs.channel,
-                repo: packs.repo ? packs.repo : systemConfigStore.defaultRepoName
+                app: linyapsRef.appId,
+                containerId: item.id,  // 容器ID
+                pid: item.pid,  // 进程ID
+                version: linyapsRef.version,
+                arch: linyapsRef.arch,
+                channel: linyapsRef.channel,
+                repo: linyapsRef.repo ? linyapsRef.repo : systemConfigStore.defaultRepoName
             } as RunTime;
             // 检查是否已经存在相同的进程
-            const existingIndex = runtimeList.value.findIndex(r => r.containerId === containerId);
+            const existingIndex = runtimeList.value.findIndex(r => r.containerId === item.id);
             // 如果存在，则更新该进程的信息
             if (existingIndex !== -1) {
                 runtimeList.value[existingIndex] = runtimeEntity;
@@ -114,11 +129,19 @@ onMounted(() => getProcessList());
 onBeforeUnmount(() => clearInterval(timer));
 </script>
 <style scoped>
-.uninstall_btn {
-    background-color: red;
+.runtime-btn {
+    height: 30px;
+    border-radius: 10px;
     color: white;
-    padding: 6px;
-    height: 24px;
+}
+
+.stop {
     width: 50px;
+    background-color: red;
+}
+
+.into {
+    width: 70px;
+    background-color: green;
 }
 </style>
