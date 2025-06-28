@@ -7,18 +7,13 @@ import { useSystemConfigStore } from "@/store/systemConfig";
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
-// 定时器每8秒检查一次当前系统有哪些应用
-let installedTimer = setInterval(() => {
-    // console.log('定时器执行，检查当前系统有哪些应用...');
-    reflushInstalledItems();
-}, 5000);
-
+// 定时器每5秒检查一次当前系统有哪些应用
+let installedTimer = setInterval(() => reflushInstalledItems(), 5000);
+// 启动定时器函数
 installedTimer;
-
 // 刷新当前系统有哪些已安装的应用
 export const reflushInstalledItems = () => {
     if (compareVersions(systemConfigStore.llVersion, '1.5.0') >= 0) {
-        ipcRenderer.send('linyaps-list', { command: 'll-cli --json list --type=all' });
         ipcRenderer.once('linyaps-list-result', async (_event: any, res: any) => {
             const { error, stdout, stderr } = res;
             if (stdout) {
@@ -44,6 +39,7 @@ export const reflushInstalledItems = () => {
                 return;
             }
         });
+        ipcRenderer.send('linyaps-list', { command: 'll-cli --json list --type=all' });
     } else {
         console.log('当前版本不支持获取应用列表，请使用最新版本的玲珑！');
     }

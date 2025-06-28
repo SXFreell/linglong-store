@@ -13,8 +13,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         sourceUrl: ref<Record<string, any>>(),
         // 是否显示非当前架构程序
         isShowDisArch: ref(true),
-        // 是否显示无图标玲珑程序
-        isShowNoIcon: ref(false),
         // 是否显示基础运行服务
         isShowBaseService: ref(false),
         // 自动检测更新
@@ -44,7 +42,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',llVersion:' + state.llVersion 
             + ',sourceUrl:' + state.sourceUrl 
             + ',isShowDisArch:' + state.isShowDisArch 
-            + ',isShowNoIcon:' + state.isShowNoIcon 
             + ',isShowBaseService:' + state.isShowBaseService 
             + ',autoCheckUpdate:' + state.autoCheckUpdate
             + ',networkRunStatus:' + state.networkRunStatus
@@ -79,11 +76,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeIsShowDisArch(isShowDisArch: boolean){
             const that = this;
             that.isShowDisArch = isShowDisArch;
-        },
-        // 修改是否显示无图标玲珑程序
-        changeIsShowNoIcon(isShowNoIcon: boolean){
-            const that = this;
-            that.isShowNoIcon = isShowNoIcon;
         },
         // 修改是否显示基础运行服务
         changeIsShowBaseService(isShowBaseService: boolean){

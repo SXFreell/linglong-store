@@ -9,19 +9,26 @@ export interface InstalledEntity {
     appId: string, // 1.4.x版本玲珑id
     appid?: string, // 1.5.0版本玲珑id
     id?: string, // 1.5.1版本玲珑id
-    icon: string, // 玲珑图标
     name: string, // 玲珑名称
-    zhName?: string, // 玲珑名称
     arch: string, // 架构
+    base: string, // 基础依赖
     channel: string, // 玲珑渠道
-    kind?: string, // 玲珑类型
+    kind: string, // 玲珑类型
     module: string, // 玲珑模块
-    repoName: string, // 来源仓库
     runtime: string, // 运行依赖
     size: string, // 文件大小
-    categoryName?: string, // 分类名称
     version: string, // 玲珑版本
     description: string, // 玲珑描述
+    schema_version: string, // 玲珑schema版本
+    /* ************ list ************ */
+    command: string, // 命令行
+    install_time: string, // 安装时间
+    permissions: string, // 权限
+    extensions: string, // 扩展
+    /* ********** 后台接口 ********* */
+    icon?: string, // 玲珑图标
+    zhName?: string, // 玲珑名称
+    categoryName?: string, // 分类名称
     createTime?: string, // 上架时间
     installCount?: number, // 安装次数
     uninstallCount?: number, // 卸载次数
@@ -29,9 +36,19 @@ export interface InstalledEntity {
     user?: string, // 用户名
     newVersion?: string, // 最新版本
     /* ********** 非命令传递字段 ********* */
+    repoName: string, // 来源仓库
     isInstalled?: boolean, // 是否已安装
     loading?: boolean,  // 是否正在安装
     schedule?: string,  // 安装进度
+}
+
+/**
+ * 玲珑更新对象
+ */
+export interface updateEntity {
+    id: string, // 玲珑id
+    old_version: string, // 旧版本号
+    new_version: string, // 新版本号
 }
 
 /**

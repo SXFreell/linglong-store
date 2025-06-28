@@ -1,6 +1,6 @@
 <template>
     <el-breadcrumb :separator-icon="ArrowRight">
-        <el-breadcrumb-item class="first-menu" @click="router.back">{{ query.menuName }}</el-breadcrumb-item>
+        <el-breadcrumb-item class="first-menu" @click="router.back">{{ menuName }}</el-breadcrumb-item>
         <el-breadcrumb-item class="second-menu">{{ defaultName }}</el-breadcrumb-item>
     </el-breadcrumb>
     <div class="base-container">
@@ -8,26 +8,26 @@
         <div class="base-message">
             <el-row style="height: 100%;">
                 <el-col :span="4" class="image-icon">
-                    <img v-lazy="query.icon" alt="程序图标" width="120px" height="120px" />
+                    <img v-lazy="icon" alt="程序图标" width="120px" height="120px" />
                 </el-col>
                 <el-col :span="20" style="padding-left: 10px;height: 100%;">
                     <el-row style="margin-bottom: 6px;">
                         <el-col :span="3" class="base-message-key">中文名称：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.zhName">{{ defaultName }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="zhName">{{ defaultName }}</el-col>
                         <el-col :span="3" class="base-message-key">应用名称：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.name">{{ query.name }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="name">{{ name }}</el-col>
                         <el-col :span="3" class="base-message-key">架构：</el-col>
                         <el-col :span="5" class="base-message-value" :title="formatArch">{{ formatArch }}</el-col>
                     </el-row>
                     <el-row style="margin-bottom: 6px;">
                         <el-col :span="3" class="base-message-key">appId：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.appId }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="appId">{{ appId }}</el-col>
                         <el-col :span="3" class="base-message-key">应用分类：</el-col>
-                        <el-col :span="5" class="base-message-value" :title="query.appId">{{ query.categoryName }}</el-col>
+                        <el-col :span="5" class="base-message-value" :title="categoryName">{{ categoryName }}</el-col>
                     </el-row>
                     <el-row style="height: calc(100% - 70px);">
                         <el-col :span="3" class="base-message-key">应用简述：</el-col>
-                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ query.description }}</el-col>
+                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ description }}</el-col>
                     </el-row>
                 </el-col>
             </el-row>
@@ -83,7 +83,7 @@ import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
@@ -93,21 +93,21 @@ const systemConfigStore = useSystemConfigStore();
 
 // 路由传递的对象
 const router = useRouter();
+const route = useRoute();
+const { menuName, name, zhName, icon, arch, appId, categoryName, description } = route.query;
 // 玲珑组件版本
 let llVersion = systemConfigStore.llVersion;
-// 获取路由参数
-const query = router.currentRoute.value.query;
 // 加载状态
 let loading = ref(true);
 
 // 格式化程序名称
-const defaultName = computed(() => query.zhName ? query.zhName : query.name);
+const defaultName = computed(() => zhName ? zhName : name);
 // 格式化架构字段
 const formatArch = computed(() => {
-    if (query.arch && (query.arch as string).startsWith('[')) {
-        return JSON.parse(query.arch as string).join(',');
+    if (arch && (arch as string).startsWith('[')) {
+        return JSON.parse(arch as string).join(',');
     }
-    return query.arch;
+    return arch;
 })
 // 格式化运行时字段
 function formatSize(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
@@ -186,16 +186,17 @@ const handleRunApp = (item: InstalledEntity) => {
 
 // 根据appId查询玲珑应用版本列表
 const searchLinyapsByAppId = (appId: string) => {
-    // 2.调用查询方法
-    let itemsCommand = `ll-cli --json search ${appId}`;
+    let command = `ll-cli --json search ${appId}`;
     if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
-        itemsCommand = systemConfigStore.isShowBaseService ? `ll-cli --json search ${appId} --type=all` : itemsCommand;
+        if (systemConfigStore.isShowBaseService) {
+            command += ` --type=all`;
+        }
     } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
-        itemsCommand = `ll-cli --json search ${appId} --all`;
+        command += ` --all`;
     } else if (compareVersions(llVersion, '1.8.3') >= 0) {
-        itemsCommand = `ll-cli --json search ${appId} --show-all-version`;
+        command += ` --show-all-version`;
     }
-    ipcRenderer.send("linyaps-search", { 'command': itemsCommand });
+    ipcRenderer.send("linyaps-search", { command });
     ipcRenderer.once('linyaps-search-result', (_event: any, res: any) => {
         const { error, stdout, stderr } = res;
         if (error || stderr) {
@@ -204,7 +205,16 @@ const searchLinyapsByAppId = (appId: string) => {
             ElNotification({ title: '提示', message: "获取版本列表失败，请稍后重试", type: 'error', duration: 500 });
             return;
         }
-        difVersionItemsStore.initDifVersionItems(stdout, query.appId as string);
+        // 创建一个数组集合
+        let searchVersionItemList: any[] = [];
+        // 版本小于1.9.0时
+        if (compareVersions(llVersion, '1.9.0') < 0) {
+            searchVersionItemList = stdout.trim() ? JSON.parse(stdout.trim()) : [];
+        } else {
+            const items = stdout ? JSON.parse(stdout) : null;
+            searchVersionItemList = Object.keys(items).length > 0 ? items.stable : [];
+        }
+        difVersionItemsStore.initDifVersionItems(searchVersionItemList, appId as string);
         loading.value = false;
     });
 }
@@ -219,7 +229,7 @@ onMounted(async () => {
     // 监听安装结果后版本刷新
     ipcRenderer.on('reflush-version-list-result', reflushVersionList);
     // 刷新版本列表
-    searchLinyapsByAppId(query.appId as string);
+    searchLinyapsByAppId(appId as string);
 })
 // 页面销毁前执行
 onBeforeUnmount(() => {

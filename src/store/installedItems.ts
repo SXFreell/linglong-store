@@ -3,6 +3,7 @@ import { defineStore } from "pinia";
 import { InstalledEntity } from "@/interface";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { getAppDetails } from "@/api";
+import { ipcRenderer } from "electron";
 
 const systemConfigStore = useSystemConfigStore();
 
@@ -29,10 +30,14 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
         datas.forEach(item => {
             item.appId = item.id ? item.id : item.appid ? item.appid : item.appId; // 设定appId
             item.arch = typeof item.arch === 'string' ? item.arch : Array.isArray(item.arch) ? item.arch[0] : ''; // 设定arch架构
-            item.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
             item.size = item.size ? item.size.toString() : '0'; // 设定文件大小
+            item.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
+            item.categoryName = '其他'; // 设定分类名称
+            item.installCount = 0; // 安装次数
+            item.uninstallCount = 0; // 卸载次数
+            item.isInstalled = true; // 默认已安装
+            item.loading = false; // 默认未加载
         });
-
         // 记录旧列表
         let addedItems: InstalledEntity[] = [];
         let removedItems: InstalledEntity[] = [];
@@ -59,22 +64,19 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
             const response = await getAppDetails(addedItems);
             if (response.code == 200) {
                 const details: InstalledEntity[] = response.data as unknown as InstalledEntity[];
-                for (let i = 0; i < addedItems.length; i++) {
-                    const item = addedItems[i];
-                    const detail = details.find(it => it.appId == item.appId && it.name == item.name && it.version == item.version);
-                    if (detail) {
-                        detail.arch = typeof detail.arch === 'string' ? detail.arch : Array.isArray(detail.arch) ? detail.arch[0] : ''; // 设定arch架构
-                        detail.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
-                        detail.size = detail.size ? detail.size.toString() : '0'; // 设定文件大小
-                        // 更新 installedItemList 中的对应项
-                        const idx = installedItemList.value.findIndex(it => it.appId == detail.appId && it.name == detail.name && it.version == detail.version);
-                        if (idx !== -1) {
-                            installedItemList.value[idx] = detail;
+                details.forEach((item: InstalledEntity) => {
+                    // 更新 installedItemList 中的对应项
+                    const idx = installedItemList.value.findIndex(it => it.appId == item.appId && it.version == item.version);
+                    if (idx !== -1) {
+                        const it = installedItemList.value[idx];
+                        for (const key in item) {
+                            (it as any)[key] = (item as any)[key];  // 有则覆盖，无则新增
                         }
+                        installedItemList.value[idx] = it;
                     }
-                }
+                });
             } else {
-                console.log(response.msg);
+                ipcRenderer.send('logger', 'error', `获取应用详情失败: ${response.msg}`);
             }
         }
         // 返回结果
