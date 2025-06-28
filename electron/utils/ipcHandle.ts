@@ -218,6 +218,38 @@ const IPCHandler = (win: BrowserWindow) => {
         });
     });
 
+    /* ****************** 命令 ll-cli run xxx ******************* */
+    ipcMain.on('linyaps-run', (_event, params) => {
+        const { appId, version } = params;
+        let currentProcess = spawn("ll-cli", ["run", `${appId}/${version}`]);
+        // 捕获标准输出
+        currentProcess.stdout.on("data", (data) => {
+            ipcLog.info(`linyaps-run stdout: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-run-result`, { code: 'stdout', params, result });
+        });
+        // 捕获标准错误
+        currentProcess.stderr.on("data", (data) => {
+            ipcLog.error(`linyaps-run stderr: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-run-result`, { code: 'stderr', params, result });
+        });
+        // 捕获错误事件
+        currentProcess.on('error', (data) => {
+            ipcLog.error(`linyaps-run error: ${data}`);
+            // 使用 stripAnsi 去除 ANSI 转义序列
+            let result = stripAnsi(data.toString());
+            win.webContents.send(`linyaps-run-result`, { code: 'error', params, result });
+        });
+        // 子进程退出
+        currentProcess.on("close", (code) => {
+            ipcLog.info(`linyaps-run child process exited with code ${code}`);
+            win.webContents.send(`linyaps-run-result`, { code: 'close', params, result: code });
+        });
+    });
+
     /* ****************** 命令 ll-cli --json ps ******************* */
     ipcMain.on("linyaps-ps", () => {
         exec('ll-cli --json ps', (error, stdout, stderr) => {
@@ -250,7 +282,7 @@ const IPCHandler = (win: BrowserWindow) => {
             ipcLog.info(`child process exited with code ${code}`);
             win.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
         })
-    })
+    });
 
     /* ****************** 打开终端并执行命令 ******************* */
     ipcMain.on('open-terminal', (_event, params) => {
@@ -275,7 +307,7 @@ const IPCHandler = (win: BrowserWindow) => {
                 console.error('No supported terminal found.')
             }
         }
-    })
+    });
 
     /* ********** 通过网络服务获取客户端ip ********** */
     // 使用 ipify API 获取 IPv4/IPv6 地址

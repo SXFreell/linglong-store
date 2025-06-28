@@ -35,7 +35,8 @@
 import router from '@/router';
 import defaultImage from '@/assets/logo.svg';
 import { ipcRenderer } from 'electron';
-import { computed, nextTick, onMounted, ref } from 'vue'
+import { ElNotification, ElMessage } from 'element-plus'
+import { computed, onMounted, ref } from 'vue'
 import { InstalledEntity } from '@/interface';
 
 import { useInstalledItemsStore } from "@/store/installedItems";
@@ -107,25 +108,31 @@ const changeStatus = (item: InstalledEntity) => {
 };
 // 运行按钮(发送操作命令,并弹出提示框)
 const handleRunApp = (item: InstalledEntity) => {
-    ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
-    ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
+    ipcRenderer.send('linyaps-run', { appId: item.appId, version: item.version });
+    ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})即将被启动！` });
 }
-// 滚动动画逻辑
-const applyScrollAnimation = () => {
-    nextTick(() => {
-        const container = containerRef.value;
-        const text = textRef.value;
-        if (container && text) {
-            if (text.scrollWidth > container.offsetWidth) {
-                // textElement.style.animation = 'scroll-text 10s linear infinite';
-            } else {
-                text.style.animation = 'none';
-                text.style.textAlign = 'center';
-            }
-        }
-    });
-};
-onMounted(() => applyScrollAnimation());
+
+const handleRunAppResult = (_event: any, res: any) => {
+    const { code, params, result } = res;
+    if (code === 'close') {
+        ElNotification({ title: '提示', type: 'success', duration: 3000, message: `${params.appId}(${params.version})已关闭！` });
+        return;
+    }
+    if (code === 'error' || code === 'stderr') {
+        ElMessage.error(`启动失败: ${result}`);
+    }
+}
+
+// 页面挂载时应用滚动动画
+onMounted(() => {
+    // ipcRenderer.on('linyaps-run-result', handleRunAppResult); // 监听应用启动结果
+    const containerElement = containerRef.value as HTMLElement;
+    const textElement = textRef.value as HTMLElement;
+    if (textElement && containerElement && textElement.scrollWidth < containerElement.offsetWidth) {
+        textElement.style.textAlign = 'center';
+        textElement.style.animation = 'none'; // 去除滚动动画
+    }
+});
 </script>
 <style scoped>
 :deep(.el-card__body) {
