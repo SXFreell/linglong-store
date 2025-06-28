@@ -131,7 +131,7 @@ const IPCHandler = (win: BrowserWindow) => {
     /* ****************** 命令 ll-cli list ******************* */
     ipcMain.on("linyaps-list", (event, params) => {
         exec(params.command, (error, stdout, stderr) => {
-            // ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
             win.webContents.send("linyaps-list-result", { error, stdout, stderr });
         });
     });
