@@ -1,41 +1,45 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
-import { CardFace } from "@/interface";
+import { InstalledEntity } from "@/interface";
 
 /**
- * 全部应用(新)
+ * 全部应用
  */
 export const useAllAppItemsStore = defineStore("allAppItems", () => {
 
-    const allAppItemList = ref<CardFace[]>([]);
+    const allAppItemList = ref<InstalledEntity[]>([]);
     
     /**
      * 新增对象
      * @param item 要新增的对象
      */
-    const addItem = (item: CardFace) => {
+    const addItem = (item: InstalledEntity) => {
         allAppItemList.value.push(item);
     };
-
+    /**
+     * 清空所有应用对象列表
+     */
+    const clearItems = () => {
+        allAppItemList.value.splice(0, allAppItemList.value.length);
+    };
     /**
      * 更新对象的安装状态
      * @param item 要更新的对象
      */
-    const updateItemInstallStatus = (item: CardFace) => {
-        const index = allAppItemList.value.findIndex((it) => it.appId === item.appId);
+    const updateItemInstallStatus = (item: InstalledEntity, flag: boolean) => {
+        const index = allAppItemList.value.findIndex((it) => it.appId === item.appId && it.version === item.version && it.module === item.module);
         if (index !== -1) {
             const aItem = allAppItemList.value[index];
-            aItem.isInstalled = item.isInstalled;
+            aItem.isInstalled = flag;
             allAppItemList.value.splice(index, 1, aItem);
         }
     }
-
     /**
      * 更新对象的加载状态
      * @param item 要更新的对象
      */
-    const updateItemLoadingStatus = (item: CardFace,flag: boolean) => {
-        const index = allAppItemList.value.findIndex((it) => it.appId === item.appId);
+    const updateItemLoadingStatus = (item: InstalledEntity,flag: boolean) => {
+        const index = allAppItemList.value.findIndex((it) => it.appId === item.appId && it.version === item.version && it.module === item.module);
         if (index !== -1) {
             const aItem = allAppItemList.value[index];
             aItem.loading = flag;
@@ -43,18 +47,12 @@ export const useAllAppItemsStore = defineStore("allAppItems", () => {
         }
     }
 
-    /**
-     * 清空所有应用对象列表
-     */
-    const clearItems = () => {
-        allAppItemList.value.splice(0, allAppItemList.value.length);
-    };
-
     return {
         allAppItemList,
         addItem,
+        clearItems,
         updateItemInstallStatus,
         updateItemLoadingStatus,
-        clearItems,
+
     };
 });

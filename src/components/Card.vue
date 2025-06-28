@@ -21,7 +21,7 @@
             <el-button class="p-card-btn" v-else @click="openDetails">安装</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '卸载程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
-            <el-button class="card-btn" @click="changeStatus(props)">卸载</el-button>
+            <el-button class="card-btn" @click="removeApp(props)">卸载</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '更新程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="card-btn" @click="openDetails">升级</el-button>
@@ -39,10 +39,14 @@ import { ElNotification, ElMessage } from 'element-plus'
 import { computed, onMounted, ref } from 'vue'
 import { InstalledEntity } from '@/interface';
 
+import { useAllAppItemsStore } from '@/store/allAppItems';
 import { useInstalledItemsStore } from "@/store/installedItems";
+import { useUpdateItemsStore } from '@/store/updateItems';
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 
+const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
+const updateItemsStore = useUpdateItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
 
 const containerRef = ref<HTMLElement | null>(null);
@@ -57,6 +61,8 @@ const props = defineProps({
     zhName: { type: String, default: '' },
     arch: { type: String, default: 'x86_64' },
     channel: { type: String, default: '' },
+    base: { type: String, default: '' },
+    kind: { type: String, default: '' },
     categoryName: { type: String, default: '其他' },
     version: { type: String, default: '0.0.0.1' },
     newVersion: { type: String, default: '0.0.0.1' },
@@ -68,7 +74,12 @@ const props = defineProps({
     createTime: { type: String, default: new Date().toISOString().split('T')[0] },
     installCount: { type: Number, default: 0 },
     isInstalled: { type: Boolean, default: false },
-    loading: { type: Boolean, default: false }
+    loading: { type: Boolean, default: false },
+    schema_version: { type: String, default: '' },
+    command: { type: String, default: '' },
+    install_time: { type: String, default: new Date().toISOString().split('T')[0] },
+    permissions: { type: String, default: '' },
+    extensions: { type: String, default: '' }
 })
 
 // 格式化描述信息
@@ -90,21 +101,15 @@ const openDetails = () => {
     }});
 }
 // 按钮点击操作事件
-const changeStatus = (item: InstalledEntity) => {
-    ElMessageBox.confirm('确定要卸载当前程序已安装的最新版本吗？<br> 如若卸载当前应用其他版本，请点击图标查看详情进行操作', '提示', {
-        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning', center: true,
-        dangerouslyUseHTMLString: true,  // 允许使用 HTML 标签
-    }).then(() => {
-        // 启用加载框
-        installedItemsStore.updateItemLoadingStatus(item as InstalledEntity, true);
-        difVersionItemsStore.updateItemLoadingStatus(item as InstalledEntity, true);
-        // 发送操作命令
-        ipcRenderer.send('command', {
-            icon: item.icon, appId: item.appId, name: item.name, arch: item.arch, version: item.version,
-            description: item.description, isInstalled: item.isInstalled, loading: false,
-            command: `ll-cli uninstall ${item.appId}/${item.version}`,
-        });
-    })
+const removeApp = (item: InstalledEntity) => {
+    // 启用加载框
+    allAppItemsStore.updateItemLoadingStatus(item, true);
+    installedItemsStore.updateItemLoadingStatus(item, true);
+    difVersionItemsStore.updateItemLoadingStatus(item, true);
+    updateItemsStore.updateItemLoadingStatus(item, true);
+    // 发送操作命令
+    item.command = `ll-cli uninstall ${item.appId}/${item.version}`;
+    ipcRenderer.send('linyaps-uninstall', item);
 };
 // 运行按钮(发送操作命令,并弹出提示框)
 const handleRunApp = (item: InstalledEntity) => {

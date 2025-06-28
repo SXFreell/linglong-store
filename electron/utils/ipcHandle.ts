@@ -128,6 +128,14 @@ const IPCHandler = (win: BrowserWindow) => {
         });
     });
 
+    /* ****************** 命令 ll-cli --json --version ******************* */
+    ipcMain.on("linyaps-version", () => {
+        exec("ll-cli --json --version", (error, stdout, stderr) => {
+            ipcLog.info('ll-cli --json --version >>', { error, stdout, stderr });
+            win.webContents.send("linyaps-version-result", { error, stdout, stderr });
+        });
+    });
+
     /* ****************** 命令 ll-cli list ******************* */
     ipcMain.on("linyaps-list", (event, params) => {
         exec(params.command, (error, stdout, stderr) => {
@@ -195,18 +203,17 @@ const IPCHandler = (win: BrowserWindow) => {
 
     /* ****************** 命令 ll-cli uninstall xxx ******************* */
     ipcMain.on("linyaps-uninstall", (_event, params) => {
-        const { password, appId, version } = params;
-        if (!appId || !version) {
-            ipcLog.error('linyaps-uninstall：应用ID或版本号为空，无法卸载应用');
-            win.webContents.send("linyaps-uninstall-result", { error: '应用ID或版本号不能为空' });
-            return;
-        }
-        if (!password) {
-            ipcLog.error('linyaps-uninstall：密码为空, 使用非 sudo 卸载应用');
-        }
-        exec(`ll-cli uninstall ${appId}/${version}`, (error, stdout, stderr) => {
-            ipcLog.info(`linyaps-uninstall >> `, { error, stdout, stderr });
-            win.webContents.send("linyaps-uninstall-result", { error, stdout, stderr });
+        exec(params.command, (error, stdout, stderr) => {
+            ipcLog.info('linyaps-uninstall：：error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
+            if (stderr) {
+                win.webContents.send("linyaps-uninstall-result", { code: 'stderr', params, result: stderr });
+                return;
+            }
+            if (error) {
+                win.webContents.send("linyaps-uninstall-result", { code: 'error', params, result: error.message });
+                return;
+            }
+            win.webContents.send("linyaps-uninstall-result", { code: 'stdout', params, result: stdout });
         });
     });
 

@@ -45,25 +45,12 @@
             <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount" show-overflow-tooltip/>
             <el-table-column label="上架时间" header-align="center" align="center" width="150" :formatter="formatUploadTime" show-overflow-tooltip/>
             <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime" show-overflow-tooltip/>
-            <el-table-column fixed="right" label="操作" header-align="center" align="center" width="160">
+            <el-table-column fixed="right" label="操作" header-align="center" align="center" width="120">
                 <template #default="scope">
-                    <el-button class="uninstall-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && scope.row.kind != 'app' && scope.row.kind != '本地安装'"
-                        disabled>已安装</el-button>
-                    <!-- 卸载按钮 -->
-                    <el-button class="uninstall-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && (scope.row.kind == 'app' || scope.row.kind == '本地安装')"
-                        @click="changeStatus(scope.row, 'uninstall')">卸载</el-button>
+                    <el-button class="detail-btn uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading" @click="removeApp(scope.row)">卸载</el-button>
                     <el-button v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
-                    <!-- 运行按钮 -->
-                    <el-button class="run-btn"
-                        v-if="scope.row.isInstalled && !scope.row.loading && (scope.row.kind == 'app' || scope.row.kind == '本地安装')"
-                        @click="handleRunApp(scope.row)">运行</el-button>
-                    <!-- 安装按钮 -->
-                    <el-button class="install-btn"
-                        v-if="!scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
-                        @click="changeStatus(scope.row, 'install')">安装</el-button>
                     <el-button v-if="!scope.row.isInstalled && scope.row.loading" loading>安装中</el-button>
+                    <el-button class="detail-btn install-btn" v-if="!scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'" @click="installApp(scope.row)">安装</el-button>
                 </template>
             </el-table-column>
         </el-table>
@@ -72,8 +59,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { ipcRenderer } from 'electron';
-import { InstalledEntity } from '@/interface';
 import { onBeforeRouteLeave } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
+import { InstalledEntity } from '@/interface';
 import { ElNotification, TableColumnCtx } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
@@ -82,19 +70,22 @@ import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
+import { useUpdateItemsStore } from '@/store/updateItems';
 import { useSystemConfigStore } from "@/store/systemConfig";
-import { useRoute, useRouter } from 'vue-router';
+
 
 const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
+const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
 // 路由传递的对象
 const router = useRouter();
 const route = useRoute();
 const { menuName, name, zhName, icon, arch, appId, categoryName, description } = route.query;
+
 // 玲珑组件版本
 let llVersion = systemConfigStore.llVersion;
 // 加载状态
@@ -139,19 +130,25 @@ function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, 
     return `${packs.appId}/${packs.version}`; // 做一些格式化处理并返回字符串
 };
 
-/**
- * 操作按钮的点击事件
- * @param item 要操作的对象
- * @param flag 安装/卸载
- */
-const changeStatus = async (item: any, flag: string) => {
+const removeApp = (item: InstalledEntity) => {
+    // 启用加载框
+    allAppItemsStore.updateItemLoadingStatus(item, true);
+    installedItemsStore.updateItemLoadingStatus(item, true);
+    difVersionItemsStore.updateItemLoadingStatus(item, true);
+    updateItemsStore.updateItemLoadingStatus(item, true);
+    // 发送操作命令
+    item.command = `ll-cli uninstall ${item.appId}/${item.version}`;
+    ipcRenderer.send('linyaps-uninstall', item);
+}
+
+const installApp = async (item: any) => {
     // 判断正在安装队列应用数量，大于10条弹出提示框
     if (installingItemsStore.installingItemList.length >= 10) {
         ElNotification({ title: '提示', type: 'warning', duration: 500, message: '当前下载队列超过10条，请稍后操作...' });
         return;
     }
     // 大于等于1.7.0版本后，安装低版本会进行校验
-    if (compareVersions(llVersion, "1.7.0") >= 0 && flag == 'install') {
+    if (compareVersions(llVersion, "1.7.0") >= 0) {
         let tempList = installedItemsStore.installedItemList;
         let theAppIdList = tempList.filter(it => it.appId == item.appId);
         if (theAppIdList.length > 0) {
@@ -165,38 +162,18 @@ const changeStatus = async (item: any, flag: string) => {
         }
     }
     // 启用加载框
-    allAppItemsStore.updateItemLoadingStatus(item, true); // 全部程序列表(新)
-    installedItemsStore.updateItemLoadingStatus(item, true); // 已安装程序列表
-    difVersionItemsStore.updateItemLoadingStatus(item, true); // 不同版本列表
-    // 根据flag判断是安装还是卸载,发送命令并弹出提示框
-    if (flag == 'install') {
-        installingItemsStore.addItem(item); // 新增到加载中列表
-        ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
-    } else {
-        ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli uninstall ${item.appId}/${item.version}` });
-        ElNotification({ title: '提示', message: `正在卸载${item.name}(${item.version})`, type: 'info', duration: 500 });
-    }
-}
-
-// 运行按钮(发送操作命令,并弹出提示框)
-const handleRunApp = (item: InstalledEntity) => {
-    ipcRenderer.send('command', { ...item, loading: false, command: `ll-cli run ${item.appId}/${item.version}` });
-    ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
+    allAppItemsStore.updateItemLoadingStatus(item, true);
+    installedItemsStore.updateItemLoadingStatus(item, true);
+    difVersionItemsStore.updateItemLoadingStatus(item, true);
+    updateItemsStore.updateItemLoadingStatus(item, true);
+    // 新增到加载中列表
+    installingItemsStore.addItem(item); 
+    ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
 }
 
 // 根据appId查询玲珑应用版本列表
 const searchLinyapsByAppId = (appId: string) => {
-    let command = `ll-cli --json search ${appId}`;
-    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
-        if (systemConfigStore.isShowBaseService) {
-            command += ` --type=all`;
-        }
-    } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
-        command += ` --all`;
-    } else if (compareVersions(llVersion, '1.8.3') >= 0) {
-        command += ` --show-all-version`;
-    }
-    ipcRenderer.send("linyaps-search", { command });
+    loading.value = true; // 列表查询时加载状态启动
     ipcRenderer.once('linyaps-search-result', (_event: any, res: any) => {
         const { error, stdout, stderr } = res;
         if (error || stderr) {
@@ -211,18 +188,28 @@ const searchLinyapsByAppId = (appId: string) => {
         if (compareVersions(llVersion, '1.9.0') < 0) {
             searchVersionItemList = stdout.trim() ? JSON.parse(stdout.trim()) : [];
         } else {
+            // 版本大于等于1.9.0时,取stable版本 TODO
             const items = stdout ? JSON.parse(stdout) : null;
             searchVersionItemList = Object.keys(items).length > 0 ? items.stable : [];
         }
         difVersionItemsStore.initDifVersionItems(searchVersionItemList, appId as string);
         loading.value = false;
     });
+    let command = `ll-cli --json search ${appId}`;
+    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
+        if (systemConfigStore.isShowBaseService) {
+            command += ` --type=all`;
+        }
+    } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
+        command += ` --all`;
+    } else if (compareVersions(llVersion, '1.8.3') >= 0) {
+        command += ` --show-all-version`;
+    }
+    ipcRenderer.send("linyaps-search", { command });
 }
 
 // 监听版本刷新结果
-const reflushVersionList = (_event: any, res: any) => {
-    searchLinyapsByAppId(res.appId);
-}
+const reflushVersionList = (_event: any, res: any) => searchLinyapsByAppId(res.appId);
 
 // 页面启动时加载
 onMounted(async () => {
@@ -289,36 +276,6 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
     height: 100%;
 }
 
-.choose-version {
-    display: flex;
-    flex-direction: column;
-    border-radius: 5px;
-    height: calc(70% - 70px);
-    background-color: #6a6d7b;
-    padding: 10px;
-}
-
-.install-btn {
-    background-color: blue;
-    color: white;
-    padding: 6px;
-    height: 24px;
-}
-
-.uninstall-btn {
-    background-color: red;
-    color: white;
-    padding: 6px;
-    height: 24px;
-}
-
-.run-btn {
-    background-color: #5F9EA0;
-    color: white;
-    padding: 6px;
-    height: 24px;
-}
-
 .base-message-key {
     color: black;
     text-align: right;
@@ -330,6 +287,32 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
+}
+
+.choose-version {
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    height: calc(70% - 70px);
+    background-color: #6a6d7b;
+    padding: 10px;
+}
+
+.detail-btn {
+    height: 24px;
+    width: 60px;
+    font-size: 14px;
+    font-weight: bold;
+    color: white;
+    padding: 6px;
+}
+
+.install-btn {
+    background-color: blue;
+}
+
+.uninstall-btn {
+    background-color: red;
 }
 
 /* 隐藏滚动条 */

@@ -94,7 +94,7 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
      * @param item 要移除的对象
      */
     const removeItem = (item: InstalledEntity) => {
-        const index = installedItemList.value.findIndex((i) => i.appId === item.appId && i.name === item.name && i.version === item.version);
+        const index = installedItemList.value.findIndex((i) => i.appId === item.appId && i.version === item.version && i.module === item.module);
         if (index !== -1) {
             installedItemList.value.splice(index, 1);
         }
@@ -110,7 +110,7 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
      * @param item 要更新的对象
      */
     const updateItemLoadingStatus = (item: InstalledEntity,flag: boolean) => {
-        const index = installedItemList.value.findIndex((it) => it.name === item.name && it.version === item.version && it.appId === item.appId);
+        const index = installedItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
         if (index !== -1) {
             const aItem = installedItemList.value[index];
             aItem.loading = flag;

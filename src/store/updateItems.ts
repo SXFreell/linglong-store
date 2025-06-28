@@ -68,6 +68,18 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
     const clearItems = () => {
         updateItemList.value.splice(0, updateItemList.value.length);
     };
+    /**
+     * 更新对象的加载状态
+     * @param item 要更新的对象
+     */
+    const updateItemLoadingStatus = (item: InstalledEntity,flag: boolean) => {
+        const index = updateItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        if (index !== -1) {
+            const aItem = updateItemList.value[index];
+            aItem.loading = flag;
+            updateItemList.value.splice(index, 1, aItem);
+        }
+    }
 
     return {
         updateItemList,
@@ -75,6 +87,7 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
         addItem,
         removeItem,
         clearItems,
+        updateItemLoadingStatus,
     };
 
 });

@@ -12,7 +12,7 @@
         <NoData v-else />
         <transition name="el-zoom-in-bottom">
             <div v-show="updateItemsStore.updateItemList.length > 0" class="transition-update-btn">
-                <el-button type="primary" @click="updateAll" :disabled="systemConfigStore.updateStatus">一键更新</el-button>
+                <el-button type="primary" @click="updateAll" :disabled="updateStatusStore.updateStatus">一键更新</el-button>
             </div>
         </transition>
     </div>
@@ -24,22 +24,33 @@ import NoData from "@/components/NoData.vue";
 import { InstalledEntity } from "@/interface";
 import { reflushUpdateItems } from "@/util/WorkerUpdate";
 
-import { useUpdateItemsStore } from "@/store/updateItems";
-import { useSystemConfigStore } from "@/store/systemConfig";
+import { useUpdateStatusStore } from "@/store/updateStatus";
 import { useInstallingItemsStore } from "@/store/installingItems";
+import { useAllAppItemsStore } from "@/store/allAppItems";
+import { useInstalledItemsStore } from "@/store/installedItems";
+import { useDifVersionItemsStore } from "@/store/difVersionItems";
+import { useUpdateItemsStore } from "@/store/updateItems";
 
-const updateItemsStore = useUpdateItemsStore();
-const systemConfigStore = useSystemConfigStore();
+const updateStatusStore = useUpdateStatusStore();
 const installingItemsStore = useInstallingItemsStore();
+const allAppItemsStore = useAllAppItemsStore();
+const installedItemsStore = useInstalledItemsStore();
+const difVersionItemsStore = useDifVersionItemsStore();
+const updateItemsStore = useUpdateItemsStore();
 
-// 更新所有
+// 一键更新按钮点击事件
 const updateAll = () => {
-    // 更改一键更新状态为true
-    systemConfigStore.changeUpdateStatus(true);
-    // 执行一键更新
-    const updateItemList = updateItemsStore.updateItemList;
-    updateItemList.forEach((item) => {
-        installingItemsStore.addItem(item as InstalledEntity); // 新增到加载中列表
+    updateStatusStore.changeUpdateStatus(true); // 更改一键更新状态为true
+    updateItemsStore.updateItemList.forEach((item) => {
+        const tempItem = { ...item }; // 深拷贝，避免直接修改原数据
+        tempItem.version = tempItem.newVersion ? tempItem.newVersion : tempItem.version; // 更新版本号
+        tempItem.newVersion = ''; // 清空新版本号
+        allAppItemsStore.updateItemLoadingStatus(item, true);
+        installedItemsStore.updateItemLoadingStatus(item, true);
+        difVersionItemsStore.updateItemLoadingStatus(item, true);
+        updateItemsStore.updateItemLoadingStatus(item, true);
+        // 新增到加载中列表
+        installingItemsStore.addItem(tempItem as InstalledEntity); 
     })
 }
 // 页面打开时执行
@@ -47,17 +58,17 @@ onMounted(async () => reflushUpdateItems());
 </script>
 <style scoped>
 .transition-update-btn {
-    border-radius: 10px;
+    height: 64px;
+    width: 120px;
+    color: #fff;
     background: radial-gradient(circle at 50% 20%, #6E6E6E, transparent);
     text-align: center;
-    color: #fff;
     padding: 16px;
+    border-radius: 10px;
     box-sizing: border-box;
     position: fixed;
     bottom: 12px;
     left: 50%;
-    height: 64px;
-    width: 120px;
     z-index: 2;
 }
 

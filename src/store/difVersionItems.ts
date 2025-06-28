@@ -108,7 +108,7 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @param item 要移除的对象
      */
     const removeItem = (item: InstalledEntity) => {
-        const index = difVersionItemList.value.findIndex((i) => i.appId === item.appId && i.name === item.name && i.version === item.version);
+        const index = difVersionItemList.value.findIndex((i) => i.appId === item.appId && i.version === item.version && i.module === item.module);
         if (index !== -1) {
             difVersionItemList.value.splice(index, 1);
         }
@@ -125,11 +125,11 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * 更新对象的安装状态
      * @param item 要更新的对象
      */
-    const updateItemInstallStatus = (item: InstalledEntity) => {
-        const index = difVersionItemList.value.findIndex((it) => it.name === item.name && it.version === item.version && it.appId === item.appId);
-        if (index !== -1 && item.isInstalled != undefined) {
+    const updateItemInstallStatus = (item: InstalledEntity, flag: boolean) => {
+        const index = difVersionItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        if (index !== -1) {
             const aItem = difVersionItemList.value[index];
-            aItem.isInstalled = item.isInstalled;
+            aItem.isInstalled = flag;
             difVersionItemList.value.splice(index, 1, aItem);
         }
     }
@@ -139,7 +139,7 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @param item 要更新的对象
      */
     const updateItemLoadingStatus = (item: InstalledEntity, flag: boolean) => {
-        const index = difVersionItemList.value.findIndex((it) => it.name === item.name && it.version === item.version && it.appId === item.appId);
+        const index = difVersionItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
         if (index !== -1) {
             const aItem = difVersionItemList.value[index];
             aItem.loading = flag;

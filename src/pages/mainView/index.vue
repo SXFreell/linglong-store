@@ -34,12 +34,10 @@ import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstal
 import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
 import { installingItems, setupIpcListeners, cleanupIpcListeners } from "@/util/IpcInstalled";
 import { useInstallingItemsStore } from "@/store/installingItems";
-import { useSystemConfigStore } from "@/store/systemConfig";
 import { useUpdateStatusStore } from "@/store/updateStatus";
 import router from '@/router';
 
 const installingItemsStore = useInstallingItemsStore();
-const systemConfigStore = useSystemConfigStore();
 const updateStatusStore = useUpdateStatusStore();
 
 let activeMenu = ref('1'); // 当前激活的菜单项
@@ -83,7 +81,7 @@ watch(() => installingItemsStore.installingItemList,
             let password = localStorage.getItem('linyaps-password'); // 获取密码
             ipcRenderer.send('linyaps-install', { password, ...item });
         } else {
-            systemConfigStore.changeUpdateStatus(false); // 如果队列为空，设置安装状态为false
+            updateStatusStore.changeUpdateStatus(false); // 如果队列为空，设置安装状态为false
         }
     },
     { deep: true, immediate: true }
