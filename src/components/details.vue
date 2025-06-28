@@ -184,6 +184,7 @@ const handleRunApp = (item: InstalledEntity) => {
     ElNotification({ title: '提示', type: 'info', duration: 500, message: `${item.name}(${item.version})j即将被启动！` });
 }
 
+// 根据appId查询玲珑应用版本列表
 const searchLinyapsByAppId = (appId: string) => {
     // 2.调用查询方法
     let itemsCommand = `ll-cli --json search ${appId}`;
