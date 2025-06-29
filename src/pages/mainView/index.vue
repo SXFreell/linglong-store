@@ -1,10 +1,9 @@
 <template>
-    <div class="common-layout">
-        <el-container>
+    <div style="height: 100%;width: 100%;">
+        <el-container style="height: 100%;">
             <el-aside>
                 <el-menu :default-active="activeMenu" @select="handleMenuSelect">
-                    <el-menu-item v-for="item in menuItems" :key="item.index" :index="item.index" @click="item.action"
-                        :style="item.style">
+                    <el-menu-item v-for="item in menuItems" :key="item.index" :index="item.index" @click="item.action">
                         <el-icon>
                             <component :is="item.icon" />
                         </el-icon>
@@ -57,7 +56,6 @@ const menuItems = [
     { index: "6", label: "基础设置", icon: "setting", action: () => router.push({ path: '/config_menu' }) },
     { index: "7", label: "关于程序", icon: "InfoFilled", action: () => router.push({ path: '/about_menu' }) },
     //   { index: "998", label: "终端页面", icon: "InfoFilled", action: () => router.push({ path: '/terminalOutput' }) },
-    { index: "8", label: "返回首页", icon: "Loading", action: () => router.push({ path: '/' }), style: "display: none;" }
 ];
 
 const handleMenuSelect = (index: string) => {
@@ -110,15 +108,6 @@ onUnmounted(() => {
 });
 </script>
 <style>
-.common-layout {
-    height: 100%;
-    width: 100%;
-}
-
-.el-container {
-    height: 100%;
-}
-
 .el-aside {
     width: 150px;
     margin: 12px 0 12px 12px;
