@@ -48,13 +48,13 @@ let show = ref(false); // 显示下载队列框
 // 菜单项配置
 const menuItems = [
     { index: "1", label: "玲珑推荐", icon: "Star", action: () => router.push({ path: '/welcome_menu' }) },
-    { index: "6", label: "排行榜", icon: "Histogram", action: () => router.push({ path: '/ranking_menu' }) },
-    { index: "2", label: "全部程序", icon: "HomeFilled", action: () => router.push({ path: '/all_app_menu' }) },
-    { index: "3", label: "更新程序", icon: "UploadFilled", action: () => router.push({ path: '/update_menu' }) },
-    { index: "4", label: "卸载程序", icon: "GobletSquareFull", action: () => router.push({ path: '/installed_menu' }) },
-    { index: "5", label: "玲珑进程", icon: "Odometer", action: () => router.push({ path: '/runtime_menu' }) },
-    { index: "6", label: "基础设置", icon: "setting", action: () => router.push({ path: '/config_menu' }) },
-    { index: "7", label: "关于程序", icon: "InfoFilled", action: () => router.push({ path: '/about_menu' }) },
+    { index: "2", label: "排行榜", icon: "Histogram", action: () => router.push({ path: '/ranking_menu' }) },
+    { index: "3", label: "全部程序", icon: "HomeFilled", action: () => router.push({ path: '/all_app_menu' }) },
+    { index: "4", label: "更新程序", icon: "UploadFilled", action: () => router.push({ path: '/update_menu' }) },
+    { index: "5", label: "卸载程序", icon: "GobletSquareFull", action: () => router.push({ path: '/installed_menu' }) },
+    { index: "6", label: "玲珑进程", icon: "Odometer", action: () => router.push({ path: '/runtime_menu' }) },
+    { index: "7", label: "基础设置", icon: "setting", action: () => router.push({ path: '/config_menu' }) },
+    { index: "8", label: "关于程序", icon: "InfoFilled", action: () => router.push({ path: '/about_menu' }) },
     //   { index: "998", label: "终端页面", icon: "InfoFilled", action: () => router.push({ path: '/terminalOutput' }) },
 ];
 
