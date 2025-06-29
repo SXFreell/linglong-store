@@ -24,6 +24,8 @@
                         <el-col :span="5" class="base-message-value" :title="appId">{{ appId }}</el-col>
                         <el-col :span="3" class="base-message-key">应用分类：</el-col>
                         <el-col :span="5" class="base-message-value" :title="categoryName">{{ categoryName }}</el-col>
+                        <el-col :span="3" class="base-message-key" v-if="devName">维护者：</el-col>
+                        <el-col :span="5" class="base-message-value" v-if="devName">{{ devName }}</el-col>
                     </el-row>
                     <el-row style="height: calc(100% - 70px);">
                         <el-col :span="3" class="base-message-key">应用简述：</el-col>
@@ -36,20 +38,20 @@
     <div class="choose-version">
         <div class="title">版本选择</div>
         <el-table class="version-table" :data="difVersionItemsStore.difVersionItemList" border stripe v-loading="loading">
-            <el-table-column prop="version" label="版本号" header-align="center" width="120" show-overflow-tooltip/>
-            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="100" show-overflow-tooltip/>
-            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="100" show-overflow-tooltip/>
-            <el-table-column prop="module" label="模式" header-align="center" align="center" width="100" show-overflow-tooltip/>
-            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="100" show-overflow-tooltip/>
-            <el-table-column label="文件大小" header-align="center" align="center" width="120" :formatter="formatSize" show-overflow-tooltip/>
-            <el-table-column label="下载量" header-align="center" align="center" width="100" :formatter="formatCount" show-overflow-tooltip/>
-            <el-table-column label="上架时间" header-align="center" align="center" width="150" :formatter="formatUploadTime" show-overflow-tooltip/>
+            <el-table-column prop="version" label="版本号" header-align="center" align="center" width="120" show-overflow-tooltip/>
+            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="90" show-overflow-tooltip/>
+            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="90" show-overflow-tooltip/>
+            <el-table-column prop="module" label="模式" header-align="center" align="center" width="90" show-overflow-tooltip/>
+            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="90" show-overflow-tooltip/>
+            <el-table-column label="文件大小" header-align="center" align="center" width="100" :formatter="formatSize" show-overflow-tooltip/>
+            <el-table-column label="下载量" header-align="center" align="center" width="90" :formatter="formatCount" show-overflow-tooltip/>
+            <el-table-column label="上架时间" header-align="center" align="center" width="120" :formatter="formatUploadTime" show-overflow-tooltip/>
             <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime" show-overflow-tooltip/>
-            <el-table-column fixed="right" label="操作" header-align="center" align="center" width="120">
+            <el-table-column fixed="right" label="操作" header-align="center" align="center" width="130">
                 <template #default="scope">
                     <el-button class="detail-btn uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading" @click="removeApp(scope.row)">卸载</el-button>
-                    <el-button v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
-                    <el-button v-if="!scope.row.isInstalled && scope.row.loading" loading>安装中</el-button>
+                    <el-button class="detail-btn" v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
+                    <el-button class="detail-btn" v-if="!scope.row.isInstalled && scope.row.loading" loading>安装中</el-button>
                     <el-button class="detail-btn install-btn" v-if="!scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'" @click="installApp(scope.row)">安装</el-button>
                 </template>
             </el-table-column>
@@ -57,7 +59,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 import { ipcRenderer } from 'electron';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
@@ -83,7 +85,7 @@ const systemConfigStore = useSystemConfigStore();
 // 路由传递的对象
 const router = useRouter();
 const route = useRoute();
-const { menuName, name, zhName, icon, arch, appId, categoryName, description } = route.query;
+const { menuName, name, zhName, icon, arch, appId, categoryName, description, devName } = route.query;
 
 // 玲珑组件版本
 let llVersion = systemConfigStore.llVersion;
@@ -240,10 +242,11 @@ onBeforeRouteLeave((to: any, from: any, next: any) => {
 
 .detail-btn {
     height: 24px;
-    width: 60px;
+    width: 70px;
     font-size: 14px;
     font-weight: bold;
     color: white;
+    background-color: #6a6d7b;
     padding: 6px;
 }
 
