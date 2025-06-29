@@ -76,13 +76,13 @@ const stopPross = (item: RunTime) => {
 const intoDom = (item: RunTime) => {
     const { containerId, app } = item;
     // ll-cli exec com.tencent.wechat.linyaps /bin/bash
-    let code = ['ll-cli', 'exec'];
+    let code = `ll-cli exec `;
     if (compareVersions(systemConfigStore.llVersion,'1.7.0') >= 0) {
-        code.push(app);
+        code += app;
     } else {
-        code.push(containerId);
+        code += containerId;
     }
-    code.push('/bin/bash');
+    code += ' /bin/bash';
     ipcRenderer.send('open-terminal', { code });
 }
 

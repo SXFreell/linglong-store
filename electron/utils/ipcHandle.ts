@@ -288,7 +288,23 @@ const IPCHandler = (win: BrowserWindow) => {
                 }
             })
             if (terminal) {
-                spawn(terminal, params.code, { stdio: 'inherit' })
+                let arr = [];
+                if (terminal == 'deepin-terminal') {
+                    arr.push('-e');
+                } else if (terminal == 'gnome-terminal') {
+                    arr.push('--');
+                    arr.push('bash');
+                    arr.push('-c');
+                } else if (terminal == 'konsole') {
+                    arr.push('-e');
+                    arr.push('bash');
+                    arr.push('-c');
+                } else if (terminal == 'xterm') {
+                    arr.push('-e');
+                }
+                arr.push(params.code);
+                const child = spawn(terminal, arr, { detached: true,stdio: 'ignore' });
+                child.unref()  // 彻底让它脱离主程序
             } else {
                 console.error('No supported terminal found.')
             }
