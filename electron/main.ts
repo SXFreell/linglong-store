@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Menu } from "electron";
+import { app, BrowserWindow, shell, Menu, ipcMain } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./logger";
 import TrayMenu from "./utils/trayHandle";
@@ -14,6 +14,7 @@ const preload = join(__dirname, 'preload.js')
 const VITE_DEV_SERVER_URL = process.env.VITE_DEV_SERVER_URL;
 
 let mainWin: BrowserWindow | null;
+let otherWin: BrowserWindow | null;
 
 // 创建窗口并初始化相关参数
 function createWindow() {
@@ -50,6 +51,55 @@ function createWindow() {
     }
     return { action: "deny" };
   });
+
+  // 拦截窗口关闭操作，改为隐藏
+  mainWin.on('close', (event) => {
+    event.preventDefault()
+    mainWin?.hide()
+  })
+}
+
+// 创建窗口并初始化相关参数
+function createOtherWindow() {
+  otherWin = new BrowserWindow({
+    width: 800,
+    height: 600,
+    minWidth: 800,
+    minHeight: 600,
+    maxHeight: 600,
+    maxWidth: 800,
+    icon: join(process.env.PUBLIC, "logo.png"),
+    webPreferences: {
+      preload,
+      nodeIntegration: true,
+      contextIsolation: false, // 解决渲染进程中无法使用nodejs/electron函数方法
+    },
+  });
+  // 禁用菜单，一般情况下，不需要禁用
+  Menu.setApplicationMenu(null);
+  // 根据环境以不同方式加载页面
+  if (VITE_DEV_SERVER_URL) {
+    mainLog.info("mainWin loadURL ", VITE_DEV_SERVER_URL);
+    otherWin.loadURL(VITE_DEV_SERVER_URL + '#/my_apps_menu');
+  } else {
+    mainLog.info("mainWin loadFile ", join(process.env.DIST, "index.html"));
+    otherWin.loadFile(join(process.env.DIST, "index.html"), {hash: '/my_apps_menu'});
+  }
+  // 设置所有链接通过默认浏览器打开，而非程序内打开
+  otherWin.webContents.setWindowOpenHandler(({ url }) => {
+    mainLog.info("打开url", url);
+    // 如果是http或https协议的链接，则通过默认浏览器打开
+    if (url.startsWith("https:") || url.startsWith("http:")) {
+      shell.openExternal(url);
+    }
+    return { action: "deny" };
+  });
+
+  // 拦截窗口关闭操作，改为隐藏
+  otherWin.on('close', (event) => {
+    event.preventDefault()
+    otherWin?.hide()
+  })
 }
 
 // 确保单实例
@@ -65,8 +115,11 @@ if (app.requestSingleInstanceLock()) {
     }
   });
   app.whenReady().then(() => {
+    // ipcMain.on('openMyApps', () => {
+    //   createOtherWindow();
+    // });
     createWindow(); // 创建商店主窗口
-    TrayMenu(mainWin); // 加载托盘
+    TrayMenu(mainWin, otherWin); // 加载托盘
     IPCHandler(mainWin); // 加载IPC服务
     updateHandle(mainWin); // 自动更新
     // 处理首次启动时的协议调用

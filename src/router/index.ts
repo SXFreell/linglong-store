@@ -111,6 +111,11 @@ const router = createRouter({
                 },
             ],
         },
+        {
+            path: '/my_apps_menu',
+            name: 'MyAppsMenu',
+            component: () => import("../pages/mainView/MyAppMenu/index.vue"),
+        },
     ], // `routes: routes` 的缩写
 })
 

@@ -2,7 +2,7 @@ import { app, Tray, Menu } from "electron";
 import { BrowserWindow } from "electron";
 import { join } from "node:path";
 
-const TrayMenu = (mainWindow: BrowserWindow) => {
+const TrayMenu = (mainWindow: BrowserWindow, otherWin: BrowserWindow) => {
     const iconPath = join(process.env.PUBLIC, "logo.png");
     const tray = new Tray(iconPath);
  
@@ -18,6 +18,12 @@ const TrayMenu = (mainWindow: BrowserWindow) => {
             } 
         },
         // { 
+        //     label: '我的应用', 
+        //     click: () => {
+        //         mainWindow.webContents.send('openMyApps');
+        //     },
+        // },
+        // { 
         //     label: '基础设置', 
         //     click: () => {
         //         mainWindow.webContents.send('openSettings');
@@ -25,7 +31,11 @@ const TrayMenu = (mainWindow: BrowserWindow) => {
         // },
         { 
             label: '退出', 
-            click: () => app.quit() 
+            click: () => {
+                mainWindow?.destroy()
+                otherWin?.destroy()
+                app.quit()
+            }
         }
     ]);
     
