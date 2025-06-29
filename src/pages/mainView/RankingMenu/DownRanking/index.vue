@@ -9,7 +9,7 @@
                 <Card :tabName="`排行榜(下载量)`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
                     :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
                     :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
-                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime" :devName="item.devName"/>
             </div>
         </div>
         <NoData v-else />
@@ -19,7 +19,7 @@
 import { nextTick, onMounted, ref } from 'vue';
 import Card from "@/components/Card.vue";
 import NoData from "@/components/NoData.vue";
-import { AppListParams, InstalledEntity, pageResult } from '@/interface';
+import { InstalledEntity, pageResult } from '@/interface';
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { onBeforeRouteLeave } from 'vue-router';
@@ -28,22 +28,20 @@ import router from '@/router';
 
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
+
+const arch = systemConfigStore.arch;
+const repoName = systemConfigStore.defaultRepoName;
+
 // 是否是第一次加载(决定是否显示查无数据)
 const isFirstLoad = ref(true);
 // 页面加载状态
 const loading = ref(true);
 
-let params = ref<AppListParams>({ 
-    repoName: systemConfigStore.defaultRepoName,
-    arch: systemConfigStore.arch, 
-    pageNo: 1, 
-    pageSize: 100 
-})
-
 let displayedItems = ref<InstalledEntity[]>([]);
+
 // 页面启动时加载
 onMounted(async () => {
-    let res = await getInstallAppList(params.value);
+    let res = await getInstallAppList({repoName, arch, pageNo: 1, pageSize: 100});
     if (res.code == 200) {
         isFirstLoad.value = false;
         displayedItems.value = (res.data as unknown as pageResult).records;
@@ -62,8 +60,6 @@ onMounted(async () => {
 onBeforeRouteLeave((to, _from, next) => {
     const container = document.getElementsByClassName('apps-container')[0] as HTMLDivElement;
     to.meta.savedPosition = container.scrollTop; // 将滚动位置保存到路由元数据中
-    to.meta.savedPageNo = params.value.pageNo; // 将页码保存到路由元数据中
-    to.meta.savedPageSize = params.value.pageSize; // 将每页条数保存到路由元数据中
     to.meta.savedTabName = `downRanking`; // 将搜索内容保存到路由元数据中
     next();
 })

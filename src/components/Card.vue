@@ -71,9 +71,9 @@ const props = defineProps({
     command: { type: String, default: '' },
     install_time: { type: String, default: new Date().toISOString().split('T')[0] },
     permissions: { type: String, default: '' },
-    extensions: { type: String, default: '' }
+    extensions: { type: String, default: '' },
+    devName: { type: String, default: '' },
 })
-console.log('props', props);
 
 // 格式化描述信息
 const desc = computed(() => props.description ? props.description.replace(/(.{20})/g, '$1\n') : '');

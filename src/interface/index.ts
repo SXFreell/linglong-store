@@ -25,6 +25,9 @@ export interface InstalledEntity {
     install_time: string, // 安装时间
     permissions: string, // 权限
     extensions: string, // 扩展
+    /* ********** update ********* */
+    oldVersion?: string, // 老版本
+    newVersion?: string, // 最新版本
     /* ********** 后台接口 ********* */
     icon?: string, // 玲珑图标
     zhName?: string, // 玲珑名称
@@ -34,8 +37,7 @@ export interface InstalledEntity {
     uninstallCount?: number, // 卸载次数
     uabUrl?: string, // 玲珑地址
     user?: string, // 用户名
-    oldVersion?: string, // 老版本
-    newVersion?: string, // 最新版本
+    devName?: string, // 维护者名称
     /* ********** 非命令传递字段 ********* */
     repoName: string, // 来源仓库
     isInstalled?: boolean, // 是否已安装
@@ -50,30 +52,6 @@ export interface updateEntity {
     id: string, // 玲珑id
     old_version: string, // 旧版本号
     new_version: string, // 新版本号
-}
-
-/**
- * 玲珑列表请求入参对象
- */
-export interface AppListParams {
-    appId?: string,
-    name?: string,
-    categoryId?: string,
-    kind?: string,
-    module?: string,
-    repoName?: string,
-    arch?: string,
-    pageNo: number,
-    pageSize: number,
-}
-
-/**
- * 根据appid获取程序列表-入参对象
- */
-export interface GetAppListByAppIdParam {
-    appId: string,
-    repoName: string,
-    arch?: string
 }
 
 /**

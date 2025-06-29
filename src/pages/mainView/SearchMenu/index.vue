@@ -9,7 +9,7 @@
                 <Card :tabName="`分类推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
                     :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
                     :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
-                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime" :devName="item.devName"/>
             </div>
         </div>
         <NoData v-else />
@@ -40,13 +40,14 @@ const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 
 const appsContainer = ref<HTMLDivElement>();
-const isLoading = ref<boolean>(false);
+const isLoading = ref(false);
 
-let repoName = systemConfigStore.defaultRepoName;
 let arch = systemConfigStore.arch;
+let repoName = systemConfigStore.defaultRepoName;
+
 let allAppItemList = allAppItemsStore.allAppItemList;
 
-const params = ref({ categoryId: '', repoName: repoName, arch: arch, pageNo: 1, pageSize: 50 })
+const params = ref({ categoryId:'', repoName, arch, pageNo:1, pageSize:50 })
 
 // 方法：加载更多内容
 const loadMore = async () => {

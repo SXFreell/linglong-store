@@ -24,7 +24,7 @@
                 <Card :tabName="`玲珑推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
                     :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
                     :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
-                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime" :devName="item.devName"/>
             </div>
         </div>
     </div>
@@ -33,7 +33,7 @@
 import { onMounted, ref } from "vue";
 import Card from "@/components/Card.vue";
 import defaultImage from '@/assets/logo.svg';
-import { AppListParams, InstalledEntity, pageResult } from "@/interface";
+import { InstalledEntity, pageResult } from "@/interface";
 import { getWelcomeAppList, getWelcomeCarouselList } from "@/api";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
@@ -42,19 +42,16 @@ import router from "@/router";
 const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
+const arch = systemConfigStore.arch;
+const repoName = systemConfigStore.defaultRepoName;
+
 const welcomeItemList = ref<InstalledEntity[]>([]);
 const categoryList = ref<any[]>([]);
 const result = ref<InstalledEntity[][]>([]);
 
-let params = ref<AppListParams>({
-    repoName: systemConfigStore.defaultRepoName,
-    arch: systemConfigStore.arch, 
-    pageNo: 1, 
-    pageSize: 10 
-})
 // 轮播图推荐程序
 const carouselChart = async () => {
-    let res = await getWelcomeCarouselList({ repoName: systemConfigStore.defaultRepoName, arch: systemConfigStore.arch });
+    let res = await getWelcomeCarouselList({repoName, arch});
     welcomeItemList.value = res.data as unknown as InstalledEntity[];
 }
 // 分类推荐程序
@@ -64,8 +61,8 @@ const groupedItems = () => {
     categoryList.value.push({ name: '编程开发', categoryId: '03' });
 }
 // 获取最受欢迎的前十名程序
-const getWelcomeApp = async (param: AppListParams) => {
-    let res = await getWelcomeAppList(param);
+const getWelcomeApp = async () => {
+    let res = await getWelcomeAppList({repoName, arch, pageNo: 1, pageSize: 10});
     if (res.code == 200) {
         const records = (res.data as unknown as pageResult).records;
         records.forEach(item => {
@@ -101,7 +98,7 @@ const openDetail = (item: InstalledEntity) => {
 onMounted(async () => {
     carouselChart(); // 轮播图推荐程序
     groupedItems(); // 分类推荐程序
-    getWelcomeApp(params.value); // 获取最受欢迎的前十名程序
+    getWelcomeApp(); // 获取最受欢迎的前十名程序
 })
 </script>
 <style scoped>

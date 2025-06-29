@@ -1,4 +1,4 @@
-import { AppListParams, InstalledEntity, GetAppListByAppIdParam, pageResult, Result } from '@/interface';
+import { InstalledEntity, pageResult, Result } from '@/interface';
 import request from '@/util/request';
 
 /**
@@ -13,7 +13,7 @@ export const getWelcomeCarouselList = (data: any) => {
  * @param data 入参条件(分页参数)
  * @returns 
  */
-export const getWelcomeAppList = (data: AppListParams) => {
+export const getWelcomeAppList = (data: any) => {
     return request<Result>({ method: 'POST', url: '/visit/getWelcomeAppList', data })
 }
 
@@ -22,7 +22,7 @@ export const getWelcomeAppList = (data: AppListParams) => {
  * @param data 入参条件
  * @returns 
  */
-export const getNewAppList = (data: AppListParams) => {
+export const getNewAppList = (data: any) => {
     return request<Result>({ method: 'POST', url: '/visit/getNewAppList', data })
 }
 
@@ -31,7 +31,7 @@ export const getNewAppList = (data: AppListParams) => {
  * @param data 入参条件
  * @returns 
  */
-export const getInstallAppList = (data: AppListParams) => {
+export const getInstallAppList = (data: any) => {
     return request<Result>({ method: 'POST', url: '/visit/getInstallAppList', data })
 }
 
@@ -47,7 +47,7 @@ export const getAppDetails = (data: InstalledEntity[]) => {
  * @param data 查询条件
  * @returns 
  */
-export const getSearchAppList = (data: AppListParams) => {
+export const getSearchAppList = (data: any) => {
     return request<pageResult>({ method: 'POST', url: '/visit/getSearchAppList', data })
 }
 
@@ -61,6 +61,6 @@ export const getDisCategoryList = () => {
 /**
  * 根据appid获取程序列表
  */
-export const getSearchAppVersionList = (data: GetAppListByAppIdParam) => {
+export const getSearchAppVersionList = (data: any) => {
     return request<Result>({ method: 'POST', url: '/visit/getSearchAppVersionList', data })
 }
