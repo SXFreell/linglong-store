@@ -4,19 +4,16 @@ import { ElNotification } from 'element-plus'
 import { reflushInstalledItems } from '@/util/WorkerInstalled';
 import { reflushUpdateItems } from "@/util/WorkerUpdate";
 import { searchLinyapsByAppId } from '@/util/WorkerSearch';
+import { StopLoading } from './ReflushLoading';
 
 import { useAllAppItemsStore } from "@/store/allAppItems";
-import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
-import { useUpdateItemsStore } from "@/store/updateItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 
 const allAppItemsStore = useAllAppItemsStore();
-const installedItemsStore = useInstalledItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
-const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
 export let installingItems = installingItemsStore.installingItemList; // 安装队列
@@ -43,11 +40,7 @@ const handleLinyapsInstallResult = (_event: any, res: any) => {
         downloadLogMsg += `<span style="color: red;">${result}</span><br>`;
     } else if (code == 'close') {
         installingItemsStore.removeItem(params); // 1.从加载列表中移除
-        // 2.关闭各个列表中的加载状态
-        allAppItemsStore.updateItemLoadingStatus(params, false);
-        installedItemsStore.updateItemLoadingStatus(params, false);
-        difVersionItemsStore.updateItemLoadingStatus(params, false);
-        updateItemsStore.updateItemLoadingStatus(params, false);
+        StopLoading(params); // 停用按钮的加载状态
         if (result == '0') {
             allAppItemsStore.updateItemInstallStatus(params, true);
             difVersionItemsStore.updateItemInstallStatus(params, true);
@@ -72,12 +65,7 @@ const handleLinyapsUninstallResult = (_event: any, res: any) => {
     }
     difVersionItemsStore.updateItemInstallStatus(params, false);
     allAppItemsStore.updateItemInstallStatus(params, false);
-
-    allAppItemsStore.updateItemLoadingStatus(params, false);
-    installedItemsStore.updateItemLoadingStatus(params, false);
-    difVersionItemsStore.updateItemLoadingStatus(params, false);
-    updateItemsStore.updateItemLoadingStatus(params, false);
-    
+    StopLoading(params); // 停用按钮的加载状态
     reflushInstalledItems(); // 刷新已安装的应用列表
     reflushUpdateItems(); // 刷新更新列表
     searchLinyapsByAppId(params.appId); // 刷新版本列表

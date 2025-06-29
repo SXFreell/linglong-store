@@ -38,16 +38,7 @@ import { ipcRenderer } from 'electron';
 import { ElNotification, ElMessage } from 'element-plus'
 import { computed, onMounted, ref } from 'vue'
 import { InstalledEntity } from '@/interface';
-
-import { useAllAppItemsStore } from '@/store/allAppItems';
-import { useInstalledItemsStore } from "@/store/installedItems";
-import { useUpdateItemsStore } from '@/store/updateItems';
-import { useDifVersionItemsStore } from "@/store/difVersionItems";
-
-const allAppItemsStore = useAllAppItemsStore();
-const installedItemsStore = useInstalledItemsStore();
-const updateItemsStore = useUpdateItemsStore();
-const difVersionItemsStore = useDifVersionItemsStore();
+import { StartLoading } from '@/util/ReflushLoading';
 
 const containerRef = ref<HTMLElement | null>(null);
 const textRef = ref<HTMLElement | null>(null);
@@ -102,14 +93,11 @@ const openDetails = () => {
 }
 // 按钮点击操作事件
 const removeApp = (item: InstalledEntity) => {
-    // 启用加载框
-    allAppItemsStore.updateItemLoadingStatus(item, true);
-    installedItemsStore.updateItemLoadingStatus(item, true);
-    difVersionItemsStore.updateItemLoadingStatus(item, true);
-    updateItemsStore.updateItemLoadingStatus(item, true);
+    StartLoading(item);  // 启动按钮的加载状态
     // 发送操作命令
-    item.command = `ll-cli uninstall ${item.appId}/${item.version}`;
-    ipcRenderer.send('linyaps-uninstall', item);
+    const plainItem = JSON.parse(JSON.stringify(item));
+    plainItem.command = `ll-cli uninstall ${item.appId}/${item.version}`;
+    ipcRenderer.send('linyaps-uninstall', plainItem);
 };
 // 运行按钮(发送操作命令,并弹出提示框)
 const handleRunApp = (item: InstalledEntity) => {

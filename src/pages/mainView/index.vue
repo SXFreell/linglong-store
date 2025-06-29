@@ -30,14 +30,17 @@ import { ipcRenderer } from 'electron';
 import { onUnmounted, onMounted, ref, watch } from 'vue';
 import NetworkSpeed from '@/components/NetworkSpeed.vue';
 import DownloadQueue from '@/components/DownloadQueue.vue'
-import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
 import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
+import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
 import { installingItems, setupIpcListeners, cleanupIpcListeners } from "@/util/IpcInstalled";
+import { StopLoading } from '@/util/ReflushLoading';
 import { useInstallingItemsStore } from "@/store/installingItems";
+import { useInstalledItemsStore } from '@/store/installedItems';
 import { useUpdateStatusStore } from "@/store/updateStatus";
 import router from '@/router';
 
 const installingItemsStore = useInstallingItemsStore();
+const installedItemsStore = useInstalledItemsStore();
 const updateStatusStore = useUpdateStatusStore();
 
 let activeMenu = ref('1'); // 当前激活的菜单项
@@ -94,8 +97,10 @@ onMounted(() => {
         // 在应用中间弹出通知，接收到了自定义协议的消息
         ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
     });
-    reflushInstalledItems();
-    reflushUpdateItems();
+    reflushInstalledItems(); // 启动时刷新已安装列表
+    reflushUpdateItems(); // 启动时刷新可更新列表
+    // 重置加载状态
+    StopLoading(installedItemsStore.installedItemList);
 });
 // 页面销毁前执行
 onUnmounted(() => {

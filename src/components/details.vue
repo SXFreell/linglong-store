@@ -67,20 +67,17 @@ import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
 import { ParseRef } from "@/util/refParam";
 import { loading, searchLinyapsByAppId } from '@/util/WorkerSearch';
+import { StartLoading } from '@/util/ReflushLoading';
 
-import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
-import { useUpdateItemsStore } from '@/store/updateItems';
 import { useSystemConfigStore } from "@/store/systemConfig";
 
 
-const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
 const installingItemsStore = useInstallingItemsStore();
-const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
 // 路由传递的对象
@@ -131,14 +128,10 @@ function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, 
 };
 
 const removeApp = (item: InstalledEntity) => {
-    // 启用加载框
-    allAppItemsStore.updateItemLoadingStatus(item, true);
-    installedItemsStore.updateItemLoadingStatus(item, true);
-    difVersionItemsStore.updateItemLoadingStatus(item, true);
-    updateItemsStore.updateItemLoadingStatus(item, true);
+    StartLoading(item); // 启动按钮的加载状态
     // 发送操作命令
     item.command = `ll-cli uninstall ${item.appId}/${item.version}`;
-    ipcRenderer.send('linyaps-uninstall', item);
+    ipcRenderer.send('linyaps-uninstall', JSON.parse(JSON.stringify(item)));
 }
 
 const installApp = async (item: any) => {
@@ -161,11 +154,7 @@ const installApp = async (item: any) => {
             }
         }
     }
-    // 启用加载框
-    allAppItemsStore.updateItemLoadingStatus(item, true);
-    installedItemsStore.updateItemLoadingStatus(item, true);
-    difVersionItemsStore.updateItemLoadingStatus(item, true);
-    updateItemsStore.updateItemLoadingStatus(item, true);
+    StartLoading(item); // 启动按钮的加载状态
     // 新增到加载中列表
     installingItemsStore.addItem(item); 
     ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
