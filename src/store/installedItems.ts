@@ -110,7 +110,7 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
      * @param item 要更新的对象
      */
     const updateItemLoadingStatus = (item: InstalledEntity,flag: boolean) => {
-        const index = installedItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        const index = installedItemList.value.findIndex((it) => it.appId === item.appId && it.module === item.module && it.version === item.version);
         if (index !== -1) {
             const aItem = installedItemList.value[index];
             aItem.loading = flag;

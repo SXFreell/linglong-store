@@ -34,6 +34,7 @@ export interface InstalledEntity {
     uninstallCount?: number, // 卸载次数
     uabUrl?: string, // 玲珑地址
     user?: string, // 用户名
+    oldVersion?: string, // 老版本
     newVersion?: string, // 最新版本
     /* ********** 非命令传递字段 ********* */
     repoName: string, // 来源仓库

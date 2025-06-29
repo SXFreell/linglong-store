@@ -25,31 +25,22 @@ export const useInstallingItemsStore = defineStore("installingItems", () => {
      * @param item 要移除的对象
      */
     const removeItem = (item: InstalledEntity) => {
-        const index = installingItemList.value.findIndex((i) => i.appId === item.appId && i.name === item.name && i.version === item.version);
+        // 找到应用从下载队列里移除
+        const index = installingItemList.value.findIndex((i) => i.appId === item.appId && i.version === item.version);
         if (index !== -1) {
             installingItemList.value.splice(index, 1);
         }
+        // 取消队列占用状态
+        updateStatusStore.changeDownloadQueueStatus(false);
+        // 下载队列是空的情况下，更新页面一键更新按钮禁用状态取消
         if (installingItemList.value.length <= 0) {
             updateStatusStore.changeUpdateStatus(false);
         }
     };
-    /**
-     * 更新对象的加载进度
-     * @param item 要更新的对象
-     */
-    const updateItemSchedule = (item: InstalledEntity, schedule: string) => {
-        const index = installingItemList.value.findIndex(it => it.name === item.name && it.version === item.version && it.appId === item.appId);
-        if (index !== -1) {
-            const aItem = installingItemList.value[index];
-            aItem.schedule = schedule;
-            installingItemList.value.splice(index, 1, aItem);
-        }
-    }
 
     return {
         installingItemList,
         addItem,
         removeItem,
-        updateItemSchedule,
     };
 });

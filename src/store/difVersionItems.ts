@@ -126,7 +126,7 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @param item 要更新的对象
      */
     const updateItemInstallStatus = (item: InstalledEntity, flag: boolean) => {
-        const index = difVersionItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        const index = difVersionItemList.value.findIndex((it) => it.appId === item.appId && it.module === item.module && it.version === item.version);
         if (index !== -1) {
             const aItem = difVersionItemList.value[index];
             aItem.isInstalled = flag;
@@ -139,7 +139,7 @@ export const useDifVersionItemsStore = defineStore("difVersionItems", () => {
      * @param item 要更新的对象
      */
     const updateItemLoadingStatus = (item: InstalledEntity, flag: boolean) => {
-        const index = difVersionItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        const index = difVersionItemList.value.findIndex((it) => it.appId === item.appId && it.module === item.module && it.version === item.version);
         if (index !== -1) {
             const aItem = difVersionItemList.value[index];
             aItem.loading = flag;

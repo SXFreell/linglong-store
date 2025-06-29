@@ -42,15 +42,12 @@ const updateItemsStore = useUpdateItemsStore();
 const updateAll = () => {
     updateStatusStore.changeUpdateStatus(true); // 更改一键更新状态为true
     updateItemsStore.updateItemList.forEach((item) => {
-        const tempItem = { ...item }; // 深拷贝，避免直接修改原数据
-        tempItem.version = tempItem.newVersion ? tempItem.newVersion : tempItem.version; // 更新版本号
-        tempItem.newVersion = ''; // 清空新版本号
         allAppItemsStore.updateItemLoadingStatus(item, true);
         installedItemsStore.updateItemLoadingStatus(item, true);
         difVersionItemsStore.updateItemLoadingStatus(item, true);
         updateItemsStore.updateItemLoadingStatus(item, true);
         // 新增到加载中列表
-        installingItemsStore.addItem(tempItem as InstalledEntity); 
+        installingItemsStore.addItem(item as InstalledEntity); 
     })
 }
 // 页面打开时执行

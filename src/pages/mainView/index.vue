@@ -73,15 +73,13 @@ const showQueue = () => {
 // 监听安装队列
 watch(() => installingItemsStore.installingItemList,
     async (newQueue) => {
-        // console.log('安装队列变化:', newQueue);
+        ipcRenderer.send('logger', 'info', `安装队列变化>>${JSON.stringify(newQueue)}`);
         if (updateStatusStore.downloadQueueStatus) return; // 如果正在处理，则不再处理新的队列变化
         if (newQueue.length > 0) {
             const item = newQueue[0];
             updateStatusStore.downloadQueueStatus = true; // 设置为正在处理状态
             let password = localStorage.getItem('linyaps-password'); // 获取密码
             ipcRenderer.send('linyaps-install', { password, ...item });
-        } else {
-            updateStatusStore.changeUpdateStatus(false); // 如果队列为空，设置安装状态为false
         }
     },
     { deep: true, immediate: true }

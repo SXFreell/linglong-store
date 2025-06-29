@@ -5,7 +5,7 @@
                 <Card :tabName="`卸载程序`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
                     :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
                     :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
-                    :isInstalled="true" :loading="item.loading"/>
+                    :isInstalled="item.isInstalled" :loading="item.loading"/>
             </div>
         </div>
         <NoData v-else />

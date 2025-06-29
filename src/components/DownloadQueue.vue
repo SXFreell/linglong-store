@@ -30,16 +30,18 @@ import { compareVersions } from '@/util/checkVersion';
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
+import { useUpdateItemsStore } from '@/store/updateItems';
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
 
 const allAppItemsStore = useAllAppItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
+const updateItemsStore = useUpdateItemsStore();
 const installingItemsStore = useInstallingItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
-defineProps({
+const props = defineProps({
     show: {
         type: Boolean,
         default: false
@@ -56,11 +58,13 @@ const isInstalling = (row: any) => !row.isInstalled && row.loading && row.schedu
 
 // 终止安装点击事件
 const cancelInstall = (row: InstalledEntity) => {
-    installingItemsStore.removeItem(row);
     // 关闭各个列表中的加载状态
+    allAppItemsStore.updateItemLoadingStatus(row, false);
     installedItemsStore.updateItemLoadingStatus(row, false);
     difVersionItemsStore.updateItemLoadingStatus(row, false);
-    allAppItemsStore.updateItemLoadingStatus(row, false);
+    updateItemsStore.updateItemLoadingStatus(row, false);
+    // 从队列中删除元素
+    installingItemsStore.removeItem(row);
 }
 
 </script>

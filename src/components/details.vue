@@ -57,7 +57,7 @@
     </div>
 </template>
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ipcRenderer } from 'electron';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
@@ -66,6 +66,8 @@ import { ElNotification, TableColumnCtx } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
 import { ParseRef } from "@/util/refParam";
+import { loading, searchLinyapsByAppId } from '@/util/WorkerSearch';
+
 import { useAllAppItemsStore } from "@/store/allAppItems";
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
@@ -88,8 +90,6 @@ const { menuName, name, zhName, icon, arch, appId, categoryName, description } =
 
 // 玲珑组件版本
 let llVersion = systemConfigStore.llVersion;
-// 加载状态
-let loading = ref(true);
 
 // 格式化程序名称
 const defaultName = computed(() => zhName ? zhName : name);
@@ -171,57 +171,8 @@ const installApp = async (item: any) => {
     ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
 }
 
-// 根据appId查询玲珑应用版本列表
-const searchLinyapsByAppId = (appId: string) => {
-    loading.value = true; // 列表查询时加载状态启动
-    ipcRenderer.once('linyaps-search-result', (_event: any, res: any) => {
-        const { error, stdout, stderr } = res;
-        if (error || stderr) {
-            loading.value = false;
-            ipcRenderer.send('logger', 'error', `获取版本列表失败: ${error || stderr}`);
-            ElNotification({ title: '提示', message: "获取版本列表失败，请稍后重试", type: 'error', duration: 500 });
-            return;
-        }
-        // 创建一个数组集合
-        let searchVersionItemList: any[] = [];
-        // 版本小于1.9.0时
-        if (compareVersions(llVersion, '1.9.0') < 0) {
-            searchVersionItemList = stdout.trim() ? JSON.parse(stdout.trim()) : [];
-        } else {
-            // 版本大于等于1.9.0时,取stable版本 TODO
-            const items = stdout ? JSON.parse(stdout) : null;
-            searchVersionItemList = Object.keys(items).length > 0 ? items.stable : [];
-        }
-        difVersionItemsStore.initDifVersionItems(searchVersionItemList, appId as string);
-        loading.value = false;
-    });
-    let command = `ll-cli --json search ${appId}`;
-    if (compareVersions(llVersion, '1.5.0') >= 0 && compareVersions(llVersion, '1.7.7') < 0) {
-        if (systemConfigStore.isShowBaseService) {
-            command += ` --type=all`;
-        }
-    } else if (compareVersions(llVersion, '1.7.7') >= 0 && compareVersions(llVersion, '1.8.3') < 0) {
-        command += ` --all`;
-    } else if (compareVersions(llVersion, '1.8.3') >= 0) {
-        command += ` --show-all-version`;
-    }
-    ipcRenderer.send("linyaps-search", { command });
-}
-
-// 监听版本刷新结果
-const reflushVersionList = (_event: any, res: any) => searchLinyapsByAppId(res.appId);
-
 // 页面启动时加载
-onMounted(async () => {
-    // 监听安装结果后版本刷新
-    ipcRenderer.on('reflush-version-list-result', reflushVersionList);
-    // 刷新版本列表
-    searchLinyapsByAppId(appId as string);
-})
-// 页面销毁前执行
-onBeforeUnmount(() => {
-    ipcRenderer.removeListener('reflush-version-list-result', reflushVersionList);
-});
+onMounted(async () => searchLinyapsByAppId(appId as string));
 
 // 路由跳转离开前
 onBeforeRouteLeave((to: any, from: any, next: any) => {

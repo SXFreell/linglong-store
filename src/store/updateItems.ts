@@ -26,7 +26,7 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
             const { id, old_version, new_version } = item;
             const thisItem = installedItemsStore.installedItemList.find(installedItem => installedItem.appId == id);
             if (thisItem) {
-                thisItem.version = old_version; // 设置旧版本号
+                thisItem.oldVersion = old_version; // 设置旧版本号
                 thisItem.newVersion = new_version; // 更新版本号
                 addedItems.push(thisItem);
             }
@@ -38,7 +38,7 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
         }
         // 更新列表和新增列表获取交集数据
         const newList = updateItemList.value.filter(aItem => addedItems.some(bItem => bItem.appId === aItem.appId));
-        updateItemList.value = newList;
+        updateItemList.value = newList; // 交集赋值给更新列表，这样更新列表只有本次继续更新的应用
         addedItems.forEach(bItem => {
             if (!newList.some(aItem => bItem.appId === aItem.appId)) {
                 updateItemList.value.push(bItem);
@@ -73,7 +73,7 @@ export const useUpdateItemsStore = defineStore("updateItems", () => {
      * @param item 要更新的对象
      */
     const updateItemLoadingStatus = (item: InstalledEntity,flag: boolean) => {
-        const index = updateItemList.value.findIndex((it) => it.version === item.version && it.appId === item.appId && it.module === item.module);
+        const index = updateItemList.value.findIndex((it) => it.appId === item.appId && it.module === item.module && it.version === item.version);
         if (index !== -1) {
             const aItem = updateItemList.value[index];
             aItem.loading = flag;

@@ -57,29 +57,6 @@ const IPCHandler = (win: BrowserWindow) => {
         });
     })
 
-    /* ********** 执行脚本命令 ********** */
-    ipcMain.on("command", (_event, data) => {
-        ipcLog.info('ipc-command：', JSON.stringify(data));
-        // 在主进程中执行命令，并将结果返回到渲染进程
-        exec(data.command, (error, stdout, stderr) => {
-            ipcLog.info('ipc-command：：error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
-            if (stderr) {
-                win.webContents.send("command-result", { code: 'stderr', param: data, result: stderr });
-                return;
-            }
-            if (error) {
-                win.webContents.send("command-result", { code: 'error', param: data, result: error.message });
-                return;
-            }
-            win.webContents.send("command-result", { code: 'stdout', param: data, result: stdout });
-        });
-    });
-
-    ipcMain.on('reflush-version-list', (_event, appId) => {
-        ipcLog.info('reflush-version-list：', appId);
-        win.webContents.send("reflush-version-list-result", { code: 'close', appId: appId });
-    });
-
     /* ****************** 命令 uname -a ******************* */
     ipcMain.on("uname-a", () => {
         exec("uname -a", (error, stdout, stderr) => {
@@ -162,14 +139,16 @@ const IPCHandler = (win: BrowserWindow) => {
 
     /* ****************** 命令 ll-cli install xxx ******************* */
     ipcMain.on("linyaps-install", (_event, params) => {
-        const { password, appId, version } = params;
+        const { password, appId, version, newVersion } = params;
+        // 判断最新版本号是否有值,如果有值代表更新
+        const updateVersion = newVersion ? newVersion : version;
         let currentProcess: ChildProcessWithoutNullStreams;
         if (!password) {
             ipcLog.error('linyaps-install：密码为空, 使用非 sudo 安装应用');
-            currentProcess = spawn("ll-cli", ["install", `${appId}/${version}`]);
+            currentProcess = spawn("ll-cli", ["install", `${appId}/${updateVersion}`]);
         } else {
             ipcLog.info('linyaps-install：使用 sudo 安装应用');
-            currentProcess = spawn("sudo", ["-S", "ll-cli", "install", `${appId}/${version}`]);
+            currentProcess = spawn("sudo", ["-S", "ll-cli", "install", `${appId}/${updateVersion}`]);
             // 自动输入密码到 sudo 的标准输入
             currentProcess.stdin.write(password + "\n");
         }

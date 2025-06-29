@@ -42,7 +42,6 @@ export const reflushUpdateItems = () => {
                 uniqueInstalledSet.push(installedItem);
             }
         })
-        updateItemsStore.clearItems(); // 清空更新列表
         // 查找是否含有高级版本
         searchLingLongHasUpdate(uniqueInstalledSet);
     } else {
@@ -75,11 +74,18 @@ const searchLingLongHasUpdate = (uniqueInstalledSet: InstalledEntity[]) => {
                     latestVersionItem.arch = typeof latestVersionItem.arch === 'string' ? latestVersionItem.arch : Array.isArray(latestVersionItem.arch) ? latestVersionItem.arch[0] : ''; // 设定arch架构
                     latestVersionItem.size = latestVersionItem.size ? latestVersionItem.size.toString() : '0'; // 设定文件大小
                     latestVersionItem.repoName = systemConfigStore.defaultRepoName; // 设定仓库源
-                    latestVersionItem.newVersion = latestVersionItem.version; // 设定最新版本号
                     latestVersionItem.version = version; // 设定当前版本号
+                    latestVersionItem.oldVersion = version; // 设定旧版本号
+                    latestVersionItem.newVersion = latestVersionItem.version; // 设定最新版本号
                     latestVersionItem.isInstalled = false; // 标记为未安装
                     latestVersionItem.loading = false; // 标记为未加载
-                    updateItemsStore.addItem(latestVersionItem); // 添加到更新列表
+                    // 已经存在则更新，否则新增
+                    const idx = updateItemsStore.updateItemList.findIndex(it => it.appId = latestVersionItem.appId);
+                    if (idx !== -1) {
+                        updateItemsStore.updateItemList.splice(idx, 1, latestVersionItem);
+                    } else {
+                        updateItemsStore.addItem(latestVersionItem); // 添加到更新列表
+                    }
                 }
                 // 执行下一个循环
                 currentIndex++;
