@@ -6,10 +6,10 @@
     <div ref="appsContainer" class="apps-container" @scroll="handleScroll">
         <div class="card-items-container" v-if="allAppItemList && allAppItemList.length > 0">
             <div class="card-items" v-for="(item, index) in allAppItemList" :key="index">
-                <Card :tabName="`分类推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
-                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
-                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
-                    :isInstalled="item.isInstalled" :loading="item.loading"/>
+                <Card :tabName="`分类推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
             </div>
         </div>
         <NoData v-else />

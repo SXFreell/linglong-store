@@ -21,10 +21,10 @@
         <div v-for="(group, groupIndex) in result" :key="groupIndex" class="items-container">
             <!-- 每五个一组的项目 -->
             <div v-for="(item, itemIndex) in group" :key="itemIndex" class="card-items">
-                <Card :tabName="`玲珑推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
-                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName"
-                    :version="item.version" :description="item.description" :createTime="item.createTime"
-                    :installCount="item.installCount" :isInstalled="item.isInstalled" :loading="item.loading"/>
+                <Card :tabName="`玲珑推荐`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
             </div>
         </div>
     </div>

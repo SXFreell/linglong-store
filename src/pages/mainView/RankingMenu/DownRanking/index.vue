@@ -6,10 +6,10 @@
         element-loading-background="rgba(122, 122, 122, 0.8)">
         <div class="card-items-container" v-if="displayedItems && displayedItems.length > 0">
             <div class="card-items" v-for="(item, index) in displayedItems" :key="index">
-                <Card :tabName="`排行榜(下载量)`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName"
-                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version"
-                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount"
-                    :isInstalled="item.isInstalled" :loading="item.loading"/>
+                <Card :tabName="`排行榜(下载量)`" :icon="item.icon" :appId="item.appId" :name="item.name" :zhName="item.zhName" :kind="item.kind"
+                    :arch="item.arch" :channel="item.channel" :categoryName="item.categoryName" :version="item.version" :base="item.base"
+                    :description="item.description" :createTime="item.createTime" :installCount="item.installCount" :module="item.module"
+                    :isInstalled="item.isInstalled" :loading="item.loading" :runtime="item.runtime"/>
             </div>
         </div>
         <NoData v-else />
