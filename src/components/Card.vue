@@ -21,7 +21,8 @@
             <el-button class="p-card-btn" v-else @click="openDetails">安装</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '卸载程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
-            <el-button class="card-btn" @click="removeApp(props)">卸载</el-button>
+            <el-button class="card-btn" v-if="kind == 'app'" @click="removeApp(props)">卸载</el-button>
+            <el-button class="card-btn" v-else type="warning" disabled>不可卸载</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '更新程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
             <el-button class="card-btn" @click="openDetails">升级</el-button>
@@ -72,6 +73,7 @@ const props = defineProps({
     permissions: { type: String, default: '' },
     extensions: { type: String, default: '' }
 })
+console.log('props', props);
 
 // 格式化描述信息
 const desc = computed(() => props.description ? props.description.replace(/(.{20})/g, '$1\n') : '');
