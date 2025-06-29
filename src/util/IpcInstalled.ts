@@ -59,6 +59,7 @@ const handleLinyapsInstallResult = (_event: any, res: any) => {
 const handleLinyapsUninstallResult = (_event: any, res: any) => {
     const { params, result, code } = res;
     if (code != 'stdout') {
+        StopLoading(params); // 停用按钮的加载状态
         ElNotification({ title: '卸载失败!', type: 'error', duration: 5000, message: `${params.name}(${params.version})卸载失败!`});
         ipcRenderer.send('logger', 'error', `"${params.command}"命令执行异常::${result}`);
         return;
