@@ -79,7 +79,7 @@ watch(() => installingItemsStore.installingItemList,
             const item = newQueue[0];
             updateStatusStore.downloadQueueStatus = true; // 设置为正在处理状态
             let password = localStorage.getItem('linyaps-password'); // 获取密码
-            ipcRenderer.send('linyaps-install', { password, ...item });
+            ipcRenderer.send('linyaps-install', JSON.parse(JSON.stringify({ password, ...item })));
         }
     },
     { deep: true, immediate: true }

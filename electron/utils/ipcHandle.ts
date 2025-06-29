@@ -114,25 +114,25 @@ const IPCHandler = (win: BrowserWindow) => {
     });
 
     /* ****************** 命令 ll-cli list ******************* */
-    ipcMain.on("linyaps-list", (event, params) => {
+    ipcMain.on("linyaps-list", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
-            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
             win.webContents.send("linyaps-list-result", { error, stdout, stderr });
         });
     });
 
     /* ****************** 命令 ll-cli search ******************* */
-    ipcMain.on("linyaps-search", (event, params) => {
+    ipcMain.on("linyaps-search", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
-            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
             win.webContents.send("linyaps-search-result", { error, stdout, stderr });
         });
     });
 
     /* ****************** 命令 ll-cli update ******************* */
-    ipcMain.on("linyaps-update", (event, params) => {
+    ipcMain.on("linyaps-update", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
-            ipcLog.info(`${params.command} >> `, { error, stdout, stderr });
+            ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
             win.webContents.send("linyaps-update-result", { error, stdout, stderr });
         });
     });
