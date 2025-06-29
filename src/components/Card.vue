@@ -10,21 +10,21 @@
         </div>
         <span v-if="tabName == '更新程序'" class="card-version">{{ newVersion }}</span>
         <span v-else class="card-version">{{ version }}</span>
-        <div class="card-bottom" v-if="tabName == '玲珑推荐' || tabName == '分类推荐' || tabName == '全部程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+        <div class="card-bottom" v-if="tabName == '玲珑推荐' || tabName == '分类推荐' || tabName == '全部程序'" v-loading="loading">
             <el-button class="card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
             <el-button class="card-btn" v-else @click="openDetails">安装</el-button>
         </div>
-        <div class="p-card-bottom" v-if="tabName == '排行榜(最新上架)' || tabName == '排行榜(下载量)'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+        <div class="p-card-bottom" v-if="tabName == '排行榜(最新上架)' || tabName == '排行榜(下载量)'" v-loading="loading">
             <div class="card-arch" v-if="tabName == '排行榜(下载量)'">下载 {{ installCount }}次</div>
             <div class="card-arch" v-else-if="tabName == '排行榜(最新上架)'">{{ displayTime }}</div>
             <el-button class="p-card-btn" v-if="isInstalled" @click="openDetails">已安装</el-button>
             <el-button class="p-card-btn" v-else @click="openDetails">安装</el-button>
         </div>
-        <div class="card-bottom" v-if="tabName == '卸载程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+        <div class="card-bottom" v-if="tabName == '卸载程序'" v-loading="loading">
             <el-button class="card-btn" v-if="kind == 'app'" @click="removeApp(props)">卸载</el-button>
             <el-button class="card-btn" v-else type="warning" disabled>不可卸载</el-button>
         </div>
-        <div class="card-bottom" v-if="tabName == '更新程序'" v-loading="loading" element-loading-svg-view-box="-10, -10, 50, 50" element-loading-background="rgba(122, 122, 122, 0.8)">
+        <div class="card-bottom" v-if="tabName == '更新程序'" v-loading="loading">
             <el-button class="card-btn" @click="openDetails">升级</el-button>
         </div>
         <div class="card-bottom" v-if="tabName == '我的应用'">
