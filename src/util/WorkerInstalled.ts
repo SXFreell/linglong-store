@@ -8,7 +8,7 @@ const installedItemsStore = useInstalledItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
 // 定时器每5秒检查一次当前系统有哪些应用
-let installedTimer = setInterval(() => reflushInstalledItems(), 5000);
+let installedTimer = setInterval(() => reflushInstalledItems(), 3000);
 // 启动定时器函数
 installedTimer;
 // 刷新当前系统有哪些已安装的应用

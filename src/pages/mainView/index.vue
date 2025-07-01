@@ -7,7 +7,13 @@
                         <el-icon>
                             <component :is="item.icon" />
                         </el-icon>
-                        <span>{{ item.label }}</span>
+                        <span class="menu-item-text">
+                            {{ item.label }}
+                            <!-- 若为更新程序菜单项且待更新数量大于 0，显示角标 -->
+                            <template v-if="item.index === '4' && updateItemsStore.updateItemList.length > 0">
+                                <sup class="update-badge">{{ updateItemsStore.updateItemList.length }}</sup>
+                            </template>
+                        </span>
                     </el-menu-item>
                 </el-menu>
                 <!-- 更多菜单项 -->
@@ -35,11 +41,13 @@ import { installingItems, setupIpcListeners, cleanupIpcListeners } from "@/util/
 import { StopLoading } from '@/util/ReflushLoading';
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useInstalledItemsStore } from '@/store/installedItems';
+import { useUpdateItemsStore } from '@/store/updateItems';
 import { useUpdateStatusStore } from "@/store/updateStatus";
 import router from '@/router';
 
 const installingItemsStore = useInstallingItemsStore();
 const installedItemsStore = useInstalledItemsStore();
+const updateItemsStore = useUpdateItemsStore();
 const updateStatusStore = useUpdateStatusStore();
 
 let activeMenu = ref('1'); // 当前激活的菜单项
@@ -123,6 +131,7 @@ onUnmounted(() => {
 }
 
 .el-menu-item {
+    position: relative;
     height: 45px;
     font-size: 12px;
     font-weight: bold;
@@ -131,6 +140,30 @@ onUnmounted(() => {
     margin: 5px;
     color: var(--menu-base-font-color);
     background-color: var(--menu-base-color);
+}
+
+.menu-item-text {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.update-badge {
+    position: absolute; /* 绝对定位，相对于父元素 .el-menu-item */
+    top: -5px; /* 向上移动到菜单项的顶部 */
+    right: -5px; /* 向右移动到菜单栏的边缘 */
+    height: 18px;
+    background-color: #ff4d4f; /* 角标背景色 */
+    color: white; /* 角标文字颜色 */
+    border-radius: 50%; /* 角标圆形样式 */
+    padding: 4px 8px; /* 角标内边距 */
+    font-size: 12px; /* 角标文字大小 */
+    min-width: 10px; /* 确保角标有最小宽度 */
+    text-align: center; /* 文字居中 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
 }
 
 .fixed-button {

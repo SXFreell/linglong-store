@@ -16,7 +16,7 @@ let llVersion = systemConfigStore.llVersion; // 玲珑版本
 let currentIndex = 0;
 
 // 定时器每10秒检查一次当前系统有哪些需要更新的应用
-let updateTimer = setInterval(() => reflushUpdateItems(), 10000);
+let updateTimer = setInterval(() => reflushUpdateItems(), 3000);
 // 启动定时器函数
 updateTimer;
 // 检查当前系统有哪些需要更新的应用
