@@ -14,13 +14,15 @@ const customProtocolResult = (_event: any, res: any) => {
     ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
     // 玲珑本地包安装
     if (res.endsWith('.layer') || res.endsWith('.uab')) {
-        const temp = res.command.split('/');
+        const temp = res.split('/');
         const fileName = temp[temp.length - 1];
         ipcRenderer.once('linyapss-package-result', (_event: any, res: any) => {
             ipcRenderer.send('logger', 'info', `安装结果：${JSON.stringify(res)}`);
             const {code, result} = res;
-            if (code === 'close' && result === 0) {
+            if (code === 'stdout' && result.includes('successfully')) {
                 ElNotification({ title: '恭喜', message: `${fileName}本地包安装成功！`, type: 'success', duration: 500 });
+            } else {
+                ElNotification({ title: '提示', message: `${fileName}本地包安装失败！`, type: 'error', duration: 500 });
             }
         })
         ipcRenderer.send('linyapss-package', { command: `ll-cli install ${res}` });

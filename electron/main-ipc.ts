@@ -317,11 +317,13 @@ const IPCHandler = (win: BrowserWindow) => {
         const installProcess = exec(params.command, { encoding: 'utf8' });
         installProcess.stdout.on('data', (data) => {
             ipcLog.info(`stdout: ${data}`);
-            win.webContents.send("linyapss-package-result", { code: 'stdout', params, result: data });
+            let result = stripAnsi(data.toString());
+            win.webContents.send("linyapss-package-result", { code: 'stdout', params, result });
         })
         installProcess.stderr.on('data', (data) => {
             ipcLog.info(`stderr: ${data}`);
-            win.webContents.send("linyapss-package-result", { code: 'stderr', params, result: data });
+            let result = stripAnsi(data.toString());
+            win.webContents.send("linyapss-package-result", { code: 'stderr', params, result });
         })
         installProcess.on('close', (code) => {
             ipcLog.info(`child process exited with code ${code}`);
