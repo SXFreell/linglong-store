@@ -31,7 +31,7 @@
   },
   "deb": {
     "depends": [],
-    "mimeTypes": ["application/x-layer", "inode/directory"],
+    "mimeTypes": ["application/x-layer", "application/x-uab"],
     "recommends": ["linglong-bin", "linglong-box"]
   }
 }
