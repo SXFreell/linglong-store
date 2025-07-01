@@ -20,7 +20,12 @@ if (app.requestSingleInstanceLock()) {
     mainLog.info('应用监听开启第二个窗口事件:', argv);
     handleCustomProtocol(argv, mainWin);
     if (mainWin) {
-      if (mainWin.isMinimized()) mainWin.restore();
+      if (mainWin.isMinimized()) {
+        mainWin.restore();
+      }
+      if (!mainWin.isVisible()) {
+        mainWin.show();
+      }
       mainWin.focus();
     }
   });
