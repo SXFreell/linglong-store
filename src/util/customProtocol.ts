@@ -1,4 +1,5 @@
 import { ipcRenderer } from "electron";
+import { ElNotification } from 'element-plus'
 import { compareVersions } from "./checkVersion";
 import { useSystemConfigStore } from "@/store/systemConfig";
 import { useInstallingItemsStore } from "@/store/installingItems";
@@ -13,17 +14,19 @@ const customProtocolResult = (_event: any, res: any) => {
     ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
     // 玲珑本地包安装
     if (res.endsWith('.layer') || res.endsWith('.uab')) {
+        const temp = res.command.split('/');
+        const fileName = temp[temp.length - 1];
         ipcRenderer.once('linyapss-package-result', (_event: any, res: any) => {
-            ipcRenderer.send('logger', 'info', `安装结果：${res}`);
-            const {code, params, result} = res;
+            ipcRenderer.send('logger', 'info', `安装结果：${JSON.stringify(res)}`);
+            const {code, result} = res;
             if (code === 'close' && result === 0) {
-                const temp = params.command.split('/');
-                const fileName = temp[temp.length - 1];
-                ElNotification({ title: '恭喜', message: `${fileName}本地包安装成功！`, type: 'success', duration: 5000 });
+                ElNotification({ title: '恭喜', message: `${fileName}本地包安装成功！`, type: 'success', duration: 500 });
             }
         })
         ipcRenderer.send('linyapss-package', { command: `ll-cli install ${res}` });
+        ElNotification({ title: '提示', message: `${fileName}本地包正在安装中，请稍等...`, type: 'info', duration: 5000 });
     }
+    // 自定义协议安装
     if (res.startsWith('linyaps://')) {
         const temp = res.split('://');
         if (temp.length !== 2) {
@@ -34,7 +37,7 @@ const customProtocolResult = (_event: any, res: any) => {
         if (path[0] === 'install' && path.length > 1) {
             const appId = path[1];
             ipcRenderer.once('linyaps-search-result', (_event: any, res: any) => {
-                const { error, stdout, stderr } = res;
+                const { stdout } = res;
                 if (stdout) {
                     // 创建一个数组集合
                     let searchVersionItemList: any[] = [];
@@ -49,10 +52,12 @@ const customProtocolResult = (_event: any, res: any) => {
                     if (searchVersionItemList.length > 0) {
                         const arr = searchVersionItemList.sort((a, b) => compareVersions(b.version, a.version));
                         const item = arr[0];
-                         StartLoading(item); // 启动按钮的加载状态
+                        StartLoading(item); // 启动按钮的加载状态
                         // 新增到加载中列表
                         installingItemsStore.addItem(item); 
                         ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
+                    } else {
+                        ElNotification({ title: '提示', message: `未找到${appId}的最新版本`, type: 'warning', duration: 1000 });
                     }
                 }
             });

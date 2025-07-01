@@ -245,7 +245,7 @@ const IPCHandler = (win: BrowserWindow) => {
     });
 
     /* ****************** 命令 ll-cli kill ******************* */
-    ipcMain.on("linyaps-kill", (event, params) => {
+    ipcMain.on("linyaps-kill", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`linyaps-kill >> `, { error, stdout, stderr });
             win.webContents.send("linyaps-kill-result", { error, stdout, stderr });
