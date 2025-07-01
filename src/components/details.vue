@@ -64,7 +64,7 @@ import { ipcRenderer } from 'electron';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
 import { InstalledEntity } from '@/interface';
-import { ElNotification, TableColumnCtx } from 'element-plus'
+import { ElNotification } from 'element-plus'
 import { ArrowRight } from '@element-plus/icons-vue'
 import { compareVersions } from "@/util/checkVersion";
 import { ParseRef } from "@/util/refParam";
@@ -99,20 +99,34 @@ const formatArch = computed(() => {
     }
     return arch;
 })
-// 格式化运行时字段
-function formatSize(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
-    let size = row.size;
-    if (!size) return '';
-    return (size / 1024 / 1024).toFixed(2) + 'MB'; // 做一些格式化处理并返回字符串
+// 格式化文件大小
+const formatSize = (row: any) => {
+    // 显式检查 size 是否存在
+    if (!row.size) return '';
+    let size = Number(row.size);
+    if (isNaN(size) || size === 0) return '';
+
+    if (size < 1024) {
+        return size.toFixed(2) + 'B';
+    } else if (size < 1024 * 1024) {
+        return (size / 1024).toFixed(2) + 'KB';
+    } else if (size < 1024 * 1024 * 1024) {
+        return (size / (1024 * 1024)).toFixed(2) + 'MB';
+    } else if (size < 1024 * 1024 * 1024 * 1024) {
+        return (size / (1024 * 1024 * 1024)).toFixed(2) + 'GB';
+    } else if (size < 1024 * 1024 * 1024 * 1024 * 1024) {
+        return (size / (1024 * 1024 * 1024 * 1024)).toFixed(2) + 'TB';
+    }
+    return (size / (1024 * 1024 * 1024 * 1024 * 1024)).toFixed(2) + 'PB';
 }
 // 格式化下载量
-function formatCount(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
+function formatCount(row: any) {
     if (row.kind && row.kind != 'app') return '-';
     let installCount = row.installCount ? row.installCount : 0;
     return installCount + "次";
 }
 // 格式化上架时间
-function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
+function formatUploadTime(row: any) {
     let uploadTime = row.createTime;
     if (!uploadTime) return '';
     const date = new Date(uploadTime);
@@ -122,7 +136,7 @@ function formatUploadTime(row: any, _column: TableColumnCtx<any>, _cellValue: an
     return date.toISOString().split('T')[0]; // 做一些格式化处理并返回字符串
 }
 // 格式化运行环境
-function formatRuntime(row: any, _column: TableColumnCtx<any>, _cellValue: any, _index: number) {
+function formatRuntime(row: any) {
     const runtime = row.runtime;
     if (!runtime) return '';
     let packs = ParseRef(runtime);
