@@ -4,7 +4,7 @@ import stripAnsi from 'strip-ansi';
 import os from 'os'
 import axios from "axios";
 import fs from "fs-extra";
-import { ipcLog, mainLog } from "../logger";
+import { ipcLog, mainLog } from "./main-logger";
 import path from "path";
 
 /**
@@ -309,6 +309,24 @@ const IPCHandler = (win: BrowserWindow) => {
                 console.error('No supported terminal found.')
             }
         }
+    });
+
+    /* ****************** 强制退出程序 ******************* */
+    ipcMain.on('linyapss-package', (_event, params) => {
+        ipcLog.info('linyapss-package：', JSON.stringify(params));
+        const installProcess = exec(params.command, { encoding: 'utf8' });
+        installProcess.stdout.on('data', (data) => {
+            ipcLog.info(`stdout: ${data}`);
+            win.webContents.send("linyapss-package-result", { code: 'stdout', params, result: data });
+        })
+        installProcess.stderr.on('data', (data) => {
+            ipcLog.info(`stderr: ${data}`);
+            win.webContents.send("linyapss-package-result", { code: 'stderr', params, result: data });
+        })
+        installProcess.on('close', (code) => {
+            ipcLog.info(`child process exited with code ${code}`);
+            win.webContents.send("linyapss-package-result", { code: 'close', params, result: code });
+        })
     });
 
     /* ********** 通过网络服务获取客户端ip ********** */

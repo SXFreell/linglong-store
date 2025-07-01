@@ -1,6 +1,6 @@
 import { BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
-import { updateLog } from '../logger'
+import { updateLog } from './main-logger'
 
 // 检测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
 export function updateHandle(mainWindow: BrowserWindow) {

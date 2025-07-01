@@ -2,7 +2,7 @@ import { app, Tray, Menu } from "electron";
 import { BrowserWindow } from "electron";
 import { join } from "node:path";
 
-const TrayMenu = (mainWindow: BrowserWindow, otherWin: BrowserWindow) => {
+const trayMenu = (mainWindow: BrowserWindow, otherWin: BrowserWindow) => {
     const iconPath = join(process.env.PUBLIC, "logo.png");
     const tray = new Tray(iconPath);
  
@@ -57,4 +57,4 @@ const TrayMenu = (mainWindow: BrowserWindow, otherWin: BrowserWindow) => {
     });
 }
 
-export default TrayMenu;
+export default trayMenu;

@@ -38,6 +38,7 @@ import DownloadQueue from '@/components/DownloadQueue.vue'
 import { reflushUpdateItems, cancelUpdateTimer } from "@/util/WorkerUpdate";
 import { reflushInstalledItems, cancelInstalledTimer } from '@/util/WorkerInstalled';
 import { installingItems, setupIpcListeners, cleanupIpcListeners } from "@/util/IpcInstalled";
+import { removeCustomProtocol, setupCustomProtocol } from '@/util/customProtocol';
 import { StopLoading } from '@/util/ReflushLoading';
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useInstalledItemsStore } from '@/store/installedItems';
@@ -97,12 +98,7 @@ watch(() => installingItemsStore.installingItemList,
 // 页面初始化时执行
 onMounted(() => {
     setupIpcListeners(); // 设置IPC监听器
-    // 监听自定义协议
-    ipcRenderer.on('custom-protocol', (_event: any, res: any) => {
-        ipcRenderer.send('logger', 'info', `接收到了自定义协议的消息：${res}`);
-        // 在应用中间弹出通知，接收到了自定义协议的消息
-        ElNotification({ title: '自定义协议消息', message: `接收到了自定义协议的消息：${res}`, type: 'success', duration: 5000 });
-    });
+    setupCustomProtocol(); // 自定义协议
     reflushInstalledItems(); // 启动时刷新已安装列表
     reflushUpdateItems(); // 启动时刷新可更新列表
     // 重置加载状态
@@ -111,6 +107,7 @@ onMounted(() => {
 // 页面销毁前执行
 onUnmounted(() => {
     cleanupIpcListeners(); // 清理IPC监听器
+    removeCustomProtocol(); // 自定义协议
     cancelInstalledTimer(); // 取消安装队列的定时器
     cancelUpdateTimer(); // 取消更新队列的定时器
 });
