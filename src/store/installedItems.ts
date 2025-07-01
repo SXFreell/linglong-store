@@ -65,9 +65,9 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
             if (response.code == 200) {
                 const details: InstalledEntity[] = response.data as unknown as InstalledEntity[];
                 details.forEach((item: InstalledEntity) => {
-                    // 更新 installedItemList 中的对应项
                     const idx = installedItemList.value.findIndex(it => it.appId == item.appId && it.version == item.version);
-                    if (idx !== -1) {
+                    // 查看元素类型字段kind是否存在，不存在代表没查到数据，不更新，查到才更新installedItemList中的对应项
+                    if (idx !== -1 && item.kind) {
                         const it = installedItemList.value[idx];
                         for (const key in item) {
                             (it as any)[key] = (item as any)[key];  // 有则覆盖，无则新增
