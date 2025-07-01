@@ -1,5 +1,5 @@
 import { InstalledEntity, pageResult, Result } from '@/interface';
-import request from '@/util/request';
+import request from '@/api/request';
 
 /**
  * 推荐页面-获取轮播图列表
