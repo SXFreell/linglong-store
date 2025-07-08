@@ -11,6 +11,7 @@ const updateItemsStore = useUpdateItemsStore();
 const systemConfigStore = useSystemConfigStore();
 
 let llVersion = systemConfigStore.llVersion; // 玲珑版本
+let onlyShowOnce = true;
 
 // 记录循环次数的标记值
 let currentIndex = 0;
@@ -53,6 +54,20 @@ export const reflushUpdateItems = () => {
             }
             updateItemsStore.initUpdateItems(stdout); // 初始化更新列表
         });
+    }
+    // 更新应用系统通知
+    if (onlyShowOnce) {
+        const list = updateItemsStore.updateItemList;
+        if (list.length > 0) {
+            const NOTIFICATION_TITLE = '商店更新提醒'
+            const NOTIFICATION_BODY = '您有' + list.length + '个应用需要更新'
+            const CLICK_MESSAGE = '消息点击'
+            new window.Notification(NOTIFICATION_TITLE, { body: NOTIFICATION_BODY })
+            .onclick = () => { console.log(CLICK_MESSAGE);}
+            onlyShowOnce = false;
+        } else {
+            onlyShowOnce = true;
+        }
     }
 }
 
