@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell, Menu, ipcMain } from "electron";
+import { app, BrowserWindow } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./main-logger";
 import trayMenu from "./main-tray";
@@ -30,9 +30,7 @@ if (app.requestSingleInstanceLock()) {
     }
   });
   app.whenReady().then(() => {
-    // ipcMain.on('openMyApps', () => {
-    //   createOtherWindow();
-    // });
+    // createOtherWindow(); // 创建我的应用窗口
     createMainWindow(); // 创建商店主窗口
     trayMenu(mainWin, otherWin); // 加载托盘
     IPCHandler(mainWin); // 加载IPC服务

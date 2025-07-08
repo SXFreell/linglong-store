@@ -15,13 +15,17 @@ export let otherWin: BrowserWindow | null;
 // 创建我的应用窗口并初始化相关参数
 export function createOtherWindow() {
   otherWin = new BrowserWindow({
+    title: '我的应用',
     width: 800,
     height: 600,
     minWidth: 800,
     minHeight: 600,
     maxHeight: 600,
     maxWidth: 800,
-    icon: join(process.env.PUBLIC, "logo.png"),
+    titleBarStyle: 'hidden',
+    // frame: false,
+    // resizable: false,
+    // transparent: true,
     webPreferences: {
       preload,
       nodeIntegration: true,
