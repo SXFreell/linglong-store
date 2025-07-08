@@ -1,24 +1,31 @@
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
+  // 应用唯一标识符
   "appId": "com.dongpl.linglong-store",
+  // 应用名称
+  "productName": "玲珑应用商店",
   "copyright": "Copyright © 2025 Jokul",
   "asar": true,
   "directories": {
+    // 构建输出目录，使用版本号区分
     "output": "release/${version}"
   },
+  // 自定义协议
   "protocols": {
     "name": "linglong-store",
     "schemes": ["linyapsss"]
   },
   "files": ["dist-electron","dist"],
   "linux": {
-    "category": "Network;",
+    "category": "Network",
     "icon": "icons/256x256.svg",
     "extraFiles": ["icons"],
     "desktop": {
-      "Name": "玲珑应用商店",
-      "Type": "Application",
-      "Terminal": false
+      "entry": {
+        "Name": "玲珑应用商店",
+        "Type": "Application",
+        "Terminal": false
+      }
     },
     "target": [
       { "target": "deb", "arch": ["x64", "arm64"] },
