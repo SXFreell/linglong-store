@@ -5,7 +5,7 @@ import os from 'os'
 import axios from "axios";
 import fs from "fs-extra";
 import { ipcLog, mainLog } from "./main-logger";
-import path from "path";
+import { join } from "node:path";
 
 /**
  * 主窗口对象所有涉及的渲染线程和主线程之间的交互
@@ -17,7 +17,7 @@ const IPCHandler = (win: BrowserWindow) => {
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
         ipcLog.info('to_install_linglong', url);
-        const scriptPath = path.join('/tmp', 'temp_script.sh');
+        const scriptPath = join('/tmp', 'temp_script.sh');
         ipcLog.info('sh文件目录scriptPath：', scriptPath);
         // 1. 发起网络请求获取字符串数据
         await axios.get(`${url}/app/findShellString`).then(async response => {
