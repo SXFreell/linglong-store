@@ -33,7 +33,7 @@ if (app.requestSingleInstanceLock()) {
     // createOtherWindow(); // 创建我的应用窗口
     createMainWindow(); // 创建商店主窗口
     trayMenu(mainWin, otherWin); // 加载托盘
-    IPCHandler(mainWin); // 加载IPC服务
+    IPCHandler(mainWin, otherWin); // 加载IPC服务
     updateHandle(mainWin); // 自动更新
     // 处理首次启动时的协议调用
     mainLog.info('处理首次启动时的协议调用:', process.argv);

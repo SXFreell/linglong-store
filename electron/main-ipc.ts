@@ -1,4 +1,4 @@
-import { BrowserWindow, ipcMain } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import stripAnsi from 'strip-ansi';
 import os from 'os'
@@ -11,31 +11,32 @@ import { join } from "node:path";
  * 主窗口对象所有涉及的渲染线程和主线程之间的交互
  * @param win 主窗口对象
  */
-const IPCHandler = (win: BrowserWindow) => {
+const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     /* ************************************************* ipcMain ********************************************** */
     
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
-        ipcLog.info('to_install_linglong', url);
-        const scriptPath = join('/tmp', 'temp_script.sh');
-        ipcLog.info('sh文件目录scriptPath：', scriptPath);
+        ipcLog.info('to_install_linglong >> ', url);
+        const scriptPath = join(app.getPath('temp'), 'temp_script.sh');
+        ipcLog.info('sh文件目录scriptPath >> ', scriptPath);
         // 1. 发起网络请求获取字符串数据
         await axios.get(`${url}/app/findShellString`).then(async response => {
-            const data = response.data;
-            const scriptContent = data.data;
-            if (data.code == 200 && scriptContent && scriptContent.length > 0) {
-                fs.writeFileSync(scriptPath, scriptContent); // 2. 将内容写入 .sh 文件
+            ipcLog.info('findShellString >> ', JSON.parse(JSON.stringify(response)));
+            const reps = response.data;
+            const {code, data} = reps;
+            if (code == 200 && data && data.length > 0) {
+                fs.writeFileSync(scriptPath, data); // 2. 将内容写入 .sh 文件
                 fs.chmodSync(scriptPath, '755'); // 3. 赋予 .sh 文件执行权限
                 // 4. 执行 .sh 文件并返回结果(继承父进程的输入输出)
                 const result = await new Promise((resolve, reject) => {
                     const child = spawn('pkexec', ['bash', scriptPath], { stdio: ['inherit', 'pipe', 'pipe'] });
                     // 监听标准输出流
                     let stdoutData = '';
-                    child.stdout.on('data', (data) => stdoutData += data);
+                    child.stdout.on('data', res => stdoutData += res);
                     ipcLog.info('runScript stdoutData', stdoutData);
                     // 监听标准错误输出流
                     let stderrData = '';
-                    child.stderr.on('data', (data) => stderrData += data);
+                    child.stderr.on('data', res => stderrData += res);
                     ipcLog.info('runScript stderrData', stderrData);
                     // 监听子进程关闭事件
                     child.on('close', (code) => {
@@ -48,12 +49,17 @@ const IPCHandler = (win: BrowserWindow) => {
                 });
                 ipcLog.info('Script Output:', result);
             } else {
-                ipcLog.info('服务暂不可用！', response.data.data);
+                ipcLog.info('服务暂不可用！', data);
             }
-        }).catch(error => ipcLog.info('error response', error.response))
+        })
+        .catch(error => ipcLog.info('error response', JSON.parse(JSON.stringify(error))))
         .finally(() => {
-            fs.unlinkSync(scriptPath); // 可选：执行完毕后删除脚本文件
-            win.close(); // win.reload();  // 重启服务
+            // fs.unlinkSync(scriptPath); // 可选：执行完毕后删除脚本文件
+            // app.relaunch(); // 重新启动应用
+            // app.exit(); // 退出当前应用实例
+            win?.destroy();
+            otherWin?.destroy();
+            app.quit();
         });
     })
 
@@ -430,6 +436,12 @@ const IPCHandler = (win: BrowserWindow) => {
         }
     })
     
+    // 监听渲染进程发送的退出消息
+    ipcMain.on('app-quit', () => {
+        win?.destroy();
+        otherWin?.destroy();
+        app.quit();
+    });
     /* ************************************************* ipcMain ********************************************** */
 }
 
