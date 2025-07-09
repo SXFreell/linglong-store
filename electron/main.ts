@@ -6,7 +6,7 @@ import IPCHandler from "./main-ipc";
 import { mainWin, createMainWindow } from "./main-main-win";
 import { otherWin, createOtherWindow } from "./main-myapps-win";
 import { updateHandle } from "./electron-update";
-import { clearUpdateCache, handleCustomProtocol } from "./main-utils";
+import { clearCacheFiles, handleCustomProtocol } from "./main-utils";
 
 process.env.DIST_ELECTRON = join(__dirname, '../dist-electron');
 process.env.DIST = join(__dirname, "../dist");
@@ -68,4 +68,4 @@ app.on("window-all-closed", () => {
 });
 
 // 处理应用程序关闭事件（在这里进行必要的清理操作，如果有未完成的更新，取消它）
-app.on('before-quit', () => clearUpdateCache());
+app.on('before-quit', () => clearCacheFiles());

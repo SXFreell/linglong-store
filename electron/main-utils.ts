@@ -1,26 +1,41 @@
+import fs from "fs-extra";
 import { app } from "electron";
 import { join } from "node:path";
-import fs from "fs-extra";
 import { mainLog } from "./main-logger";
 
-// 清理升级缓存
-export function clearUpdateCache() {
+export function clearCacheFiles() {
+    // 清理升级缓存
+    const homePath = app.getPath('home');
+    clearPathFile(homePath, '/.cache/linglong-store-updater');
+    // 清理日志文件
+    const logPath = app.getPath('logs');
+    clearPathFile(logPath, 'main.log');
+    clearPathFile(logPath, 'main');
+    clearPathFile(logPath, 'print-updater');
+}
+
+function clearPathFile(logPath: string, logFile: string) {
     try {
-        const updateCachePath = join(app.getPath('home'), '/.cache/linglong-store-updater');
-        mainLog.log('清除更新缓存目录:', updateCachePath);
-        // 检测更新日志目录是否存在
-        fs.pathExists(updateCachePath, (err, exists) => {
+        const logFilePath = join(logPath, logFile);
+        mainLog.log('要清除的文件目录:', logFilePath);
+        // 检测目录是否存在
+        fs.pathExists(logFilePath, (err, exists) => {
             if (err) {
-                mainLog.error('检测文件是否存在时出现错误:', err);
-            } else {
-                mainLog.log('文件是否存在:', exists);
-                if (exists) {
-                    fs.rmSync(updateCachePath, { recursive: true });
+                mainLog.error('检测目录是否存在时出现错误:', err);
+                return;
+            }
+            mainLog.log('文件目录是否存在:', exists);
+            if (exists) {
+                try {
+                    // recursive: true 递归删除的参数
+                    fs.rmSync(logFilePath, { recursive: true });
+                } catch (rmError) {
+                    mainLog.error('删除文件目录时出现错误:', rmError);
                 }
             }
         });
     } catch (error) {
-        mainLog.error('清除文件出现异常:', error);
+        mainLog.error('清除文件目录时出现异常:', error);
     }
 }
 
