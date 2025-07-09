@@ -20,11 +20,16 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
      * @returns 将数据放入后的对象数组
      */
     const initInstalledItems = async (data: string) => {
+        // 记录旧列表
+        let addedItems: InstalledEntity[] = [];
+        let removedItems: InstalledEntity[] = [];
+        // 字符串转对象数组
         const datas: any[] = data.trim() ? JSON.parse(data.trim()) : [];
+        // 对象数组传入是空的时候，处理返回
         if (datas.length < 1) {
-            const removedItems = [...installedItemList.value]; // 全部被移除
+            removedItems = [...installedItemList.value]; // 全部被移除
             clearItems(); // 清空已安装列表
-            return { installedItemList, addedItems: [], removedItems };
+            return { installedItemList, addedItems, removedItems };
         }
         // 拆解并处理数据
         datas.forEach(item => {
@@ -38,27 +43,22 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
             item.isInstalled = true; // 默认已安装
             item.loading = false; // 默认未加载
         });
-        // 记录旧列表
-        let addedItems: InstalledEntity[] = [];
-        let removedItems: InstalledEntity[] = [];
+        
         // 如果已安装列表不为空，则进行对比
         if (installedItemList.value.length > 0) {
-            const aMap = installedItemList.value;  // 已安装列表
-            const newList = installedItemList.value.filter(aItem => datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
-            // 找出被移除的元素
+            // 获取原已安装列表中和当前查询的列表的交集元素集合
+            const mixedList = installedItemList.value.filter(aItem => datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
+            // 获取原已安装列表中不存在当前查询列表元素的元素，找出后保存在被移除的元素集合中
             removedItems = installedItemList.value.filter(aItem => !datas.some(bItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
-            installedItemList.value = newList;
-            // 找出新增的元素
-            datas.forEach(bItem => {
-                if (!aMap.some(aItem => bItem.appId === aItem.appId && bItem.version === aItem.version)) {
-                    installedItemList.value.push(bItem);
-                    addedItems.push(bItem);
-                }
-            });
-        } else {
-            installedItemList.value = datas as InstalledEntity[]; // 如果已安装列表为空，则直接赋值
+            // 获取当前查询列表中不存在原已安装列表中元素的元素，找出后保存到新增元素集合中
+            addedItems = datas.filter(bItem => !installedItemList.value.some(aItem => bItem.appId === aItem.appId && bItem.version === aItem.version));
+            // 将新增元素集合合并到已安装列表变量中
+            installedItemList.value = [...mixedList, ...addedItems];
+        } else { // 如果已安装列表为空，则直接赋值
+            installedItemList.value = datas as InstalledEntity[];
             addedItems = [...installedItemList.value];
         }
+
         // 只在有新增时才获取新增应用详情
         if (addedItems.length > 0) {
             const response = await getAppDetails(addedItems);
@@ -73,6 +73,27 @@ export const useInstalledItemsStore = defineStore("installedItems", () => {
                             (it as any)[key] = (item as any)[key];  // 有则覆盖，无则新增
                         }
                         installedItemList.value[idx] = it;
+                    }
+                });
+            } else {
+                ipcRenderer.send('logger', 'error', `获取应用详情失败: ${response.msg}`);
+            }
+        }
+
+        // 获取已安装列表中元素的categoryName为“其他”的项，如果集合不为空则调用后台接口查询详情填充
+        const otherItems = installedItemList.value.filter(item => item.categoryName === '其他');
+        if (otherItems.length > 0) {
+            const response = await getAppDetails(otherItems);
+            if (response.code == 200) {
+                const details: InstalledEntity[] = response.data as unknown as InstalledEntity[];
+                details.forEach((item: InstalledEntity) => {
+                    const idx = installedItemList.value.findIndex(it => it.appId == item.appId && it.version == item.version);
+                    // 查看元素类型字段kind是否存在，不存在代表没查到数据，不更新，查到才更新installedItemList中的对应项
+                    if (idx !== -1 && item.kind) {
+                        const it = installedItemList.value[idx];
+                        for (const key in item) {
+                            (it as any)[key] = (item as any)[key];  // 有则覆盖，无则新增
+                        }
                     }
                 });
             } else {
