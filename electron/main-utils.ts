@@ -6,7 +6,7 @@ import { mainLog } from "./main-logger";
 // 清理升级缓存
 export function clearUpdateCache() {
     try {
-        const updateCachePath = join(app.getPath('home'), '/.cache/linglong_store-updater');
+        const updateCachePath = join(app.getPath('home'), '/.cache/linglong-store-updater');
         mainLog.log('清除更新缓存目录:', updateCachePath);
         // 检测更新日志目录是否存在
         fs.pathExists(updateCachePath, (err, exists) => {
