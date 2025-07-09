@@ -18,21 +18,15 @@ export const reflushInstalledItems = () => {
             const { error, stdout, stderr } = res;
             if (stdout) {
                 let { addedItems, removedItems} = await installedItemsStore.initInstalledItems(stdout);
-                // 非开发环境发送发送操作命令！
-                if (process.env.NODE_ENV != "development") {
-                    if (addedItems.length > 0 || removedItems.length > 0) {
-                        // 转换为普通对象数组
-                        const plainAddedItems = addedItems.map(item => ({ ...item }));
-                        const plainRemovedItems = removedItems.map(item => ({ ...item }));
-                        let addList = {
-                            url: `${import.meta.env.VITE_SERVER_URL}/app/saveInstalledRecord`,
-                            visitorId: systemConfigStore.visitorId,
-                            clientIp: systemConfigStore.clientIP,
-                            addedItems: plainAddedItems, 
-                            removedItems: plainRemovedItems
-                        };
-                        ipcRenderer.send('visit', addList);
-                    }
+                if (addedItems.length > 0 || removedItems.length > 0) {
+                    let params = {
+                        url: `${import.meta.env.VITE_SERVER_URL}/app/saveInstalledRecord`,
+                        visitorId: systemConfigStore.visitorId,
+                        clientIp: systemConfigStore.clientIP,
+                        addedItems: addedItems, 
+                        removedItems: removedItems
+                    };
+                    ipcRenderer.send('visit', JSON.parse(JSON.stringify(params)));
                 }
             } else {
                 ipcRenderer.send('logger', 'error', `"ll-cli --json list --type=all"命令执行异常::${error || stderr}`);
