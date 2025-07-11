@@ -29,7 +29,8 @@
                     </el-row>
                     <el-row style="height: calc(100% - 70px);">
                         <el-col :span="3" class="base-message-key">应用简述：</el-col>
-                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ description }}</el-col>
+                        <el-col :span="21" style="height: 100%;overflow: scroll;color: #213547;">{{ description
+                            }}</el-col>
                     </el-row>
                 </el-col>
             </el-row>
@@ -37,29 +38,46 @@
     </div>
     <div class="choose-version">
         <div class="title">版本选择</div>
-        <el-table class="version-table" :data="difVersionItemsStore.difVersionItemList" border stripe v-loading="loading">
-            <el-table-column prop="version" label="版本号" header-align="center" align="center" width="120" show-overflow-tooltip/>
-            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="90" show-overflow-tooltip/>
-            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="90" show-overflow-tooltip/>
-            <el-table-column prop="module" label="模式" header-align="center" align="center" width="90" show-overflow-tooltip/>
-            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="90" show-overflow-tooltip/>
-            <el-table-column label="文件大小" header-align="center" align="center" width="100" :formatter="formatSize" show-overflow-tooltip/>
-            <el-table-column label="下载量" header-align="center" align="center" width="90" :formatter="formatCount" show-overflow-tooltip/>
-            <el-table-column label="上架时间" header-align="center" align="center" width="120" :formatter="formatUploadTime" show-overflow-tooltip/>
-            <el-table-column label="运行环境" header-align="center" align="center" min-width="260" :formatter="formatRuntime" show-overflow-tooltip/>
+        <el-table class="version-table" :data="difVersionItemsStore.difVersionItemList" border stripe
+            v-loading="loading">
+            <el-table-column prop="version" label="版本号" header-align="center" align="center" width="120"
+                show-overflow-tooltip />
+            <el-table-column prop="kind" label="应用类型" header-align="center" align="center" width="90"
+                show-overflow-tooltip />
+            <el-table-column prop="channel" label="通道" header-align="center" align="center" width="90"
+                show-overflow-tooltip />
+            <el-table-column prop="module" label="模式" header-align="center" align="center" width="90"
+                show-overflow-tooltip />
+            <el-table-column prop="repoName" label="仓库来源" header-align="center" align="center" width="90"
+                show-overflow-tooltip />
+            <el-table-column label="文件大小" header-align="center" align="center" width="100" :formatter="formatSize"
+                show-overflow-tooltip />
+            <el-table-column label="下载量" header-align="center" align="center" width="90" :formatter="formatCount"
+                show-overflow-tooltip />
+            <el-table-column label="上架时间" header-align="center" align="center" width="120" :formatter="formatUploadTime"
+                show-overflow-tooltip />
+            <el-table-column label="运行环境" header-align="center" align="center" min-width="260"
+                :formatter="formatRuntime" show-overflow-tooltip />
             <el-table-column fixed="right" label="操作" header-align="center" align="center" width="130">
                 <template #default="scope">
-                    <el-button class="detail-btn uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading" @click="removeApp(scope.row)">卸载</el-button>
-                    <el-button class="detail-btn" v-if="scope.row.isInstalled && scope.row.loading" loading>卸载中</el-button>
-                    <el-button class="detail-btn" v-if="!scope.row.isInstalled && scope.row.loading" loading>安装中</el-button>
-                    <el-button class="detail-btn install-btn" v-if="!scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'" @click="installApp(scope.row)">安装</el-button>
+                    <el-button class="detail-btn uninstall-btn" v-if="scope.row.isInstalled && !scope.row.loading"
+                        @click="removeApp(scope.row)">卸载</el-button>
+                    <el-button class="detail-btn" v-if="scope.row.isInstalled && scope.row.loading"
+                        loading>卸载中</el-button>
+                    <el-button class="detail-btn" v-if="!scope.row.isInstalled && scope.row.loading"
+                        loading>安装中</el-button>
+                    <el-button class="detail-btn install-btn"
+                        v-if="!scope.row.isInstalled && !scope.row.loading && scope.row.kind == 'app'"
+                        @click="installApp(scope.row)">安装</el-button>
                 </template>
             </el-table-column>
         </el-table>
+        <el-button type="primary" @click="drawer = true;">评论</el-button>
     </div>
+    <DiscussAreaDrawer :drawer="drawer" :defaultName="defaultName" @update:drawer="drawer = $event" />
 </template>
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { ipcRenderer } from 'electron';
 import { onBeforeRouteLeave } from 'vue-router';
 import { useRoute, useRouter } from 'vue-router';
@@ -70,12 +88,12 @@ import { compareVersions } from "@/util/checkVersion";
 import { ParseRef } from "@/util/refParam";
 import { loading, searchLinyapsByAppId } from '@/util/WorkerSearch';
 import { StartLoading } from '@/util/ReflushLoading';
+import DiscussAreaDrawer from '@/components/DiscussAreaDrawer.vue'
 
 import { useInstalledItemsStore } from "@/store/installedItems";
 import { useDifVersionItemsStore } from "@/store/difVersionItems";
 import { useInstallingItemsStore } from "@/store/installingItems";
 import { useSystemConfigStore } from "@/store/systemConfig";
-
 
 const installedItemsStore = useInstalledItemsStore();
 const difVersionItemsStore = useDifVersionItemsStore();
@@ -87,11 +105,12 @@ const router = useRouter();
 const route = useRoute();
 const { menuName, name, zhName, icon, arch, appId, categoryName, description, devName } = route.query;
 
-// 玲珑组件版本
-let llVersion = systemConfigStore.llVersion;
+let drawer = ref(false)
 
 // 格式化程序名称
-const defaultName = computed(() => zhName ? zhName : name);
+const defaultName = computed(() => {
+    return (zhName ? zhName : name) as string
+});
 // 格式化架构字段
 const formatArch = computed(() => {
     if (arch && (arch as string).startsWith('[')) {
@@ -142,14 +161,13 @@ function formatRuntime(row: any) {
     let packs = ParseRef(runtime);
     return `${packs.appId}/${packs.version}`; // 做一些格式化处理并返回字符串
 };
-
+// 发送卸载操作命令
 const removeApp = (item: InstalledEntity) => {
     StartLoading(item); // 启动按钮的加载状态
-    // 发送操作命令
     item.command = `ll-cli uninstall ${item.appId}/${item.version}`;
     ipcRenderer.send('linyaps-uninstall', JSON.parse(JSON.stringify(item)));
 }
-
+// 安装点击事件
 const installApp = async (item: any) => {
     // 判断正在安装队列应用数量，大于10条弹出提示框
     if (installingItemsStore.installingItemList.length >= 10) {
@@ -157,7 +175,7 @@ const installApp = async (item: any) => {
         return;
     }
     // 大于等于1.7.0版本后，安装低版本会进行校验
-    if (compareVersions(llVersion, "1.7.0") >= 0) {
+    if (compareVersions(systemConfigStore.llVersion, "1.7.0") >= 0) {
         let tempList = installedItemsStore.installedItemList;
         let theAppIdList = tempList.filter(it => it.appId == item.appId);
         if (theAppIdList.length > 0) {
@@ -172,7 +190,7 @@ const installApp = async (item: any) => {
     }
     StartLoading(item); // 启动按钮的加载状态
     // 新增到加载中列表
-    installingItemsStore.addItem(item); 
+    installingItemsStore.addItem(item);
     ElNotification({ title: '提示', message: `正在安装${item.name}(${item.version})`, type: 'info', duration: 500 });
 }
 
