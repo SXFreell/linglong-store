@@ -5,6 +5,8 @@ import { ref } from 'vue'
  */
 export const useSystemConfigStore = defineStore('systemConfig', {
     state: () => ({
+        // 客户端版本号
+        appVersion: ref(''),
         // 系统架构
         arch: ref('x86_64'),
         // 玲珑版本
@@ -20,7 +22,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         // 当前收录玲珑程序数量
         linglongCount: ref(0),
         // linglong-bin的包版本号
-        linglongBinVersion: ref(''),
+        llBinVersion: ref(''),
         // 指纹码
         visitorId: ref(''),
         // 玲珑基本信息
@@ -32,13 +34,14 @@ export const useSystemConfigStore = defineStore('systemConfig', {
     }),
     getters: {
         getSystemConfigInfo: (state) => {
-            return 'arch:' + state.arch 
+            return 'appVersion:' + state.appVersion
+            + ',arch:' + state.arch 
             + ',llVersion:' + state.llVersion 
             + ',sourceUrl:' + JSON.stringify(state.sourceUrl) 
             + ',isShowBaseService:' + state.isShowBaseService 
             + ',autoCheckUpdate:' + state.autoCheckUpdate
             + ',linglongCount:' + state.linglongCount
-            + ',linglongBinVersion:' + state.linglongBinVersion
+            + ',llBinVersion:' + state.llBinVersion
             + ',defaultRepoName:' + state.defaultRepoName
             + ',visitorId:' + state.visitorId
             + ',detailMsg:' + state.detailMsg
@@ -47,6 +50,11 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         },
     },
     actions: {
+        // 修改客户端版本号
+        changeAppVersion(appVersion: string){
+            const that = this;
+            that.appVersion = appVersion;
+        },
         // 修改系统架构信息
         changeArch(inArch: string){
             const that = this;
@@ -83,9 +91,9 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             that.linglongCount = linglongCount;
         },
         // 修改linglong-bin的包版本号
-        changeLinglongBinVersion(linglongBinVersion: string){
+        changeLlBinVersion(llBinVersion: string){
             const that = this;
-            that.linglongBinVersion = linglongBinVersion;
+            that.llBinVersion = llBinVersion;
         },
         // 修改指纹码
         changeVisitorId(visitorId: string){

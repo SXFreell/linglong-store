@@ -25,7 +25,6 @@ import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { ElMessageBox } from 'element-plus';
 import { ipcRenderer } from "electron";
 import { useRouter } from 'vue-router';
-import pkg from '../../package.json';
 import NoLinyapsEnvDialog from '@/components/NoLinyapsEnvDialog.vue';
 import FingerprintJS from '@fingerprintjs/fingerprintjs'
 import { useSystemConfigStore } from "@/store/systemConfig";
@@ -129,7 +128,7 @@ const startEnvCheck = () => {
                 }
             });
             ipcRenderer.send('logger', 'info', '已安装版本：' + installedVersion);
-            systemConfigStore.changeLinglongBinVersion(installedVersion);
+            systemConfigStore.changeLlBinVersion(installedVersion);
         }
     });
     ipcRenderer.send('apt-linyaps-bin');
@@ -190,11 +189,10 @@ const startEnvCheck = () => {
             ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
             // 检测当前环境(非开发环境发送通知APP登陆！)
             if (process.env.NODE_ENV != "development") {
-                const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIp, arch } = systemConfigStore;
+                const { appVersion, llVersion, llBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIp, arch } = systemConfigStore;
                 ipcRenderer.send('appLogin', {
                     url: `${import.meta.env.VITE_SERVER_URL}/app/saveVisitRecord`, 
-                    appVersion: pkg.version, clientIp, arch,
-                    llVersion, llBinVersion: linglongBinVersion, detailMsg, 
+                    appVersion, clientIp, arch, llVersion, llBinVersion, detailMsg, 
                     osVersion, repoName: defaultRepoName, visitorId
                 });
             }
@@ -214,6 +212,12 @@ const startEnvCheck = () => {
 onMounted(async () => {
     // 设置ipc监听器
     ipcRenderer.on('update-message', updateMessage);
+    // 获取客户端版本号
+    ipcRenderer.once('app-version-result', (_event: any, version: string) => {
+        ipcRenderer.send('logger', 'info', '客户端版本号：' + version);
+        systemConfigStore.changeAppVersion(version);
+    })
+    ipcRenderer.send('app-version');
     // 获取指纹码
     const result = await (await FingerprintJS.load()).get();
     let visitorId = result.visitorId

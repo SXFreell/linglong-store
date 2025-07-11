@@ -20,7 +20,7 @@
       </el-button>
     </li>
     <div class="item">
-      当前商店版本: {{ pkg.version }}
+      当前商店版本: {{ systemConfigStore.appVersion }}
       <el-button class="updateBtn" type="warning" :size="'small'" @click="checkVersion()" :disabled="updateBtnStatus">
         检查版本<el-icon class="el-icon--right">
           <Upload />
@@ -28,7 +28,7 @@
       </el-button>
     </div>
     <div class="item">当前玲珑组件版本：{{ systemConfigStore.llVersion }}</div>
-    <div class="item">开发作者：{{ pkg.author }}</div>
+    <div class="item">开发作者：Jokul &lt;986432015@qq.com&gt;</div>
     <div class="item">
       码云地址：<a class="link" href="https://gitee.com/Jokul2018/linglong_store"
         target="_blank">https://gitee.com/Jokul2018/linglong_store</a>
@@ -53,7 +53,6 @@
 </template>
 <script setup lang="ts">
 import { ipcRenderer } from 'electron';
-import pkg from '../../../../package.json';
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { ElNotification, ElMessageBox, ElMessage } from 'element-plus'
 import { getSearchAppList } from '@/api';
@@ -84,11 +83,10 @@ const suggest = () => {
     customClass: 'custom-message-box', // 自定义类名
   }).then(({ value }) => {
     if (value) {
-      const {visitorId, clientIp, llVersion} = systemConfigStore;
+      const { visitorId, clientIp, llVersion, appVersion } = systemConfigStore;
       ipcRenderer.send('suggest', {
         url: `${import.meta.env.VITE_SERVER_URL}/visit/suggest`,
-        llVersion, visitorId, clientIp, appVersion: pkg.version,
-        message: value,
+        llVersion, visitorId, clientIp, appVersion, message: value,
       })
       ElMessage({ type: 'success', message: `反馈内容已发送` })
     }

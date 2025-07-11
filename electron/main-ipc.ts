@@ -11,6 +11,12 @@ import { join } from "node:path";
  * @param win 主窗口对象
  */
 const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
+
+    /* ****************** 获取系统版本号 ******************* */
+    ipcMain.on('app-version', (event) => {
+        const appVersion = app.getVersion();
+        event.sender.send('app-version-result', appVersion);
+    })
     
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
