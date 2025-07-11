@@ -1,7 +1,6 @@
 import { app, BrowserWindow, ipcMain } from "electron";
 import { ChildProcessWithoutNullStreams, exec, spawn } from "child_process";
 import stripAnsi from 'strip-ansi';
-import os from 'os'
 import axios from "axios";
 import fs from "fs-extra";
 import { ipcLog, mainLog } from "./main-logger";
@@ -113,12 +112,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             const repoLines = lines.slice(2);
             let repos = repoLines.map(line => {
                 const parts = line.trim().split(/\s{2,}/);
-                return {
-                    name: parts[0],
-                    url: parts[1],
-                    alias: parts[2],
-                    priority: parts[3]
-                };
+                return { name: parts[0], url: parts[1], alias: parts[2], priority: parts[3] };
             });
             return { defaultRepoName, repos };
         };
@@ -127,15 +121,15 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         // 执行查询脚本
         exec("ll-cli --json repo show", (error, stdout, stderr) => {
             ipcLog.info('ll-cli --json repo show >>', { error, stdout, stderr });
-            if (stdout) {
+            if (stdout) {  // 如果 stdout 不为空，则解析响应结果
                 try {
                     const tout = stripAnsi(stdout.toString());
                     const json = JSON.parse(tout);
                     data.defaultRepoName = json.defaultRepo;
                     data.repos = json.repos;
-                } catch {
+                } catch { // 解析 JSON 失败，尝试旧版解析
                     exec("ll-cli repo show", (error, stdout, stderr) => {
-                        ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
+                        ipcLog.info('解析失败，尝试再执行旧版命令 ll-cli repo show >>', { error, stdout, stderr });
                         if (stdout) {
                             const out = stripAnsi(stdout.toString());
                             const result = parseRepoInfo(out);
@@ -149,7 +143,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
                 }
             } else {
                 exec("ll-cli repo show", (error, stdout, stderr) => {
-                    ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
+                    ipcLog.info('stdout 为空，尝试再执行旧版命令 ll-cli repo show >>', { error, stdout, stderr });
                     if (stdout) {
                         const out = stripAnsi(stdout.toString());
                         const result = parseRepoInfo(out);
@@ -177,8 +171,8 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-version", () => {
         exec("ll-cli --json --version", (error, stdout, stderr) => {
             ipcLog.info('ll-cli --json --version >>', { error, stdout, stderr });
-            let version = '';
             if (stdout) {
+                let version = '';
                 const out = stripAnsi(stdout.toString()); // 使用 stripAnsi 去除 ANSI 转义序列
                 try { // 处理 {"version":"1.6.3"} json 格式
                     const json = JSON.parse(out) as { version: string }; // 类型断言
@@ -187,8 +181,33 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
                     const match = out.match(/(\d+\.\d+\.\d+)/);
                     version = match ? match[1] : '';
                 }
+                if (version) { // 解析stdout 成功，直接发送到渲染进程
+                    win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                } else { // 解析stdout 失败，尝试再执行旧版命令
+                    exec("ll-cli --version", (error, stdout, stderr) => {
+                        ipcLog.info('stdout 为空，尝试再执行旧版命令 ll-cli --version >>', { error, stdout, stderr });
+                        let version = '';
+                        if (stdout) {
+                            const out = stripAnsi(stdout.toString());
+                            const match = out.match(/(\d+\.\d+\.\d+)/);
+                            version = match ? match[1] : '';
+                        }
+                        win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                    }); 
+                }
+            } else { // stdout 为空，尝试再执行旧版命令
+                exec("ll-cli --version", (error, stdout, stderr) => {
+                    ipcLog.info('stdout 为空，尝试再执行旧版命令 ll-cli --version >>', { error, stdout, stderr });
+                    let version = '';
+                    if (stdout) {
+                        const out = stripAnsi(stdout.toString());
+                        const match = out.match(/(\d+\.\d+\.\d+)/);
+                        version = match ? match[1] : '';
+                    }
+                    win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                });
             }
-            win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+            win.webContents.send("linyaps-version-result", { error, stdout : "", stderr });
         });
     });
 
@@ -351,46 +370,38 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
 
     /* ****************** 打开终端并执行命令 ******************* */
     ipcMain.on('open-terminal', (_event, params) => {
-        const platform = os.platform()
-        if (platform === 'win32') { // Windows - 打开 cmd
-            spawn('cmd.exe', { stdio: 'inherit', shell: true })
-        } else if (platform === 'darwin') { // macOS - 打开 Terminal
-            spawn('open', ['-a', 'Terminal'], { stdio: 'inherit' })
-        } else if (platform === 'linux') { // Linux - 根据常用终端之一打开
-            const terminals = ['deepin-terminal', 'gnome-terminal', 'konsole', 'xfce4-terminal', 'xterm']
-            const terminal = terminals.find(term => {
-                try {
-                    spawn(term, ['--version']) // 简单验证可用性
-                    return true
-                } catch {
-                    return false
-                }
-            })
-            if (terminal) {
-                let arr = [];
-                if (terminal == 'deepin-terminal') {
-                    arr.push('-e');
-                } else if (terminal == 'gnome-terminal') {
-                    arr.push('--');
-                    arr.push('bash');
-                    arr.push('-c');
-                } else if (terminal == 'konsole') {
-                    arr.push('-e');
-                    arr.push('bash');
-                    arr.push('-c');
-                } else if (terminal == 'xterm') {
-                    arr.push('-e');
-                }
-                arr.push(params.code);
-                const child = spawn(terminal, arr, { detached: true,stdio: 'ignore' });
-                child.unref()  // 彻底让它脱离主程序
-            } else {
-                console.error('No supported terminal found.')
+        // 验证终端是否可用
+        const isTerminalAvailable = (term: string) => {
+            try {
+                const child = spawn(term, ['--version']);
+                child.kill(); // 启动后立即终止进程
+                return true;
+            } catch {
+                return false;
             }
+        };
+        const terminals = ['deepin-terminal', 'gnome-terminal', 'konsole', 'xfce4-terminal', 'xterm'];
+        const terminal = terminals.find(isTerminalAvailable);
+
+        // 定义不同终端的参数配置
+        const terminalArgsConfig: Record<string, string[]> = {
+            'deepin-terminal': ['-e'],
+            'gnome-terminal': ['--', 'bash', '-c'],
+            'konsole': ['-e', 'bash', '-c'],
+            'xterm': ['-e']
+        };
+
+        if (terminal) {
+            // 获取对应终端的参数配置
+            const arr = [...(terminalArgsConfig[terminal] || []), params.code];
+            const child = spawn(terminal, arr, { detached: true,stdio: 'ignore' });
+            child.unref()  // 彻底让它脱离主程序
+        } else {
+            ipcLog.info('open-terminal：', '没有可运行的终端应用');
         }
     });
 
-    /* ****************** 强制退出程序 ******************* */
+    /* ****************** 安装本地玲珑包应用 ******************* */
     ipcMain.on('linyapss-package', (_event, params) => {
         ipcLog.info('linyapss-package：', JSON.stringify(params));
         const installProcess = exec(params.command, { encoding: 'utf8' });
