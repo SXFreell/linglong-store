@@ -12,7 +12,6 @@ import { join } from "node:path";
  * @param win 主窗口对象
  */
 const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
-    /* ************************************************* ipcMain ********************************************** */
     
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
@@ -123,10 +122,8 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             });
             return { defaultRepoName, repos };
         };
-
         // 初始化返回对象
         let data = {defaultRepoName: '', repos: []};
-
         // 执行查询脚本
         exec("ll-cli --json repo show", (error, stdout, stderr) => {
             ipcLog.info('ll-cli --json repo show >>', { error, stdout, stderr });
@@ -167,7 +164,6 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             // 在外部 exec 回调结束后处理结果
             handleResult(data);
         })
-        
         // 将结果返回到渲染进程
         const handleResult = (stdout: any) => {
             ipcLog.info('linyaps-repo >>', JSON.parse(JSON.stringify(stdout)));
@@ -447,29 +443,12 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         });
     });
 
-    /* ********** 执行网络请求 ********** */
-    ipcMain.on("network", (_event, data) => {
-        ipcLog.info('ipc-network：', JSON.stringify(data));
-        axios.defaults.headers.common['Content-Type'] = 'application/json';
-        axios.defaults.timeout = 30000;
-        axios.get(data.url).then(response => {
-            const code = response.data.code;
-            const dataList = response.data.data.list;
-            const result = { code: code, data: dataList, param: data };
-            win.webContents.send("network-result", result);
-        }).catch(error => {
-            const response = error.response;
-            const result = { code: response.status, msg: response.data, param: data };
-            win.webContents.send("network-result", result);
-        });
-    });
-
     /* ********** 执行安装卸载操作时的记录请求 ********** */
     ipcMain.on("visit", (_event, data) => {
         ipcLog.info('ipc-visit：', JSON.stringify(data));
         axios.defaults.headers.common['Content-Type'] = 'application/json';
         axios.defaults.timeout = 30000;
-        axios.post(data.url, JSON.stringify({ ...data })).then(response => {
+        axios.post(data.url, { ...data }).then(response => {
             ipcLog.info('ipc-visit-success：', JSON.stringify(response.data))
         }).catch(error => {
             ipcLog.info('ipc-visit-error：', error.message)
@@ -519,7 +498,6 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         otherWin?.destroy();
         app.quit();
     });
-    /* ************************************************* ipcMain ********************************************** */
 }
 
 export default IPCHandler;
