@@ -15,10 +15,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         defaultRepoName: ref(''),
         // 玲珑源地址 'https://mirror-repo-linglong.deepin.com'
         sourceUrl: ref<Record<string, any>[]>(),
-        // 是否显示基础运行服务
-        isShowBaseService: ref(false),
-        // 自动检测更新
-        autoCheckUpdate: ref(true),
         // 当前收录玲珑程序数量
         linglongCount: ref(0),
         // linglong-bin的包版本号
@@ -31,6 +27,12 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         osVersion: ref(''),
         // 客户端ip地址
         clientIp: ref(''),
+        // 启动应用更新提醒
+        isShowUpdateTip: ref(true),
+        // 是否显示基础运行服务
+        isShowBaseService: ref(false),
+        // 自动检测更新
+        autoCheckUpdate: ref(true),
     }),
     getters: {
         getSystemConfigInfo: (state) => {
@@ -38,8 +40,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',arch:' + state.arch 
             + ',llVersion:' + state.llVersion 
             + ',sourceUrl:' + JSON.stringify(state.sourceUrl) 
-            + ',isShowBaseService:' + state.isShowBaseService 
-            + ',autoCheckUpdate:' + state.autoCheckUpdate
             + ',linglongCount:' + state.linglongCount
             + ',llBinVersion:' + state.llBinVersion
             + ',defaultRepoName:' + state.defaultRepoName
@@ -47,6 +47,9 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',detailMsg:' + state.detailMsg
             + ',osVersion:' + state.osVersion
             + ',clientIp:' + state.clientIp
+            + ',isShowUpdateTip:' + state.isShowUpdateTip
+            + ',isShowBaseService:' + state.isShowBaseService 
+            + ',autoCheckUpdate:' + state.autoCheckUpdate
         },
     },
     actions: {
@@ -74,16 +77,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeSourceUrl(inSourceUrl: Record<string, any>[]){
             const that = this;
             that.sourceUrl = inSourceUrl;
-        },
-        // 修改是否显示基础运行服务
-        changeIsShowBaseService(isShowBaseService: boolean){
-            const that = this;
-            that.isShowBaseService = isShowBaseService;
-        },
-        // 修改是否自动检测更新
-        changeAutoCheckUpdate(autoCheckUpdate: boolean){
-            const that = this;
-            that.autoCheckUpdate = autoCheckUpdate;
         },
         // 修改当前收录玲珑程序数量
         changeLinglongCount(linglongCount: number){
@@ -114,6 +107,21 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeClientIp(clientIp: string){
             const that = this;
             that.clientIp = clientIp;
+        },
+        // 修改启动应用更新提醒
+        changeIsShowUpdateTip(isShowUpdateTip: boolean){
+            const that = this;
+            that.isShowUpdateTip = isShowUpdateTip;
+        },
+        // 修改是否显示基础运行服务
+        changeIsShowBaseService(isShowBaseService: boolean){
+            const that = this;
+            that.isShowBaseService = isShowBaseService;
+        },
+        // 修改是否自动检测更新
+        changeAutoCheckUpdate(autoCheckUpdate: boolean){
+            const that = this;
+            that.autoCheckUpdate = autoCheckUpdate;
         },
     },
     persist: true

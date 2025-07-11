@@ -58,7 +58,7 @@ export const reflushUpdateItems = () => {
     // 更新应用系统通知
     if (onlyShowOnce) {
         const list = updateItemsStore.updateItemList;
-        if (list.length > 0) {
+        if (list.length > 0 && systemConfigStore.isShowUpdateTip) {
             const NOTIFICATION_TITLE = '商店更新提醒'
             const NOTIFICATION_BODY = '您有' + list.length + '个应用需要更新'
             const CLICK_MESSAGE = '消息点击'

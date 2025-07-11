@@ -10,7 +10,7 @@
                         <span class="menu-item-text">
                             {{ item.label }}
                             <!-- 若为更新程序菜单项且待更新数量大于 0，显示角标 -->
-                            <template v-if="item.index === '4' && updateItemsStore.updateItemList.length > 0">
+                            <template v-if="item.index === '4' && systemConfigStore.isShowUpdateTip && updateItemsStore.updateItemList.length > 0">
                                 <sup class="update-badge">{{ updateItemsStore.updateItemList.length }}</sup>
                             </template>
                         </span>
@@ -44,12 +44,14 @@ import { useInstallingItemsStore } from "@/store/installingItems";
 import { useInstalledItemsStore } from '@/store/installedItems';
 import { useUpdateItemsStore } from '@/store/updateItems';
 import { useUpdateStatusStore } from "@/store/updateStatus";
+import { useSystemConfigStore } from "@/store/systemConfig";
 import router from '@/router';
 
 const installingItemsStore = useInstallingItemsStore();
 const installedItemsStore = useInstalledItemsStore();
 const updateItemsStore = useUpdateItemsStore();
 const updateStatusStore = useUpdateStatusStore();
+const systemConfigStore = useSystemConfigStore();
 
 let activeMenu = ref('1'); // 当前激活的菜单项
 let show = ref(false); // 显示下载队列框

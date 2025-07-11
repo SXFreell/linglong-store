@@ -20,6 +20,16 @@
       <hr>
     </div>
     <div>
+      <li><a class="title">更新程序</a></li>
+      <div style="margin-left: 30px;">
+        <el-checkbox v-model="isShowUpdateTip" size="large"
+          @change="systemConfigStore.changeIsShowUpdateTip(isShowUpdateTip)">
+          启动应用更新提醒
+        </el-checkbox>
+      </div>
+      <hr>
+    </div>
+    <div>
       <li><a class="title">卸载程序</a></li>
       <div style="margin-left: 30px;">
         <el-checkbox v-model="isShowBaseService" size="large"
@@ -49,6 +59,8 @@ const systemConfigStore = useSystemConfigStore();
 
 // 自动检测更新
 let autoCheckUpdate = ref(true);
+// 是否显示应用更新提醒
+let isShowUpdateTip = ref(true);
 // 默认玲珑仓库对象
 let defaultRepo = ref('');
 // 仓库源地址
