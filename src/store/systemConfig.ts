@@ -9,10 +9,10 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         arch: ref('x86_64'),
         // 玲珑版本
         llVersion: ref('1.3.8'),
+        // 默认仓库名称
+        defaultRepoName: ref(''),
         // 玲珑源地址 'https://mirror-repo-linglong.deepin.com'
-        sourceUrl: ref<Record<string, any>>(),
-        // 是否显示非当前架构程序
-        isShowDisArch: ref(true),
+        sourceUrl: ref<Record<string, any>[]>(),
         // 是否显示基础运行服务
         isShowBaseService: ref(false),
         // 自动检测更新
@@ -23,8 +23,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         linglongCount: ref(0),
         // linglong-bin的包版本号
         linglongBinVersion: ref(''),
-        // 默认仓库名称
-        defaultRepoName: ref(''),
         // 指纹码
         visitorId: ref(''),
         // 玲珑基本信息
@@ -38,8 +36,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         getSystemConfigInfo: (state) => {
             return 'arch:' + state.arch 
             + ',llVersion:' + state.llVersion 
-            + ',sourceUrl:' + state.sourceUrl 
-            + ',isShowDisArch:' + state.isShowDisArch 
+            + ',sourceUrl:' + JSON.stringify(state.sourceUrl) 
             + ',isShowBaseService:' + state.isShowBaseService 
             + ',autoCheckUpdate:' + state.autoCheckUpdate
             + ',networkRunStatus:' + state.networkRunStatus
@@ -51,7 +48,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',osVersion:' + state.osVersion
             + ',clientIP:' + state.clientIP
         },
-        getIsShowDisArch: (state) => state.isShowDisArch,
     },
     actions: {
         // 修改系统架构信息
@@ -65,14 +61,9 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             that.llVersion = llVersion;
         },
         // 修改玲珑源地址
-        changeSourceUrl(inSourceUrl: Record<string, any>){
+        changeSourceUrl(inSourceUrl: Record<string, any>[]){
             const that = this;
             that.sourceUrl = inSourceUrl;
-        },
-        // 修改是否显示非当前架构程序
-        changeIsShowDisArch(isShowDisArch: boolean){
-            const that = this;
-            that.isShowDisArch = isShowDisArch;
         },
         // 修改是否显示基础运行服务
         changeIsShowBaseService(isShowBaseService: boolean){
