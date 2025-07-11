@@ -1,6 +1,7 @@
 import { BrowserWindow, shell, Menu } from "electron";
 import { join } from "node:path";
 import { mainLog } from "./main-logger";
+import { isForceQuit } from "./electron-update";
 
 process.env.DIST_ELECTRON = join(__dirname, '../dist-electron');
 process.env.DIST = join(__dirname, "../dist");
@@ -49,10 +50,12 @@ export function createMainWindow() {
 
   // 拦截窗口关闭操作，改为隐藏
   mainWin.on('close', (event) => {
-    event.preventDefault()
-    // mainWin?.hide()
-    if (mainWin) {
-      mainWin.webContents.send('show-close-confirm');
+    if (!isForceQuit) {
+      event.preventDefault()
+      // mainWin?.hide()
+      if (mainWin) {
+        mainWin.webContents.send('show-close-confirm');
+      }
     }
   })
 }

@@ -2,6 +2,8 @@ import { BrowserWindow, ipcMain } from 'electron'
 import { autoUpdater } from 'electron-updater'
 import { updateLog } from './main-logger'
 
+export let isForceQuit = false
+
 // 检测更新，在你想要检查更新的时候执行，renderer事件触发后的操作自行编写
 export function updateHandle(mainWindow: BrowserWindow) {
   //                            清除每次更新下载的文件，否则无法进行更新
@@ -66,6 +68,7 @@ export function updateHandle(mainWindow: BrowserWindow) {
   // 监听更新事件
   ipcMain.on('isUpdateNow', (e, arg) => {
     updateLog.warn('开始更新安装');
+    isForceQuit = true;
     autoUpdater.quitAndInstall();
   })
   // 监听更新事件
