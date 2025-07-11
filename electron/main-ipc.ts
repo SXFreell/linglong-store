@@ -21,7 +21,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         ipcLog.info('sh文件目录scriptPath >> ', scriptPath);
         // 1. 发起网络请求获取字符串数据
         await axios.get(`${url}/app/findShellString`).then(async response => {
-            ipcLog.info('findShellString >> ', JSON.parse(JSON.stringify(response)));
+            ipcLog.info('findShellString >> ', response);
             const reps = response.data;
             const {code, data} = reps;
             if (code == 200 && data && data.length > 0) {
@@ -105,17 +105,94 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
 
     /* ****************** 命令 ll-cli repo show ******************* */
     ipcMain.on("linyaps-repo", () => {
-        exec("ll-cli repo show", (error, stdout, stderr) => {
-            ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
-            win.webContents.send("linyaps-repo-result", { error, stdout, stderr });
-        });
+        // 处理非 JSON 格式输出
+        const parseRepoInfo = (output: string) => {
+            const lines = output.split('\n').filter(line => line.trim() !== '');
+            // 提取默认仓库名
+            let defaultRepoName = lines[0].split(': ')[1].trim();
+            // 跳过标题行
+            const repoLines = lines.slice(2);
+            let repos = repoLines.map(line => {
+                const parts = line.trim().split(/\s{2,}/);
+                return {
+                    name: parts[0],
+                    url: parts[1],
+                    alias: parts[2],
+                    priority: parts[3]
+                };
+            });
+            return { defaultRepoName, repos };
+        };
+
+        // 初始化返回对象
+        let data = {defaultRepoName: '', repos: []};
+
+        // 执行查询脚本
+        exec("ll-cli --json repo show", (error, stdout, stderr) => {
+            ipcLog.info('ll-cli --json repo show >>', { error, stdout, stderr });
+            if (stdout) {
+                try {
+                    const tout = stripAnsi(stdout.toString());
+                    const json = JSON.parse(tout);
+                    data.defaultRepoName = json.defaultRepo;
+                    data.repos = json.repos;
+                } catch {
+                    exec("ll-cli repo show", (error, stdout, stderr) => {
+                        ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
+                        if (stdout) {
+                            const out = stripAnsi(stdout.toString());
+                            const result = parseRepoInfo(out);
+                            data.defaultRepoName = result.defaultRepoName;
+                            data.repos = result.repos;
+                        }
+                        // 在内部 exec 回调结束后处理结果
+                        handleResult(data);
+                    });
+                    return;
+                }
+            } else {
+                exec("ll-cli repo show", (error, stdout, stderr) => {
+                    ipcLog.info('ll-cli repo show >>', { error, stdout, stderr });
+                    if (stdout) {
+                        const out = stripAnsi(stdout.toString());
+                        const result = parseRepoInfo(out);
+                        data.defaultRepoName = result.defaultRepoName;
+                        data.repos = result.repos;
+                    }
+                    // 在内部 exec 回调结束后处理结果
+                    handleResult(data);
+                });
+                return;
+            }
+            // 在外部 exec 回调结束后处理结果
+            handleResult(data);
+        })
+        
+        // 将结果返回到渲染进程
+        const handleResult = (stdout: any) => {
+            ipcLog.info('linyaps-repo >>', JSON.parse(JSON.stringify(stdout)));
+            const {defaultRepoName, repos} = stdout;
+            let errMes = (!defaultRepoName || repos.length < 1) ? "未配置玲珑源" : '';
+            win.webContents.send("linyaps-repo-result", { error: null, stdout, stderr: errMes });
+        }
     });
 
     /* ****************** 命令 ll-cli --json --version ******************* */
     ipcMain.on("linyaps-version", () => {
         exec("ll-cli --json --version", (error, stdout, stderr) => {
             ipcLog.info('ll-cli --json --version >>', { error, stdout, stderr });
-            win.webContents.send("linyaps-version-result", { error, stdout, stderr });
+            let version = '';
+            if (stdout) {
+                const out = stripAnsi(stdout.toString()); // 使用 stripAnsi 去除 ANSI 转义序列
+                try { // 处理 {"version":"1.6.3"} json 格式
+                    const json = JSON.parse(out) as { version: string }; // 类型断言
+                    version = json.version;
+                } catch { // 处理 "linglong cli 1.6.3" 字符串格式
+                    const match = out.match(/(\d+\.\d+\.\d+)/);
+                    version = match ? match[1] : '';
+                }
+            }
+            win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
         });
     });
 

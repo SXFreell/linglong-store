@@ -84,15 +84,11 @@ const suggest = () => {
     customClass: 'custom-message-box', // 自定义类名
   }).then(({ value }) => {
     if (value) {
-      // 发送建议到主进程
-      let baseURL = import.meta.env.VITE_SERVER_URL as string;
+      const {visitorId, clientIp, llVersion} = systemConfigStore;
       ipcRenderer.send('suggest', {
-        url: baseURL + "/visit/suggest",
-        llVersion: systemConfigStore.llVersion,
-        appVersion: pkg.version,
+        url: `${import.meta.env.VITE_SERVER_URL}/visit/suggest`,
+        llVersion, visitorId, clientIp, appVersion: pkg.version,
         message: value,
-        visitorId: systemConfigStore.visitorId,
-        clientIp: systemConfigStore.clientIP
       })
       ElMessage({ type: 'success', message: `反馈内容已发送` })
     }

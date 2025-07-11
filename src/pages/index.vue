@@ -155,22 +155,14 @@ const startEnvCheck = () => {
                 centerDialogVisible.value = true; // 显示弹窗
                 return;
             }
-            ipcRenderer.send('logger', 'info', `检查当前玲珑基础环境使用的仓库源...${stdout}`);
-            const lines = stdout.replace(/\x1B\[[0-9;]*m/g, '') // 去除ANSI颜色控制符
-                .split('\n').filter(line => line.trim() !== '');
-            const defaultLine = lines[0];
-            const defaultRepo = defaultLine.split(':')[1].trim();
-            ipcRenderer.send('logger', 'info', `当前玲珑基础环境使用的仓库源为：${defaultRepo}`);
+            ipcRenderer.send('logger', 'info', `当前玲珑基础环境使用的仓库源...${JSON.stringify(stdout)}`);
+            const json = JSON.parse(JSON.stringify(stdout));
+            const defaultRepo = json.defaultRepoName;
+            ipcRenderer.send('logger', 'info', `当前玲珑基础环境使用的默认仓库为：${defaultRepo}`);
             systemConfigStore.changeDefaultRepoName(defaultRepo);
-            // 跳过默认和标题行
-            const repoLines = lines.slice(2); 
-            const repos = repoLines.map(line => {
-                // 使用正则或者 split 拆分：假设字段之间用多个空格隔开
-                const parts = line.trim().split(/\s+/);
-                return { name: parts[0], url: parts[1], alias: parts[2], priority: parts[3] };
-            });
+            const repos = json.repos;
+            ipcRenderer.send('logger', 'info', `当前玲珑基础环境使用的仓库源列表为：${JSON.stringify(repos)}`);
             systemConfigStore.changeSourceUrl(repos);
-            return { default: defaultRepo, repos };
         });
         ipcRenderer.send('linyaps-repo');
         // 检测玲珑基础环境版本号    
@@ -185,28 +177,26 @@ const startEnvCheck = () => {
                 return;
             }
             ipcRenderer.send('logger', 'info', `检测玲珑基础环境版本号...${stdout}`);
-            const obj = JSON.parse(stdout) as { version: unknown }; // 类型断言
-            if (typeof obj.version === 'string') {
-                systemConfigStore.changeLlVersion(obj.version);
-            }
-            ipcRenderer.send('logger', 'info', "玲珑环境版本检测完毕...");
-            ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
+            systemConfigStore.changeLlVersion(stdout);
             if (!systemConfigStore.llVersion || compareVersions(systemConfigStore.llVersion, "1.5.0") < 0) {
-                message.value = "当前玲珑环境版本过低，请手动安装最新版本的玲珑环境！";
-                ipcRenderer.send('logger', 'error', "当前玲珑环境版本过低，请手动安装最新版本的玲珑环境！");
+                message.value = "当前玲珑基础环境版本号过低(<1.5.0)或不存在，请安装最新版本的玲珑环境！";
+                ipcRenderer.send('logger', 'error', "当前玲珑基础环境版本号过低(<1.5.0)或不存在，请安装最新版本的玲珑环境！");
                 centerDialogVisible.value = true; // 显示弹窗
                 return;
             }
-            message.value = "玲珑环境版本检测完毕...";
+            message.value = "玲珑基础环境版本号检测完毕...";
+            ipcRenderer.send('logger', 'info', "玲珑基础环境版本号检测完毕...");
             downloadPercentMsg.value = "";
+            ipcRenderer.send('logger', 'info', systemConfigStore.getSystemConfigInfo);
             // 检测当前环境(非开发环境发送通知APP登陆！)
             if (process.env.NODE_ENV != "development") {
-                const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIP, arch } = systemConfigStore;
-                const loginPayload = {
-                    url: `${import.meta.env.VITE_SERVER_URL}/app/saveVisitRecord`, appVersion: pkg.version, clientIp: clientIP, arch,
-                    llVersion, llBinVersion: linglongBinVersion, detailMsg, osVersion, repoName: defaultRepoName, visitorId
-                };
-                ipcRenderer.send('appLogin', loginPayload);
+                const { llVersion, linglongBinVersion, detailMsg, osVersion, defaultRepoName, visitorId, clientIp, arch } = systemConfigStore;
+                ipcRenderer.send('appLogin', {
+                    url: `${import.meta.env.VITE_SERVER_URL}/app/saveVisitRecord`, 
+                    appVersion: pkg.version, clientIp, arch,
+                    llVersion, llBinVersion: linglongBinVersion, detailMsg, 
+                    osVersion, repoName: defaultRepoName, visitorId
+                });
             }
             // 延时1000毫秒进入
             await new Promise(resolve => setTimeout(resolve, 1000));
@@ -224,31 +214,27 @@ const startEnvCheck = () => {
 onMounted(async () => {
     // 设置ipc监听器
     ipcRenderer.on('update-message', updateMessage);
-    // 开启系统参数中的网络标识
-    systemConfigStore.changeNetworkRunStatus(true);
     // 获取指纹码
     const result = await (await FingerprintJS.load()).get();
     let visitorId = result.visitorId
     systemConfigStore.changeVisitorId(visitorId);
     // 获取客户端ip
     ipcRenderer.once('fetchClientIP-result', (_event: any, res: any) => {
-        const clientIP = res.data.query || '';
-        systemConfigStore.changeClientIP(clientIP)
+        systemConfigStore.changeClientIp(res.data.query || '');
     });
     ipcRenderer.send('fetchClientIP');
     // 获取分类列表
-    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     ipcRenderer.once('categories-result', (_event: any, res: any) => {
         const categories = [{ "categoryId": "", "categoryName": "全部程序" }] as categoryItem[];
         if (res.code == 200) {
             const categoriesByIpc = (res.data as categoryItem[]).map(({ categoryId, categoryName }) => ({ categoryId, categoryName }));
             categories.push(...categoriesByIpc);
         } else {
-            systemConfigStore.changeNetworkRunStatus(false);
             ipcRenderer.send('logger', 'error', "获取分类列表的接口状态异常...");
         }
         localStorage.setItem('categories', JSON.stringify(categories));
     })
+    ipcRenderer.send('ipc-categories', { url: import.meta.env.VITE_SERVER_URL });
     // 判断是否是开发模式，跳出版本检测
     if (process.env.NODE_ENV != "development" && systemConfigStore.autoCheckUpdate) {
         message.value = "正在检测商店版本号...";

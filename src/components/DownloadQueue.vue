@@ -44,7 +44,7 @@ const formatName = (row: any) => row.zhName ? row.zhName : row.name;
 const formatVersion = (row: any) => row.newVersion ? row.newVersion : row.version;
 // 安装进度展示
 const formatSchedule = (row: any) => {
-    if (compareVersions(systemConfigStore.linglongBinVersion, '1.5.0') < 0) {
+    if (compareVersions(systemConfigStore.llVersion, '1.5.0') < 0) {
         return "-";
     }
     return row.schedule !== '-' ? row.schedule : '等待中...';

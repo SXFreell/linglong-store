@@ -19,12 +19,10 @@ export const reflushInstalledItems = () => {
             if (stdout) {
                 let { addedItems, removedItems} = await installedItemsStore.initInstalledItems(stdout);
                 if (addedItems.length > 0 || removedItems.length > 0) {
+                    const {visitorId, clientIp} = systemConfigStore;
                     let params = {
                         url: `${import.meta.env.VITE_SERVER_URL}/app/saveInstalledRecord`,
-                        visitorId: systemConfigStore.visitorId,
-                        clientIp: systemConfigStore.clientIP,
-                        addedItems: addedItems, 
-                        removedItems: removedItems
+                        visitorId, clientIp, addedItems, removedItems
                     };
                     ipcRenderer.send('visit', JSON.parse(JSON.stringify(params)));
                 }

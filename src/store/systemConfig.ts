@@ -17,8 +17,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         isShowBaseService: ref(false),
         // 自动检测更新
         autoCheckUpdate: ref(true),
-        // 网络运行状态
-        networkRunStatus: ref(true),
         // 当前收录玲珑程序数量
         linglongCount: ref(0),
         // linglong-bin的包版本号
@@ -30,7 +28,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         // 系统版本
         osVersion: ref(''),
         // 客户端ip地址
-        clientIP: ref(''),
+        clientIp: ref(''),
     }),
     getters: {
         getSystemConfigInfo: (state) => {
@@ -39,14 +37,13 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',sourceUrl:' + JSON.stringify(state.sourceUrl) 
             + ',isShowBaseService:' + state.isShowBaseService 
             + ',autoCheckUpdate:' + state.autoCheckUpdate
-            + ',networkRunStatus:' + state.networkRunStatus
             + ',linglongCount:' + state.linglongCount
             + ',linglongBinVersion:' + state.linglongBinVersion
             + ',defaultRepoName:' + state.defaultRepoName
             + ',visitorId:' + state.visitorId
             + ',detailMsg:' + state.detailMsg
             + ',osVersion:' + state.osVersion
-            + ',clientIP:' + state.clientIP
+            + ',clientIp:' + state.clientIp
         },
     },
     actions: {
@@ -59,6 +56,11 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeLlVersion(llVersion: string){
             const that = this;
             that.llVersion = llVersion;
+        },
+        // 修改默认仓库名称
+        changeDefaultRepoName(defaultRepoName: string){
+            const that = this;
+            that.defaultRepoName = defaultRepoName;
         },
         // 修改玲珑源地址
         changeSourceUrl(inSourceUrl: Record<string, any>[]){
@@ -75,12 +77,7 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             const that = this;
             that.autoCheckUpdate = autoCheckUpdate;
         },
-        // 修改网络运行状态
-        changeNetworkRunStatus(networkRunStatus: boolean){
-            const that = this;
-            that.networkRunStatus = networkRunStatus;
-        },
-        // 修改网络运行状态
+        // 修改当前收录玲珑程序数量
         changeLinglongCount(linglongCount: number){
             const that = this;
             that.linglongCount = linglongCount;
@@ -89,11 +86,6 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeLinglongBinVersion(linglongBinVersion: string){
             const that = this;
             that.linglongBinVersion = linglongBinVersion;
-        },
-        // 修改默认仓库名称
-        changeDefaultRepoName(defaultRepoName: string){
-            const that = this;
-            that.defaultRepoName = defaultRepoName;
         },
         // 修改指纹码
         changeVisitorId(visitorId: string){
@@ -111,9 +103,9 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             that.osVersion = osVersion;
         },
         // 修改客户端ip
-        changeClientIP(clientIP: string){
+        changeClientIp(clientIp: string){
             const that = this;
-            that.clientIP = clientIP;
+            that.clientIp = clientIp;
         },
     },
     persist: true
