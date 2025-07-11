@@ -36,7 +36,7 @@
 import router from '@/router';
 import defaultImage from '@/assets/logo.svg';
 import { ipcRenderer } from 'electron';
-import { ElNotification, ElMessage } from 'element-plus'
+import { ElNotification, ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, ref } from 'vue'
 import { InstalledEntity } from '@/interface';
 import { StartLoading } from '@/util/ReflushLoading';
@@ -95,11 +95,21 @@ const openDetails = () => {
 }
 // 按钮点击操作事件
 const removeApp = (item: InstalledEntity) => {
-    StartLoading(item);  // 启动按钮的加载状态
-    // 发送操作命令
-    const plainItem = JSON.parse(JSON.stringify(item));
-    plainItem.command = `ll-cli uninstall ${item.appId}/${item.version}`;
-    ipcRenderer.send('linyaps-uninstall', plainItem);
+    // 弹框确认
+    ElMessageBox.confirm('确定要卸载吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+    }).then(() => {
+        StartLoading(item);  // 启动按钮的加载状态
+        // 发送操作命令
+        const plainItem = JSON.parse(JSON.stringify(item));
+        plainItem.command = `ll-cli uninstall ${item.appId}/${item.version}`;
+        ipcRenderer.send('linyaps-uninstall', plainItem);
+    }).catch(() => {
+        // 取消卸载
+        ipcRenderer.send('logger', 'info', `取消卸载${item.appId}/${item.version}`);
+    });
 };
 // 运行按钮(发送操作命令,并弹出提示框)
 const handleRunApp = (item: InstalledEntity) => {
