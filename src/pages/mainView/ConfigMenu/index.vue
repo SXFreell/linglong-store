@@ -3,10 +3,18 @@
     <div>
       <li><a class="title">基础设置</a></li>
       <div style="margin-left: 30px;">
-        <el-checkbox v-model="autoCheckUpdate" size="large"
-          @change="systemConfigStore.changeAutoCheckUpdate(autoCheckUpdate)">
-          启动App自动检测商店版本
-        </el-checkbox>
+        <el-tooltip placement="top" effect="dark" content="是否启动App自动检测商店版本(默认是启动)">
+          <el-checkbox v-model="autoCheckUpdate" size="large"
+            @change="systemConfigStore.changeAutoCheckUpdate(autoCheckUpdate)">
+            启动App自动检测商店版本
+          </el-checkbox>
+        </el-tooltip>
+        <el-tooltip placement="top" effect="dark" content="点击右上角退出程序时弹框是否显示(默认记住上次选择)">
+          <el-checkbox v-model="rememberCloseDialog" size="large" style="margin-left: 15px;"
+            @change="systemConfigStore.changeRememberCloseDialog(rememberCloseDialog)">
+            关闭窗口确认弹窗
+          </el-checkbox>
+        </el-tooltip>
       </div>
       <hr>
     </div>
@@ -22,10 +30,12 @@
     <div>
       <li><a class="title">更新程序</a></li>
       <div style="margin-left: 30px;">
-        <el-checkbox v-model="isShowUpdateTip" size="large"
-          @change="systemConfigStore.changeIsShowUpdateTip(isShowUpdateTip)">
-          启动应用更新提醒
-        </el-checkbox>
+        <el-tooltip placement="top" effect="dark" content="是否显示应用更新提醒(其中包括系统更新提醒和左侧更新菜单的右上角数量角标提醒)">
+          <el-checkbox v-model="isShowUpdateTip" size="large"
+            @change="systemConfigStore.changeIsShowUpdateTip(isShowUpdateTip)">
+            启动应用更新提醒
+          </el-checkbox>
+        </el-tooltip>
       </div>
       <hr>
     </div>
@@ -49,7 +59,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
+import { onMounted, ref, watch } from "vue";
 import { ipcRenderer } from "electron";
 import { ElNotification } from 'element-plus'
 import { compareVersions } from '@/util/checkVersion';
@@ -69,6 +79,8 @@ let sourceUrl = ref<Record<string, any>>();
 let isShowBaseService = ref(false);
 // 清除按钮状态
 let clearBtnStatus = ref(false);
+// 退出确认弹窗
+let rememberCloseDialog = ref(false);
 
 // 清除无用组件
 const pruneLinyaps = () => {
@@ -85,9 +97,15 @@ const pruneLinyaps = () => {
   })
 }
 
+watch(() => systemConfigStore.rememberCloseDialog, (val) => {
+  rememberCloseDialog.value = val;
+});
+
 // 页面启动时加载
 onMounted(() => {
   autoCheckUpdate.value = systemConfigStore.autoCheckUpdate;  // 是否自动检测更新
+  isShowUpdateTip.value = systemConfigStore.isShowUpdateTip;  // 是否显示应用更新提醒
+  rememberCloseDialog.value = systemConfigStore.rememberCloseDialog;  // 是否显示应用更新提醒
   defaultRepo.value = systemConfigStore.defaultRepoName;  // 默认仓库
   // 仓库源地址
   let rawSourceUrl = systemConfigStore.sourceUrl;

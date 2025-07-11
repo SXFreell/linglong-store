@@ -8,15 +8,10 @@ import { join } from "node:path";
 
 /**
  * 主窗口对象所有涉及的渲染线程和主线程之间的交互
- * @param win 主窗口对象
+ * @param mainWin 主窗口对象
+ * @param otherWin 列表窗口对象
  */
-const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
-
-    /* ****************** 获取系统版本号 ******************* */
-    ipcMain.on('app-version', (event) => {
-        const appVersion = app.getVersion();
-        event.sender.send('app-version-result', appVersion);
-    })
+const IpcHandler = (mainWin: BrowserWindow, otherWin: BrowserWindow) => {
     
     /* ********** 执行自动化安装玲珑环境的脚本文件 ********** */
     ipcMain.on("to_install_linglong", async (_event, url: string) => {
@@ -61,7 +56,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             // fs.unlinkSync(scriptPath); // 可选：执行完毕后删除脚本文件
             // app.relaunch(); // 重新启动应用
             // app.exit(); // 退出当前应用实例
-            win?.destroy();
+            mainWin?.destroy();
             otherWin?.destroy();
             app.quit();
         });
@@ -71,7 +66,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("uname-a", () => {
         exec("uname -a", (error, stdout, stderr) => {
             ipcLog.info('uname -a >>', { error, stdout, stderr });
-            win.webContents.send("uname-a-result", { error, stdout, stderr });
+            mainWin.webContents.send("uname-a-result", { error, stdout, stderr });
         });
     });
 
@@ -79,7 +74,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("uname-m", () => {
         exec("uname -m", (error, stdout, stderr) => {
             ipcLog.info('uname -m >>', { error, stdout, stderr });
-            win.webContents.send("uname-m-result", { error, stdout, stderr });
+            mainWin.webContents.send("uname-m-result", { error, stdout, stderr });
         });
     });
 
@@ -87,7 +82,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("dpkg-linyaps", () => {
         exec("dpkg -l | grep linglong", (error, stdout, stderr) => {
             ipcLog.info('dpkg -l | grep linglong >>', { error, stdout, stderr });
-            win.webContents.send("dpkg-linyaps-result", { error, stdout, stderr });
+            mainWin.webContents.send("dpkg-linyaps-result", { error, stdout, stderr });
         });
     });
 
@@ -95,7 +90,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("apt-linyaps-bin", () => {
         exec("apt-cache policy linglong-bin", (error, stdout, stderr) => {
             ipcLog.info('apt-cache policy linglong-bin >>', { error, stdout, stderr });
-            win.webContents.send("apt-linyaps-bin-result", { error, stdout, stderr });
+            mainWin.webContents.send("apt-linyaps-bin-result", { error, stdout, stderr });
         });
     });
 
@@ -103,7 +98,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-exist", () => {
         exec("ll-cli --help", (error, stdout, stderr) => {
             ipcLog.info('ll-cli --help >>', { error, stdout, stderr });
-            win.webContents.send("linyaps-exist-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-exist-result", { error, stdout, stderr });
         });
     });
 
@@ -169,7 +164,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             ipcLog.info('linyaps-repo >>', JSON.parse(JSON.stringify(stdout)));
             const {defaultRepoName, repos} = stdout;
             let errMes = (!defaultRepoName || repos.length < 1) ? "未配置玲珑源" : '';
-            win.webContents.send("linyaps-repo-result", { error: null, stdout, stderr: errMes });
+            mainWin.webContents.send("linyaps-repo-result", { error: null, stdout, stderr: errMes });
         }
     });
 
@@ -188,7 +183,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
                     version = match ? match[1] : '';
                 }
                 if (version) { // 解析stdout 成功，直接发送到渲染进程
-                    win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                    mainWin.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
                 } else { // 解析stdout 失败，尝试再执行旧版命令
                     exec("ll-cli --version", (error, stdout, stderr) => {
                         ipcLog.info('stdout 为空，尝试再执行旧版命令 ll-cli --version >>', { error, stdout, stderr });
@@ -198,7 +193,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
                             const match = out.match(/(\d+\.\d+\.\d+)/);
                             version = match ? match[1] : '';
                         }
-                        win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                        mainWin.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
                     }); 
                 }
             } else { // stdout 为空，尝试再执行旧版命令
@@ -210,10 +205,10 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
                         const match = out.match(/(\d+\.\d+\.\d+)/);
                         version = match ? match[1] : '';
                     }
-                    win.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
+                    mainWin.webContents.send("linyaps-version-result", { error, stdout : version, stderr });
                 });
             }
-            win.webContents.send("linyaps-version-result", { error, stdout : "", stderr });
+            mainWin.webContents.send("linyaps-version-result", { error, stdout : "", stderr });
         });
     });
 
@@ -221,7 +216,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-list", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
-            win.webContents.send("linyaps-list-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-list-result", { error, stdout, stderr });
         });
     });
 
@@ -229,7 +224,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-search", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
-            win.webContents.send("linyaps-search-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-search-result", { error, stdout, stderr });
         });
     });
 
@@ -237,7 +232,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-update", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`${params.command} >> `, { error, stdout: stdout ? JSON.parse(stdout).length : 0, stderr });
-            win.webContents.send("linyaps-update-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-update-result", { error, stdout, stderr });
         });
     });
 
@@ -261,26 +256,26 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             ipcLog.info(`linyaps-install stdout: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-install-result`, { code: 'stdout', params, result });
+            mainWin.webContents.send(`linyaps-install-result`, { code: 'stdout', params, result });
         });
         // 捕获标准错误
         currentProcess.stderr.on("data", (data) => {
             ipcLog.error(`linyaps-install stderr: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-install-result`, { code: 'stderr', params, result });
+            mainWin.webContents.send(`linyaps-install-result`, { code: 'stderr', params, result });
         });
         // 捕获错误事件
         currentProcess.on('error', (data) => {
             ipcLog.error(`linyaps-install error: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-install-result`, { code: 'error', params, result });
+            mainWin.webContents.send(`linyaps-install-result`, { code: 'error', params, result });
         });
         // 子进程退出
         currentProcess.on("close", (code) => {
             ipcLog.info(`linyaps-install child process exited with code ${code}`);
-            win.webContents.send(`linyaps-install-result`, { code: 'close', params, result: code });
+            mainWin.webContents.send(`linyaps-install-result`, { code: 'close', params, result: code });
         });
     });
 
@@ -289,14 +284,14 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info('linyaps-uninstall：：error:', error, ' | stdout:', stdout, ' | stderr:', stderr);
             if (stderr) {
-                win.webContents.send("linyaps-uninstall-result", { code: 'stderr', params, result: stderr });
+                mainWin.webContents.send("linyaps-uninstall-result", { code: 'stderr', params, result: stderr });
                 return;
             }
             if (error) {
-                win.webContents.send("linyaps-uninstall-result", { code: 'error', params, result: error.message });
+                mainWin.webContents.send("linyaps-uninstall-result", { code: 'error', params, result: error.message });
                 return;
             }
-            win.webContents.send("linyaps-uninstall-result", { code: 'stdout', params, result: stdout });
+            mainWin.webContents.send("linyaps-uninstall-result", { code: 'stdout', params, result: stdout });
         });
     });
 
@@ -304,7 +299,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-prune", () => {
         exec('ll-cli prune', (error, stdout, stderr) => {
             ipcLog.info(`linyaps-prune >> `, { error, stdout, stderr });
-            win.webContents.send("linyaps-prune-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-prune-result", { error, stdout, stderr });
         });
     });
 
@@ -317,26 +312,26 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             ipcLog.info(`linyaps-run stdout: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-run-result`, { code: 'stdout', params, result });
+            mainWin.webContents.send(`linyaps-run-result`, { code: 'stdout', params, result });
         });
         // 捕获标准错误
         currentProcess.stderr.on("data", (data) => {
             ipcLog.error(`linyaps-run stderr: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-run-result`, { code: 'stderr', params, result });
+            mainWin.webContents.send(`linyaps-run-result`, { code: 'stderr', params, result });
         });
         // 捕获错误事件
         currentProcess.on('error', (data) => {
             ipcLog.error(`linyaps-run error: ${data}`);
             // 使用 stripAnsi 去除 ANSI 转义序列
             let result = stripAnsi(data.toString());
-            win.webContents.send(`linyaps-run-result`, { code: 'error', params, result });
+            mainWin.webContents.send(`linyaps-run-result`, { code: 'error', params, result });
         });
         // 子进程退出
         currentProcess.on("close", (code) => {
             ipcLog.info(`linyaps-run child process exited with code ${code}`);
-            win.webContents.send(`linyaps-run-result`, { code: 'close', params, result: code });
+            mainWin.webContents.send(`linyaps-run-result`, { code: 'close', params, result: code });
         });
     });
 
@@ -344,7 +339,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-ps", () => {
         exec('ll-cli --json ps', (error, stdout, stderr) => {
             ipcLog.info(`linyaps-ps >> `, { error, stdout, stderr });
-            win.webContents.send("linyaps-ps-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-ps-result", { error, stdout, stderr });
         });
     });
 
@@ -352,7 +347,7 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
     ipcMain.on("linyaps-kill", (_event, params) => {
         exec(params.command, (error, stdout, stderr) => {
             ipcLog.info(`linyaps-kill >> `, { error, stdout, stderr });
-            win.webContents.send("linyaps-kill-result", { error, stdout, stderr });
+            mainWin.webContents.send("linyaps-kill-result", { error, stdout, stderr });
         });
     });
 
@@ -362,15 +357,15 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         const installProcess = exec(params.command, { encoding: 'utf8' });
         installProcess.stdout.on('data', (data) => {
             ipcLog.info(`stdout: ${data}`);
-            win.webContents.send("kill-app-result", { code: 'stdout', param: params, result: data });
+            mainWin.webContents.send("kill-app-result", { code: 'stdout', param: params, result: data });
         })
         installProcess.stderr.on('data', (data) => {
             ipcLog.info(`stderr: ${data}`);
-            win.webContents.send("kill-app-result", { code: 'stderr', param: params, result: data });
+            mainWin.webContents.send("kill-app-result", { code: 'stderr', param: params, result: data });
         })
         installProcess.on('close', (code) => {
             ipcLog.info(`child process exited with code ${code}`);
-            win.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
+            mainWin.webContents.send("kill-app-result", { code: 'close', param: params, result: code });
         })
     });
 
@@ -414,16 +409,16 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         installProcess.stdout.on('data', (data) => {
             ipcLog.info(`stdout: ${data}`);
             let result = stripAnsi(data.toString());
-            win.webContents.send("linyapss-package-result", { code: 'stdout', params, result });
+            mainWin.webContents.send("linyapss-package-result", { code: 'stdout', params, result });
         })
         installProcess.stderr.on('data', (data) => {
             ipcLog.info(`stderr: ${data}`);
             let result = stripAnsi(data.toString());
-            win.webContents.send("linyapss-package-result", { code: 'stderr', params, result });
+            mainWin.webContents.send("linyapss-package-result", { code: 'stderr', params, result });
         })
         installProcess.on('close', (code) => {
             ipcLog.info(`child process exited with code ${code}`);
-            win.webContents.send("linyapss-package-result", { code: 'close', params, result: code });
+            mainWin.webContents.send("linyapss-package-result", { code: 'close', params, result: code });
         })
     });
 
@@ -437,11 +432,11 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             const code = response.data.code;
             const dataList = response.data;
             const result = { code: code, data: dataList };
-            win.webContents.send("fetchClientIP-result", result);
+            mainWin.webContents.send("fetchClientIP-result", result);
         }).catch(error => {
             const response = error.response;
             const result = { code: response.status, msg: response.data };
-            win.webContents.send("fetchClientIP-result", result);
+            mainWin.webContents.send("fetchClientIP-result", result);
         });
     });
 
@@ -452,11 +447,11 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
             const code = response.data.code;
             const dataList = response.data.data;
             const result = { code: code, data: dataList };
-            win.webContents.send("categories-result", result);
+            mainWin.webContents.send("categories-result", result);
         }).catch(error => {
             const response = error.response;
             const result = { code: response.status, msg: response.data };
-            win.webContents.send("categories-result", result);
+            mainWin.webContents.send("categories-result", result);
         });
     });
 
@@ -509,12 +504,29 @@ const IPCHandler = (win: BrowserWindow, otherWin: BrowserWindow) => {
         }
     })
     
-    // 监听渲染进程发送的退出消息
+    /* ************** 监听渲染进程发送的退出程序消息 *************** */
     ipcMain.on('app-quit', () => {
-        win?.destroy();
+        mainWin?.destroy();
         otherWin?.destroy();
         app.quit();
     });
+
+    /* ****************** 获取系统版本号 ******************* */
+    ipcMain.on('app-version', (event) => {
+        const appVersion = app.getVersion();
+        event.sender.send('app-version-result', appVersion);
+    })
+
+    /* ************** 监听渲染进程关闭事件的响应 *************** */
+    ipcMain.on('close-action', (_event, action) => {
+        if (action === 'minimize') {
+            // mainWin?.minimize();
+            mainWin?.hide();
+        } else if (action === 'quit') {
+            mainWin?.destroy();
+            app.quit();
+        }
+    });
 }
 
-export default IPCHandler;
+export default IpcHandler;

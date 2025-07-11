@@ -33,6 +33,10 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         isShowBaseService: ref(false),
         // 自动检测更新
         autoCheckUpdate: ref(true),
+        // 是否记住关闭窗口
+        rememberCloseDialog: ref(false),
+        // 关闭窗口记住上次操作
+        rememberLastAction: ref("minimize"),
     }),
     getters: {
         getSystemConfigInfo: (state) => {
@@ -50,6 +54,8 @@ export const useSystemConfigStore = defineStore('systemConfig', {
             + ',isShowUpdateTip:' + state.isShowUpdateTip
             + ',isShowBaseService:' + state.isShowBaseService 
             + ',autoCheckUpdate:' + state.autoCheckUpdate
+            + ',rememberCloseDialog:' + state.rememberCloseDialog
+            + ',rememberLastAction:' + state.rememberLastAction
         },
     },
     actions: {
@@ -122,6 +128,16 @@ export const useSystemConfigStore = defineStore('systemConfig', {
         changeAutoCheckUpdate(autoCheckUpdate: boolean){
             const that = this;
             that.autoCheckUpdate = autoCheckUpdate;
+        },
+        // 修改是否记住关闭窗口
+        changeRememberCloseDialog(rememberCloseDialog: boolean){
+            const that = this;
+            that.rememberCloseDialog = rememberCloseDialog;
+        },
+        // 修改关闭窗口记住上次操作
+        changeRememberLastAction(rememberLastAction: string){
+            const that = this;
+            that.rememberLastAction = rememberLastAction;
         },
     },
     persist: true

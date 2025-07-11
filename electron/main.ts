@@ -1,16 +1,14 @@
 import { app, BrowserWindow } from "electron";
-import { join } from "node:path";
 import { mainLog } from "./main-logger";
 import trayMenu from "./main-tray";
-import IPCHandler from "./main-ipc";
+import IpcHandler from "./main-ipc";
 import { mainWin, createMainWindow } from "./main-main-win";
 import { otherWin, createOtherWindow } from "./main-myapps-win";
 import { updateHandle } from "./electron-update";
 import { clearCacheFiles, handleCustomProtocol } from "./main-utils";
 
-process.env.DIST_ELECTRON = join(__dirname, '../dist-electron');
-process.env.DIST = join(__dirname, "../dist");
-process.env.PUBLIC = process.env.VITE_DEV_SERVER_URL ? join(process.env.DIST_ELECTRON, '../public') : process.env.DIST;
+// 关闭硬件加速
+// app.disableHardwareAcceleration();
 
 // 确保单实例
 if (app.requestSingleInstanceLock()) {
@@ -33,7 +31,7 @@ if (app.requestSingleInstanceLock()) {
     // createOtherWindow(); // 创建我的应用窗口
     createMainWindow(); // 创建商店主窗口
     trayMenu(mainWin, otherWin); // 加载托盘
-    IPCHandler(mainWin, otherWin); // 加载IPC服务
+    IpcHandler(mainWin, otherWin); // 加载IPC服务
     updateHandle(mainWin); // 自动更新
     // 处理首次启动时的协议调用
     mainLog.info('处理首次启动时的协议调用:', process.argv);

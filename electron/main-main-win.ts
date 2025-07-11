@@ -50,6 +50,9 @@ export function createMainWindow() {
   // 拦截窗口关闭操作，改为隐藏
   mainWin.on('close', (event) => {
     event.preventDefault()
-    mainWin?.hide()
+    // mainWin?.hide()
+    if (mainWin) {
+      mainWin.webContents.send('show-close-confirm');
+    }
   })
 }
