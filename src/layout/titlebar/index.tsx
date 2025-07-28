@@ -24,7 +24,7 @@ const Titlebar = () => {
     <div className={styles.titlebar} data-tauri-drag-region="true">
       <div className={styles.titlebarLeft}>
         <img src="/logo.svg" alt="logo" className={styles.logo} draggable={false} />
-        <span className={styles.title}>App Store</span>
+        <span className={styles.title}>如意玲珑应用商店</span>
       </div>
       <div className={styles.titlebarRight}>
         <span className={styles.title} onClick={handleMinimize}><IconMinus /></span>
