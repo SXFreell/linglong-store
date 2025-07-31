@@ -1,6 +1,7 @@
 import styles from "./index.module.scss";
 
 import menuList from "./components/menuList";
+import SpeedTool from "./components/speedTool";
 
 const Sidebar = ({ className }: { className: string }) => {
   return (
@@ -15,9 +16,7 @@ const Sidebar = ({ className }: { className: string }) => {
           ))
         }
       </div>
-      <div className="speedTool">
-        123
-      </div>
+      <SpeedTool />
     </div>
   )
 };
