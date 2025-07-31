@@ -1,0 +1,33 @@
+.speedTool {
+  flex: 0 0 7.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  font-size: 0.75rem;
+  color: #383838;
+  margin-left: -0.5rem;
+
+  .speedToolItem {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    
+    .speedToolItemIcon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .speedToolItemText {
+      display: flex;
+      flex-direction: column;
+
+      .speedToolItemTextValue {
+        color: #016FFD;
+      }
+    }
+  }
+}
