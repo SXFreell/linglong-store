@@ -1,5 +1,3 @@
-use serde::{Deserialize, Serialize};
-
 mod services;
 
 use services::network::{NetworkSpeed, get_network_speed as network_get_speed};
