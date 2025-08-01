@@ -1,13 +1,24 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { vitePluginForArco } from '@arco-plugins/vite-react'
+import eslint from 'vite-plugin-eslint2'
 
-// @ts-expect-error process is a nodejs global
 const host = process.env.TAURI_DEV_HOST;
 
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), vitePluginForArco()],
+  plugins: [
+    react(), 
+    vitePluginForArco(),
+    eslint({
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['node_modules', 'dist'],
+      cache: false, // 禁用缓存以确保实时检查
+      fix: false, // 开发时不自动修复，避免意外修改
+      emitWarning: true, // 在终端显示警告
+      emitError: true, // 在终端显示错误
+    })
+  ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
