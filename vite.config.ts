@@ -1,14 +1,14 @@
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
 import { vitePluginForArco } from '@arco-plugins/vite-react'
 import eslint from 'vite-plugin-eslint2'
 
-const host = process.env.TAURI_DEV_HOST;
+const host = process.env.TAURI_DEV_HOST
 
 // https://vitejs.dev/config/
-export default defineConfig(async () => ({
+export default defineConfig(async() => ({
   plugins: [
-    react(), 
+    react(),
     vitePluginForArco(),
     eslint({
       include: ['src/**/*.{ts,tsx}'],
@@ -17,7 +17,7 @@ export default defineConfig(async () => ({
       fix: false, // 开发时不自动修复，避免意外修改
       emitWarning: true, // 在终端显示警告
       emitError: true, // 在终端显示错误
-    })
+    }),
   ],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
@@ -31,14 +31,14 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-          protocol: "ws",
-          host,
-          port: 1421,
-        }
+        protocol: 'ws',
+        host,
+        port: 1421,
+      }
       : undefined,
     watch: {
       // 3. tell vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ['**/src-tauri/**'],
     },
   },
-}));
+}))
