@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import menuList from "./components/menuList";
 import SpeedTool from "./components/speedTool";
 
+import { Popover } from "@arco-design/web-react";
+import { Speed } from "@icon-park/react";
+
 const Sidebar = ({ className }: { className: string }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,7 +37,23 @@ const Sidebar = ({ className }: { className: string }) => {
           })
         }
       </div>
-      <SpeedTool />
+      <div className={styles.speedToolContainer}>
+        <div className={styles.speedTool}>
+          <SpeedTool />
+        </div>
+        <div className={styles.speedToolIcon}>
+          <Popover
+            trigger='click'
+            position='right'
+            unmountOnExit={false}
+            content={
+              <SpeedTool />
+            }
+          >
+            <Speed theme="outline" size="16" fill="#4E4E4E"/>
+          </Popover>
+        </div>
+      </div>
     </div>
   )
 };
