@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NetworkSpeed {
@@ -10,7 +10,7 @@ pub struct NetworkSpeed {
 }
 
 // 实时网速监控配置
-const MIN_SAMPLING_INTERVAL: f64 = 0.5;      // 最小采样间隔（秒）
+// const MIN_SAMPLING_INTERVAL: f64 = 0.5;      // 最小采样间隔（秒）
 const MAX_SAMPLING_INTERVAL: f64 = 60.0;     // 最大采样间隔（1分钟）
 
 // 基本异常值检测 - 仅过滤明显错误的数据
