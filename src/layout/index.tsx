@@ -14,9 +14,11 @@ const Layout = () => {
       <div className={styles.layoutContent}>
         <Sidebar className={styles.sider} />
         <div className={styles.content}>
-          <Suspense fallback={<Loading />}>
-            <Outlet />
-          </Suspense>
+          <div className={styles.contentInner}>
+            <Suspense fallback={<Loading />}>
+              <Outlet />
+            </Suspense>
+          </div>
         </div>
       </div>
     </div>
