@@ -4,9 +4,9 @@
   "version": "2.0.0",
   "identifier": "com.dongpl.linglong-store",
   "build": {
-    "beforeDevCommand": "pnpm dev",
+    "beforeDevCommand": "pnpm tauri:dev",
     "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "pnpm build",
+    "beforeBuildCommand": "pnpm tauri:build",
     "frontendDist": "../dist"
   },
   "app": {
