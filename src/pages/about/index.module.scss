@@ -1,0 +1,52 @@
+.about_app {
+    font-weight: 500;
+    font-size: 1.5rem;
+    color: #383838;
+    text-align: left;
+    margin-bottom: 1.66rem;
+
+}
+
+.app_info {
+    margin-bottom: 2.8rem;
+}
+
+.app_info,
+.version_info {
+
+
+    .des_name {
+        position: relative;
+
+    }
+
+    .des_name::before {
+        content: '';
+        position: absolute;
+        top: 0.35rem;
+        left: -0.5rem;
+        width: 0.38rem;
+        height: 0.8rem;
+        background: #016FFD;
+        border-radius: 0.3rem;
+    }
+}
+
+.feedback {
+    display: flex;
+
+    .feed,
+    .checkVersion {
+        // font-size: 1.25rem;
+        color: #016FFD;
+        line-height: 1.25rem;
+        text-align: left;
+        margin: 0 1rem 0 0.8rem;
+        cursor: pointer;
+    }
+
+    .feed {
+        display: flex;
+        align-items: center;
+    }
+}
