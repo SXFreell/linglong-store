@@ -1,3 +1,5 @@
+@import './Theme.scss';
+
 /* 全局样式 */
 // 重置默认样式
 * {
@@ -12,23 +14,16 @@
   line-height: 24px;
   font-weight: 400;
 
-  color: #0f0f0f;
-  background-color: #f6f6f6;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
 
-  // 定义全局变量
-  --primary-color: #1890ff;
-  --success-color: #52c41a;
-  --warning-color: #faad14;
-  --error-color: #f5222d;
-  --font-size-base: 14px;
-  --border-radius-base: 4px;
-  --transition-duration: 0.3s;
+html, body {
+  background-color: var(--fill-color-2);
+  color: var(--text-1);
 }
 
 // 响应式设计基础
@@ -42,7 +37,7 @@
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: #f5f5f5;
+  background-color: var(--fill-color-2);
 }
 
 .arco-icon {

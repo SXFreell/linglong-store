@@ -9,8 +9,8 @@
     -webkit-user-select: none;
     user-select: none;
     cursor: default;
-    background-color: #f5f5f5;
-    color: #383838;
+    background-color: var(--color-fill-2);
+    color: var(--text-color-1);
     padding: 0 1rem;
     .titlebarLeft {
         display: flex;
