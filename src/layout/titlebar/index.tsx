@@ -1,11 +1,9 @@
 import styles from './index.module.scss'
 
 import { useEffect, useState } from 'react'
-import { IconFullscreen, IconFullscreenExit, IconMinus, IconClose } from '@arco-design/web-react/icon'
+import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-
 const Titlebar = () => {
-
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
 
@@ -13,6 +11,7 @@ const Titlebar = () => {
     try {
       await appWindow.toggleMaximize()
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to toggle maximize:', error)
     }
   }
@@ -32,6 +31,7 @@ const Titlebar = () => {
     try {
       await appWindow.minimize()
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to minimize:', error)
     }
   }
@@ -40,6 +40,7 @@ const Titlebar = () => {
     try {
       await appWindow.close()
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.error('Failed to close:', error)
     }
   }
@@ -51,11 +52,11 @@ const Titlebar = () => {
         <span className={styles.title}>如意玲珑应用商店</span>
       </div>
       <div className={styles.titlebarRight}>
-        <span className={styles.title} onClick={handleMinimize}><IconMinus /></span>
+        <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>
         <span className={styles.title} onClick={handleFullscreen}>
-          {isMaximized ? <IconFullscreenExit /> : <IconFullscreen />}
+          {isMaximized ? <Copy /> : <Square />}
         </span>
-        <span className={styles.title} onClick={handleClose}><IconClose /></span>
+        <span className={styles.title} onClick={handleClose}><Close /></span>
       </div>
     </div>
   )
