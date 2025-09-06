@@ -1,0 +1,54 @@
+.setting {
+
+    .basic_setting,
+    .remove_setting {
+        margin: 0 0 2.8125rem 0.625rem;
+
+        .setting_name {
+            cursor: default;
+            position: relative;
+            font-size: 1rem;
+            color: var(--color-text-1);
+            font-weight: 500;
+            line-height: 1.5715;
+            margin-bottom: 16px;
+        }
+
+        .setting_name::before {
+            content: '';
+            position: absolute;
+            top: 0.375rem;
+            left: -0.5rem;
+            width: 0.375rem;
+            height: 0.8125rem;
+            background: #016FFD;
+            border-radius: 0.3125rem;
+        }
+
+        .setting_content {
+            display: flex;
+            align-items: center;
+            font-size: 0.875rem;
+
+            .content_item {
+                margin-right: 1rem;
+                display: flex;
+                align-items: center;
+
+                .item_label {
+
+                    margin-left: 0.875rem;
+                }
+
+            }
+
+            .clean_basic {
+                padding: 0.1rem 0.875rem;
+                color: #fff;
+                background: #016FFD;
+                border-radius: 0.2rem;
+                cursor: pointer;
+            }
+        }
+    }
+}
