@@ -1,5 +1,5 @@
 const Recommend = () => {
-  return <div>Recommend</div>;
-};
+  return <div>Recommend</div>
+}
 
-export default Recommend;
+export default Recommend

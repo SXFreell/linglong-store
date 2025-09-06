@@ -5,6 +5,7 @@ import Layout from '../layout'
 // 懒加载路由组件
 const Recommend = lazy(() => import('../pages/recommend'))
 const Ranking = lazy(() => import('../pages/ranking'))
+const About = lazy(() => import('../pages/about'))
 
 // 路由配置
 const router = createBrowserRouter([
@@ -19,6 +20,10 @@ const router = createBrowserRouter([
       {
         path: '/ranking',
         element: <Ranking />,
+      },
+      {
+        path: '/about',
+        element: <About />,
       },
     ],
   },
