@@ -15,7 +15,7 @@
     "build:pro": "cross-env NODE_ENV=pro tauri build",
     "preview": "vite preview",
     "tauri": "tauri",
-    "tauri:dev": "vite --mode dev",
+    "tauri:dev": "vite --mode ${NODE_ENV}",
     "tauri:build": "tsc && vite build --mode ${NODE_ENV}",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix"
