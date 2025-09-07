@@ -3,7 +3,7 @@
     height: 100vh;
     display: flex;
     flex-direction: column;
-    background-color: #F5F5F5;
+    background-color: var(--color-fill-2);
     .header {
         flex: 0 0 3.6rem;
         width: 100%;
@@ -25,7 +25,7 @@
             flex: 1;
             height: 100%;
             overflow: auto;
-            background-color: #FFF;
+            background-color: var(--color-bg-white);
             border-radius: 0.5rem 0 0 0;
         }
     }

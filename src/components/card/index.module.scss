@@ -1,24 +1,24 @@
 .box {
     width: 17.5rem;
     height: 6.75rem;
-    padding: 1.25rem 0.88rem;
+    padding: 1.25rem 0.875rem;
     display: flex;
     align-items: center;
     background: #F6F6F6;
-    border-radius: 0.5rem 0.5rem 0.5rem 0.5rem;
+    border-radius: 0.5rem;
     user-select: none;
     cursor: default;
 
     .soft_icon {
-        width: 4.19rem;
-        height: 4.19rem;
+        width: 4.25rem;
+        height: 4.25rem;
         margin-right: 1.5rem;
     }
 
     .soft_content {
         flex: 1;
         width: 0; // 设置width 为 0
-        height: 4.19rem;
+        height: 4.25rem;
         display: flex;
         flex-flow: column nowrap;
         justify-content: space-between;
@@ -35,7 +35,7 @@
         }
 
         .description {
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             color: #5F5B5B;
             text-align: left;
             white-space: nowrap;
@@ -46,8 +46,8 @@
 
         .version_container {
             position: relative;
-            height: 1.69rem;
-            font-size: 0.81rem;
+            height: 1.75rem;
+            font-size: 0.875rem;
             color: #5F5B5B;
             text-align: left;
 
@@ -65,9 +65,9 @@
                 transition: opacity 0.3s ease, transform 0.3s ease;
 
                 .btn {
-                    font-size: 0.88rem;
+                    font-size: 0.875rem;
                     width: 5.25rem;
-                    height: 1.69rem;
+                    height: 1.75rem;
                     background: #409EFF;
                 }
             }

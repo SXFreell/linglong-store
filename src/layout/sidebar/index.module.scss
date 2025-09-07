@@ -27,14 +27,14 @@
     overflow: hidden;
 
     &:hover {
-      background-color: rgba(0, 0, 0, 0.04);
+      background-color: var(--fill-color-3);
     }
 
     &.active {
-      background-color: #016FFD1A;
+      background-color: var(--primary-2);
       
       .menuItemText {
-        color: #016FFD;
+        color: var(--primary-6);
         font-weight: 500;
       }
     }
@@ -52,7 +52,6 @@
 
   .menuItemText {
     font-size: 0.875rem;
-    color: #4E4E4E;
     opacity: 1;
     transition: opacity 0.2s ease-in-out;
   }

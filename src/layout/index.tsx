@@ -5,7 +5,7 @@ import { Suspense } from 'react'
 
 import Titlebar from './titlebar'
 import Sidebar from './sidebar'
-import Loading from '../components/loading'
+import Loading from '../components/Loading'
 
 const Layout = () => {
   return (
