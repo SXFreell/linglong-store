@@ -1,0 +1,61 @@
+.applicationCard {
+  flex: 1;
+  background-color: var(--color-fill-1);
+  border-radius: 0.5rem;
+  display: flex;
+  border: 1px solid var(--color-fill-1);
+  min-width: 18rem;
+  padding: 0.5rem 1rem;
+  height: 6rem;
+  cursor: pointer;
+  align-items: center;
+  &:hover {
+    border: 1px solid rgb(var(--primary-3));
+  }
+  .icon {
+    width: 4rem;
+    height: 4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 1rem;
+    background-color: antiquewhite;
+    border-radius: 0.25rem;
+    img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 0.25rem;
+    }
+  }
+  .content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+
+    .title {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--color-text-1);
+      :global(.arco-typography) {
+        margin: 0;
+      }
+    }
+
+    .description {
+      font-size: 0.75rem;
+      color: var(--color-text-2);
+      :global(.arco-typography) {
+        margin: 0.25rem 0;
+      }
+    }
+  }
+  .actions {
+    display: flex;
+    flex-direction: column;
+    margin-left: 0.5rem;
+    .installButton {
+      border-radius: 0.25rem;
+    }
+  }
+}

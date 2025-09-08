@@ -1,4 +1,4 @@
-import { Star, Ranking, Info, SettingTwo, Hourglass } from '@icon-park/react'
+import { Star, Ranking, Info, SettingTwo, Hourglass, ApplicationOne } from '@icon-park/react'
 
 export default [
   {
@@ -14,6 +14,13 @@ export default [
     icon: <Ranking theme="outline" size="16" fill="var(--color-text-1)"/>,
     activeIcon: <Ranking theme="filled" size="16" fill="rgb(var(--primary-6))"/>,
     index: 1,
+  },
+  {
+    menuName: '全部应用',
+    menuPath: '/allapps',
+    icon: <ApplicationOne theme="outline" size="16" fill="var(--color-text-1)"/>,
+    activeIcon: <ApplicationOne theme="filled" size="16" fill="rgb(var(--primary-6))"/>,
+    index: 2,
   },
   {
     menuName: '玲珑进程',
