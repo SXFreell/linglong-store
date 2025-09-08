@@ -1,138 +1,14 @@
 :root {
   html, body {
-    /* 数值变量 */
-    --num-primary-1: 232, 246, 255;
-    --num-primary-2: 186, 225, 255;
-    --num-primary-3: 139, 201, 254;
-    --num-primary-4: 93, 173, 254;
-    --num-primary-5: 47, 143, 253;
-    --num-primary-6: 1, 111, 253;
-    --num-primary-7: 1, 84, 209;
-    --num-primary-8: 0, 61, 165;
-    --num-primary-9: 0, 40, 121;
-    --num-primary-10: 0, 23, 77;
-
-    --num-warning-1: 255, 247, 232;
-    --num-warning-2: 255, 228, 186;
-    --num-warning-3: 255, 207, 139;
-    --num-warning-4: 255, 182, 93;
-    --num-warning-5: 255, 154, 46;
-    --num-warning-6: 255, 125, 0;
-    --num-warning-7: 210, 95, 0;
-    --num-warning-8: 166, 69, 0;
-    --num-warning-9: 121, 46, 0;
-    --num-warning-10: 77, 27, 0;
-
-    --num-success-1: 232, 255, 234;
-    --num-success-2: 175, 240, 181;
-    --num-success-3: 123, 225, 136;
-    --num-success-4: 76, 210, 99;
-    --num-success-5: 35, 195, 67;
-    --num-success-6: 0, 180, 42;
-    --num-success-7: 0, 154, 41;
-    --num-success-8: 0, 128, 38;
-    --num-success-9: 0, 102, 34;
-    --num-success-10: 0, 77, 28;
-
-    --num-danger-1: 255, 236, 232;
-    --num-danger-2: 253, 205, 197;
-    --num-danger-3: 251, 172, 163;
-    --num-danger-4: 249, 137, 129;
-    --num-danger-5: 247, 101, 96;
-    --num-danger-6: 245, 63, 63;
-    --num-danger-7: 203, 39, 45;
-    --num-danger-8: 161, 21, 30;
-    --num-danger-9: 119, 8, 19;
-    --num-danger-10: 77, 0, 10;
-
-    --num-color-border-1: 242, 243, 245;
-    --num-color-border-2: 229, 230, 235;
-    --num-color-border-3: 201, 205, 212;
-    --num-color-border-4: 134, 144, 156;
-
-    --num-color-bg-white: 255, 255, 255;
-    --num-color-fill-1: 247, 248, 250;
-    --num-color-fill-2: 242, 243, 245;
-    --num-color-fill-3: 229, 230, 235;
-    --num-color-fill-4: 201, 205, 212;
-
-    --num-text-1: 29, 33, 41;
-    --num-text-2: 78, 89, 105;
-    --num-text-3: 134, 144, 156;
-    --num-text-4: 201, 205, 212;
-    --num-color-white: 255, 255, 255;
-
-    --num-color-bg-1: 255, 255, 255;
-    --num-color-bg-2: 255, 255, 255;
-    --num-color-bg-3: 255, 255, 255;
-    --num-color-bg-4: 255, 255, 255;
-    --num-color-bg-5: 255, 255, 255;
-
-    --primary-1: rgb(var(--num-primary-1));
-    --primary-2: rgb(var(--num-primary-2));
-    --primary-3: rgb(var(--num-primary-3));
-    --primary-4: rgb(var(--num-primary-4));
-    --primary-5: rgb(var(--num-primary-5));
-    --primary-6: rgb(var(--num-primary-6));
-    --primary-7: rgb(var(--num-primary-7));
-    --primary-8: rgb(var(--num-primary-8));
-    --primary-9: rgb(var(--num-primary-9));
-    --primary-10: rgb(var(--num-primary-10));
-
-    --warning-1: rgb(var(--num-warning-1));
-    --warning-2: rgb(var(--num-warning-2));
-    --warning-3: rgb(var(--num-warning-3));
-    --warning-4: rgb(var(--num-warning-4));
-    --warning-5: rgb(var(--num-warning-5));
-    --warning-6: rgb(var(--num-warning-6));
-    --warning-7: rgb(var(--num-warning-7));
-    --warning-8: rgb(var(--num-warning-8));
-    --warning-9: rgb(var(--num-warning-9));
-    --warning-10: rgb(var(--num-warning-10));
-
-    --success-1: rgb(var(--num-success-1));
-    --success-2: rgb(var(--num-success-2));
-    --success-3: rgb(var(--num-success-3));
-    --success-4: rgb(var(--num-success-4));
-    --success-5: rgb(var(--num-success-5));
-    --success-6: rgb(var(--num-success-6));
-    --success-7: rgb(var(--num-success-7));
-    --success-8: rgb(var(--num-success-8));
-    --success-9: rgb(var(--num-success-9));
-    --success-10: rgb(var(--num-success-10));
-
-    --danger-1: rgb(var(--num-danger-1));
-    --danger-2: rgb(var(--num-danger-2));
-    --danger-3: rgb(var(--num-danger-3));
-    --danger-4: rgb(var(--num-danger-4));
-    --danger-5: rgb(var(--num-danger-5));
-    --danger-6: rgb(var(--num-danger-6));
-    --danger-7: rgb(var(--num-danger-7));
-    --danger-8: rgb(var(--num-danger-8));
-    --danger-9: rgb(var(--num-danger-9));
-    --danger-10: rgb(var(--num-danger-10));
-
-    --color-border-1: rgb(var(--num-color-border-1));
-    --color-border-2: rgb(var(--num-color-border-2));
-    --color-border-3: rgb(var(--num-color-border-3));
-    --color-border-4: rgb(var(--num-color-border-4));
-
-    --color-bg-white: rgb(var(--num-color-bg-white));
-    --color-fill-1: rgb(var(--num-color-fill-1));
-    --color-fill-2: rgb(var(--num-color-fill-2));
-    --color-fill-3: rgb(var(--num-color-fill-3));
-    --color-fill-4: rgb(var(--num-color-fill-4));
-
-    --text-1: rgb(var(--num-text-1));
-    --text-2: rgb(var(--num-text-2));
-    --text-3: rgb(var(--num-text-3));
-    --text-4: rgb(var(--num-text-4));
-    --color-white: rgb(var(--num-color-white));
-
-    --color-bg-1: rgb(var(--num-color-bg-1));
-    --color-bg-2: rgb(var(--num-color-bg-2));
-    --color-bg-3: rgb(var(--num-color-bg-3));
-    --color-bg-4: rgb(var(--num-color-bg-4));
-    --color-bg-5: rgb(var(--num-color-bg-5));
+    --primary-1: 232, 246, 255;
+    --primary-2: 186, 225, 255;
+    --primary-3: 139, 201, 254;
+    --primary-4: 93, 173, 254;
+    --primary-5: 47, 143, 253;
+    --primary-6: 1, 111, 253;
+    --primary-7: 1, 84, 209;
+    --primary-8: 0, 61, 165;
+    --primary-9: 0, 40, 121;
+    --primary-10: 0, 23, 77;
   }
 }

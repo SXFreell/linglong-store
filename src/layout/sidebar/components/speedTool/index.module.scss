@@ -5,7 +5,7 @@
   align-items: center;
   justify-content: center;
   font-size: 0.75rem;
-  color: var(--text-1);
+  color: var(--color-text-1);
 
   .speedToolItem {
     display: flex;
@@ -24,7 +24,7 @@
       width: 4rem;
 
       .speedToolItemTextValue {
-        color: var(--primary-6);
+        color: rgb(var(--primary-6));
       }
     }
   }
