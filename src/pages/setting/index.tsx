@@ -4,15 +4,11 @@ import { useState } from 'react'
 const BasicSetting = ()=>{
   const [autoCheck, setAutoCheck] = useState(false)
   const [showBaseService, setShowBaseService] = useState(false)
-  const [mergeAppid, setMergeAppid] = useState(false)
   const autoCheckClick = ()=>{
     setAutoCheck(!autoCheck)
   }
   const showBaseServiceClick = ()=>{
     setShowBaseService(!showBaseService)
-  }
-  const mergeAppidClick = ()=>{
-    setMergeAppid(!mergeAppid)
   }
   const clearAbandonServiceClick = ()=>{
     console.log('清除废弃基础服务')
@@ -33,9 +29,6 @@ const BasicSetting = ()=>{
         <div className={styles.setting_content}>
           <div className={styles.content_item}>
             <Switch size='small' checked={showBaseService} defaultChecked={showBaseService} onChange={showBaseServiceClick}/><span className={styles.item_label}>显示基础运行服务</span>
-          </div>
-          <div className={styles.content_item}>
-            <Switch size='small' checked={mergeAppid} defaultChecked={mergeAppid} onChange={mergeAppidClick}/><span className={styles.item_label}>同appid程序合并</span>
           </div>
           <p className={styles.clean_basic} onClick={clearAbandonServiceClick}>清除废弃基础服务</p>
         </div>
