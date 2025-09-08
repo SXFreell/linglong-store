@@ -31,10 +31,10 @@
     }
 
     &.active {
-      background-color: var(--primary-2);
+      background-color: rgb(var(--primary-2));
       
       .menuItemText {
-        color: var(--primary-6);
+        color: rgb(var(--primary-6));
         font-weight: 500;
       }
     }

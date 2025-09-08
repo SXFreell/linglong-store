@@ -50,7 +50,7 @@ const Sidebar = ({ className }: { className: string }) => {
               <SpeedTool />
             }
           >
-            <Speed theme="outline" size="16" fill="var(--text-1)"/>
+            <Speed theme="outline" size="16" fill="var(--color-text-1)"/>
           </Popover>
         </div>
       </div>
