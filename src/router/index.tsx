@@ -5,6 +5,7 @@ import Layout from '../layout'
 // 懒加载路由组件
 const Recommend = lazy(() => import('../pages/recommend'))
 const Ranking = lazy(() => import('../pages/ranking'))
+const AllApps = lazy(() => import('../pages/allApps'))
 const About = lazy(() => import('../pages/about'))
 const Setting = lazy(() => import('../pages/setting'))
 const Process = lazy(()=>import('../pages/process'))
@@ -22,6 +23,10 @@ const router = createBrowserRouter([
       {
         path: '/ranking',
         element: <Ranking />,
+      },
+      {
+        path: '/allapps',
+        element: <AllApps />,
       },
       {
         path: '/about',
