@@ -7,6 +7,7 @@ const Recommend = lazy(() => import('../pages/recommend'))
 const Ranking = lazy(() => import('../pages/ranking'))
 const About = lazy(() => import('../pages/about'))
 const Setting = lazy(() => import('../pages/setting'))
+const Process = lazy(()=>import('../pages/process'))
 
 // 路由配置
 const router = createBrowserRouter([
@@ -29,6 +30,10 @@ const router = createBrowserRouter([
       {
         path: '/setting',
         element: <Setting />,
+      },
+      {
+        path: '/process',
+        element: <Process />,
       },
     ],
   },

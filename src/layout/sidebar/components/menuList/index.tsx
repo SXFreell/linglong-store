@@ -1,4 +1,4 @@
-import { Star, Ranking, Info, SettingTwo } from '@icon-park/react'
+import { Star, Ranking, Info, SettingTwo, Hourglass } from '@icon-park/react'
 
 export default [
   {
@@ -14,6 +14,13 @@ export default [
     icon: <Ranking theme="outline" size="16" fill="var(--text-1)"/>,
     activeIcon: <Ranking theme="filled" size="16" fill="var(--primary-6)"/>,
     index: 1,
+  },
+  {
+    menuName: '玲珑进程',
+    menuPath: '/process',
+    icon: <Hourglass theme="outline" size="16" fill="var(--text-1)"/>,
+    activeIcon: <Hourglass theme="filled" size="16" fill="var(--primary-6)"/>,
+    index: 6,
   },
   {
     menuName: '基础设置',
