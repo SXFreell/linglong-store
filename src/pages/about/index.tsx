@@ -47,7 +47,7 @@ const AboutSoft = () => {
 
   }
   return (
-    <div>
+    <div style={{ padding: 20 }}>
       <p className={styles.about_app}>关于程序</p>
       <div className={styles.app_info}>
         <Descriptions

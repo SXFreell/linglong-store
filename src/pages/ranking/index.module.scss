@@ -1,0 +1,21 @@
+.appBox {
+    padding-top: 1rem;
+
+    .appList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+        gap: 16px;
+    }
+}
+
+.customTabs {
+    :global {
+        .arco-tabs-header-nav::before {
+            height: 0;
+        }
+
+        .arco-tabs-header-ink-inner {
+            border-radius: 1rem;
+        }
+    }
+}

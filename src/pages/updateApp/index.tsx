@@ -1,8 +1,9 @@
 import styles from './index.module.scss'
 import ApplicationCard from '@/components/ApplicationCard'
-const MyApplications = ()=>{
+const UpdateApp = ()=>{
   return <div style={{ padding: 20 }}>
-    <div className={styles.myApplicationList}>
+    <div className={styles.updateApplicationList}>
+      <ApplicationCard/>
       <ApplicationCard/>
       <ApplicationCard/>
       <ApplicationCard/>
@@ -10,4 +11,4 @@ const MyApplications = ()=>{
     </div>
   </div>
 }
-export default MyApplications
+export default UpdateApp
