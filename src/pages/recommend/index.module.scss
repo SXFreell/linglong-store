@@ -1,0 +1,35 @@
+.recommend {
+
+    .recommendHead {
+        width: 100%;
+    }
+
+    .recommendMain {
+        .tabBtn {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            margin-bottom: 2.5rem;
+
+            .btn {
+                font-size: 1rem;
+            }
+        }
+
+        .appMain {
+            .name {
+                font-weight: 500;
+                font-size: 1.25rem;
+                color: #383838;
+                text-align: left;
+            }
+
+            .appList {
+                margin-top: 1rem;
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+                gap: 16px;
+            }
+        }
+    }
+}
