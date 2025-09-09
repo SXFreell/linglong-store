@@ -3,3 +3,16 @@
   grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
   gap: 16px;
 }
+
+.tabBtn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-bottom: 2rem;
+
+
+  .btn {
+    font-size: 1rem;
+    margin-right: 0.75rem;
+  }
+}
