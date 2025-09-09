@@ -15,7 +15,7 @@ const BasicSetting = ()=>{
 
   }
   return (
-    <div className={styles.setting}>
+    <div className={styles.setting} style={{ padding: 20 }}>
       <div className={styles.basic_setting}>
         <p className={styles.setting_name}>基础设置</p>
         <div className={styles.setting_content}>

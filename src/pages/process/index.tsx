@@ -103,16 +103,18 @@ const Process = () => {
 
   }
   return (
-    <Table
-      columns={columns}
-      data={data}
-      hover
-      pagePosition='bottomCenter'
-      border={{
-        wrapper: true,
-        headerCell: true,
-      }}
-    />
+    <div style={{ padding: 20 }}>
+      <Table
+        columns={columns}
+        data={data}
+        hover
+        pagePosition='bottomCenter'
+        border={{
+          wrapper: true,
+          headerCell: true,
+        }}
+      />
+    </div>
   )
 }
 
