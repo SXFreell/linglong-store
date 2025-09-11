@@ -2,11 +2,14 @@ import styles from './index.module.scss'
 import { useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import searchIcon from '@/assets/icons/searchIcon.png'
+import searchIcon from '@/assets/icons/searchIcon.svg'
+import download from '@/assets/icons/download.svg'
+import downloadA from '@/assets/icons/downloadA.svg'
 const Titlebar = () => {
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
 
+  const [downloadStatus, setDownloadStatus] = useState(false)
   const handleFullscreen = async() => {
     try {
       await appWindow.toggleMaximize()
@@ -44,7 +47,11 @@ const Titlebar = () => {
       console.error('Failed to close:', error)
     }
   }
+  const handleDownload = ()=>{
+    console.log('下载')
+    setDownloadStatus(!downloadStatus)
 
+  }
   return (
     <div className={styles.titlebar} data-tauri-drag-region="true">
       <div className={styles.titlebarLeft}>
@@ -60,6 +67,7 @@ const Titlebar = () => {
         </div>
       </div>
       <div className={styles.titlebarRight}>
+        <span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span>
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>
         <span className={styles.title} onClick={handleFullscreen}>
           {isMaximized ? <Copy /> : <Square />}
