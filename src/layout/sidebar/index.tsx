@@ -6,8 +6,13 @@ import SpeedTool from './components/speedTool'
 
 import { Popover } from '@arco-design/web-react'
 import { Speed } from '@icon-park/react'
+import { useState } from 'react'
 
 const Sidebar = ({ className }: { className: string }) => {
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [appUpdateSum, setAppUpdateSum] = useState(10)
+
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -31,7 +36,7 @@ const Sidebar = ({ className }: { className: string }) => {
                 <span className={styles.menuItemIcon}>
                   {isActive ? item.activeIcon : item.icon}
                 </span>
-                <span className={styles.menuItemText}>{item.menuName}</span>
+                <span className={styles.menuItemText}>{item.menuName}<i className={appUpdateSum > 0 && item.menuName === '软件更新' ? styles.additional : styles.notAdditional}>{appUpdateSum}</i> </span>
               </div>
             )
           })
