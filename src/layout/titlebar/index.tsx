@@ -1,8 +1,8 @@
 import styles from './index.module.scss'
-
 import { useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import searchIcon from '@/assets/icons/searchIcon.png'
 const Titlebar = () => {
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
@@ -50,6 +50,14 @@ const Titlebar = () => {
       <div className={styles.titlebarLeft}>
         <img src="/logo.svg" alt="logo" className={styles.logo} draggable={false} />
         <span className={styles.title}>如意玲珑应用商店</span>
+      </div>
+      <div className={styles.titlebarCenter}>
+        <div className={styles.inputBox}>
+          <input type="text" className={styles.input} placeholder='搜索'/>
+        </div>
+        <div className={styles.inputIcon}>
+          <img src={searchIcon} width='100%' height='100%' alt="搜索" />
+        </div>
       </div>
       <div className={styles.titlebarRight}>
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>

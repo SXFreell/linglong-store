@@ -1,31 +1,23 @@
+import styles from './index.module.scss'
+
 import { Carousel } from '@arco-design/web-react'
-const imageSrc = [
-  '//p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/cd7a1aaea8e1c5e3d26fe2591e561798.png~tplv-uwbnlip3yd-webp.webp',
-  '//p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/6480dbc69be1b5de95010289787d64f1.png~tplv-uwbnlip3yd-webp.webp',
-  '//p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/0265a04fddbd77a19602a15d9d55d797.png~tplv-uwbnlip3yd-webp.webp',
-  '//p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/24e0dd27418d2291b65db1b21aa62254.png~tplv-uwbnlip3yd-webp.webp',
-]
+// const imageSrc = [
+//   '1111111', '222222222', '3333333333333',
+// ]
 
 function AppCarousel() {
   return (
     <Carousel
       autoPlay
-      animation='card'
+      animation='fade'
       showArrow='never'
-      indicatorPosition='outer'
-      style={{ width: '100%', height: '15rem' }}
+      indicatorType='never'
+      className={styles.carouselBox}
     >
-      {imageSrc.map((src, index) => (
-        <div
-          key={index}
-          style={{ width: '50%' }}
-        >
-          <img
-            src={src}
-            style={{ width: '100%' }}
-          />
-        </div>
-      ))}
+      <div className={styles.carouselItem}>111111</div>
+      <div className={styles.carouselItem}>222222</div>
+      <div className={styles.carouselItem}>333333</div>
+      <div className={styles.carouselItem}>444444</div>
     </Carousel>
   )
 }
