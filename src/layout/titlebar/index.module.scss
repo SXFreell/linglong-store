@@ -12,24 +12,74 @@
     background-color: var(--color-fill-2);
     color: var(--text-color-1);
     padding: 0 1rem;
+
     .titlebarLeft {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 0.5rem;
+
         .logo {
             width: 2rem;
             height: 2rem;
             pointer-events: none;
         }
     }
+
+    .titlebarCenter {
+        width: 33.4375rem;
+        height: 2.25rem;
+        background: rgb(231, 231, 231);
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        padding: 0 1rem;
+        border: 1px solid transparent; // 添加透明边框保持布局稳定
+
+        .inputBox {
+            flex: 1;
+
+            .input {
+                width: 100%;
+                border: none;
+                background: rgb(231, 231, 231);
+
+                &:focus {
+                    outline: none;
+                    background: rgb(255, 255, 255);
+
+                    // 通过兄弟选择器影响父元素
+                    &~.titlebarCenter {
+                        border-color: rgb(var(--primary-6));
+                        // background: rgb(255, 255, 255);
+                    }
+                }
+            }
+        }
+
+        // 当包含聚焦的 input 时
+        &:focus-within {
+            border-color: rgb(var(--primary-6));
+            background: rgb(255, 255, 255);
+        }
+
+        .inputIcon {
+            width: 1rem;
+            height: 1rem;
+            margin-left: 0.5rem;
+            cursor: pointer;
+        }
+    }
+
     .titlebarRight {
         display: flex;
         align-items: center;
         justify-content: center;
         gap: 1rem;
+
         .title {
             cursor: pointer;
+
             :global(.arco-icon) {
                 font-size: 1.5rem;
             }
