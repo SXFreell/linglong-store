@@ -11,6 +11,9 @@ const Setting = lazy(() => import('../pages/setting'))
 const Process = lazy(()=>import('../pages/process'))
 const UpdateApp = lazy(()=>import('../pages/updateApp'))
 const MyApplication = lazy(()=>import('../pages/myApps'))
+const AppDetail = lazy(()=>{
+  import('../pages/appDetail')
+})
 // 路由配置
 const router = createBrowserRouter([
   {
@@ -48,6 +51,10 @@ const router = createBrowserRouter([
       {
         path: '/my_apps',
         element: <MyApplication />,
+      },
+      {
+        path: '/app_detail',
+        element: <AppDetail />,
       },
     ],
   },
