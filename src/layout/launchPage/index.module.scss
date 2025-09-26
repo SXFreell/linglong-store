@@ -1,9 +1,9 @@
 .launchPage {
     width: 100vw;
-    height: 100vh;
+    height: 100%;
 
     .main {
-        height: 60vh;
+        height: 60%;
         display: flex;
         flex-flow: column nowrap;
         justify-content: center;
@@ -24,7 +24,7 @@
     }
 
     .footer {
-        height: 40vh;
+        height: 40%;
         padding: 0 4rem;
 
         .notice {
