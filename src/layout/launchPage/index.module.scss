@@ -1,0 +1,37 @@
+.launchPage {
+    width: 100vw;
+    height: 100vh;
+
+    .main {
+        height: 60vh;
+        display: flex;
+        flex-flow: column nowrap;
+        justify-content: center;
+        align-items: center;
+
+        .name {
+            font-weight: 600;
+            font-size: 2rem;
+            color: #383838;
+            text-align: left;
+        }
+
+        .progress {
+            font-size: 1.25rem;
+            color: #383838;
+            text-align: left;
+        }
+    }
+
+    .footer {
+        height: 40vh;
+        padding: 0 4rem;
+
+        .notice {
+            font-size: 0.9375rem;
+            color: #383838;
+            line-height: 1.5625rem;
+            text-align: left;
+        }
+    }
+}
