@@ -1,9 +1,14 @@
 import { Button, Typography } from '@arco-design/web-react'
 import styles from './index.module.scss'
-
+import { useNavigate } from 'react-router-dom'
 const Card = () => {
+  const navigate = useNavigate()
+
+  const toAppDetail = ()=>{
+    navigate('/app_detail')
+  }
   return (
-    <div className={styles.applicationCard}>
+    <div className={styles.applicationCard} onClick={toAppDetail}>
       <div className={styles.icon}>
         Icon
       </div>
