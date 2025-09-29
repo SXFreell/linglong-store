@@ -14,7 +14,7 @@ const Layout = () => {
     // 每次渲染后都会执行此处的代码
     const timer = setTimeout(()=>{
       setIsInit(false)
-    }, 5000)
+    }, 3000)
     return ()=>{
       clearTimeout(timer)
     }

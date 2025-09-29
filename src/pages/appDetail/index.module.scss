@@ -13,8 +13,8 @@
         .goBack {
             cursor: pointer;
             position: absolute;
-            top: 0.875rem;
-            left: 0.875rem;
+            top: 0.5rem;
+            left: 0.5rem;
         }
 
         .goBack:hover {
@@ -104,12 +104,32 @@
                     justify-content: flex-start;
 
                     .modules {
+                        min-width: 5rem;
                         font-size: 0.875rem;
                         margin-right: 1rem;
                         display: flex;
                         flex-flow: column nowrap;
                         justify-content: center;
                         align-items: center;
+
+                        :global(.arco-typography) {
+                            margin-bottom: 0;
+                        }
+                    }
+
+                    .separate {
+                        position: relative;
+                    }
+
+                    .separate::after {
+                        content: '';
+                        width: 1px;
+                        height: 1.5rem;
+                        background: #7E7E7E;
+                        position: absolute;
+                        right: -0.5rem;
+                        top: 50%;
+                        transform: translateY(-50%);
                     }
                 }
 
@@ -117,9 +137,53 @@
         }
     }
 
-    .describe {}
+    .describe {
+        padding: 2rem;
+        width: 100%;
 
-    .screenshot {}
+        .title {
+            font-weight: 500;
+            font-size: 1.5rem;
+            color: #383838;
+            text-align: left;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #EAEAEA;
+        }
+
+        .content {
+            font-size: 1rem;
+            color: #000000;
+            text-align: left;
+        }
+    }
+
+    .screenshot {
+        padding: 2rem;
+        width: 100%;
+
+        .title {
+            font-weight: 500;
+            font-size: 1.5rem;
+            color: #383838;
+            text-align: left;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #EAEAEA;
+        }
+
+        .imgBox {
+            width: 100%;
+            overflow: hidden;
+
+            .imgList {
+                width: 100%;
+                display: flex;
+                align-items: center;
+                overflow-x: scroll;
+            }
+        }
+    }
 
     .version {}
 }
