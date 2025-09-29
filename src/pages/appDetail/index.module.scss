@@ -185,5 +185,18 @@
         }
     }
 
-    .version {}
+    .version {
+        padding: 2rem;
+        width: 100%;
+
+        .title {
+            font-weight: 500;
+            font-size: 1.5rem;
+            color: #383838;
+            text-align: left;
+            padding-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #EAEAEA;
+        }
+    }
 }

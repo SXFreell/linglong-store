@@ -1,11 +1,111 @@
 import styles from './index.module.scss'
-import { Button, Image, Typography } from '@arco-design/web-react'
+import { Button, Image, Typography, Table } from '@arco-design/web-react'
 import goBack from '@/assets/icons/go_back.svg'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 const AppDetail = ()=>{
   const navigate = useNavigate()
   const handleGoBack = () => {
     navigate(-1) // 返回上一页
+  }
+  const columns = [
+    {
+      title: '版本号',
+      dataIndex: 'version',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '应用类型',
+      dataIndex: 'framework',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '通道',
+      dataIndex: 'channel',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '模式',
+      dataIndex: 'source',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '仓库来源',
+      dataIndex: 'process_id',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '文件大小',
+      dataIndex: 'container_id',
+      ellipsis: true,
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '下载量',
+      dataIndex: 'container_id',
+      ellipsis: true,
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+    },
+    {
+      title: '操作',
+      dataIndex: 'operate',
+      align: 'center',
+      headerCellStyle: {
+        backgroundColor: 'var(--color-bg-2)',
+      },
+      // 等接口数据出来再替换any
+      render: (_col:any, record:any) => (
+        <Button type='primary' status='danger' onClick={()=>processClick(record)}>
+          安装
+        </Button>
+      ),
+    },
+  ]
+
+  const [data] = useState([
+    {
+      key: '1',
+      name: 'org.dde.calendar',
+      version: '5.14.7.3',
+      framework: 'x86_64',
+      channel: 'main',
+      source: 'stable',
+      process_id: '6363',
+      container_id: '003f05894ac4',
+    },
+    {
+      key: '2',
+      name: 'org.dde.calendar',
+      version: '5.14.7.3',
+      framework: 'x86_64',
+      channel: 'main',
+      source: 'stable',
+      process_id: '6363',
+      container_id: '003f05894ac4',
+    },
+  ])
+  const processClick = (item:any)=>{
+    console.log(item, '安装=>item==========')
+
   }
   return <div className={styles.appDetail}>
     <div className={styles.ability}>
@@ -92,8 +192,16 @@ const AppDetail = ()=>{
     </div>
     <div className={styles.version}>
       <div className={styles.title}>版本选择</div>
-      <div className={styles.content}>微信是一款全方位的通讯应用，帮助你轻松连接全球好友。微信可以群聊、进行视频聊天、与好友一起玩游戏，以及分享自己的生活到朋友圈，让你感受耳目一新的生活方式。
-        <br/>本应用在安装时需要管理员权限。</div>
+      <div className={styles.content}><Table
+        columns={columns}
+        data={data}
+        hover
+        pagePosition='bottomCenter'
+        border={{
+          wrapper: true,
+          headerCell: true,
+        }}
+      /></div>
     </div>
   </div>
 }
