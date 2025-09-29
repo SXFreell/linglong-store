@@ -19,7 +19,7 @@ const AppDetail = ()=>{
     },
     {
       title: '应用类型',
-      dataIndex: 'framework',
+      dataIndex: 'appType',
       align: 'center',
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
@@ -35,7 +35,7 @@ const AppDetail = ()=>{
     },
     {
       title: '模式',
-      dataIndex: 'source',
+      dataIndex: 'mode',
       align: 'center',
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
@@ -43,7 +43,7 @@ const AppDetail = ()=>{
     },
     {
       title: '仓库来源',
-      dataIndex: 'process_id',
+      dataIndex: 'warehouse',
       align: 'center',
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
@@ -51,7 +51,7 @@ const AppDetail = ()=>{
     },
     {
       title: '文件大小',
-      dataIndex: 'container_id',
+      dataIndex: 'fileSize',
       ellipsis: true,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
@@ -59,7 +59,7 @@ const AppDetail = ()=>{
     },
     {
       title: '下载量',
-      dataIndex: 'container_id',
+      dataIndex: 'downloads',
       ellipsis: true,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
@@ -84,23 +84,23 @@ const AppDetail = ()=>{
   const [data] = useState([
     {
       key: '1',
-      name: 'org.dde.calendar',
       version: '5.14.7.3',
-      framework: 'x86_64',
+      appType: 'app',
+      mode: 'binary',
       channel: 'main',
-      source: 'stable',
-      process_id: '6363',
-      container_id: '003f05894ac4',
+      warehouse: 'abc',
+      fileSize: '223',
+      downloads: '356',
     },
     {
       key: '2',
-      name: 'org.dde.calendar',
       version: '5.14.7.3',
-      framework: 'x86_64',
+      appType: 'app',
+      mode: 'binary',
       channel: 'main',
-      source: 'stable',
-      process_id: '6363',
-      container_id: '003f05894ac4',
+      warehouse: 'abc',
+      fileSize: '223',
+      downloads: '356',
     },
   ])
   const processClick = (item:any)=>{
