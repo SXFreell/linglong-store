@@ -2,10 +2,12 @@ import styles from './index.module.scss'
 import { useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useInitStore } from '@/stores/appConfig'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
 const Titlebar = () => {
+  const loadingInit = useInitStore((state) => state.loadingInit)
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
 
@@ -58,16 +60,20 @@ const Titlebar = () => {
         <img src="/logo.svg" alt="logo" className={styles.logo} draggable={false} />
         <span className={styles.title}>如意玲珑应用商店</span>
       </div>
-      <div className={styles.titlebarCenter}>
-        <div className={styles.inputBox}>
-          <input type="text" className={styles.input} placeholder='搜索'/>
-        </div>
-        <div className={styles.inputIcon}>
-          <img src={searchIcon} width='100%' height='100%' alt="搜索" />
-        </div>
-      </div>
+      {
+        loadingInit ? <div className={styles.titlebarCenter}>
+          <div className={styles.inputBox}>
+            <input type="text" className={styles.input} placeholder='搜索'/>
+          </div>
+          <div className={styles.inputIcon}>
+            <img src={searchIcon} width='100%' height='100%' alt="搜索" />
+          </div>
+        </div> : null
+      }
+
       <div className={styles.titlebarRight}>
-        <span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span>
+        {loadingInit ? <span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span> : null}
+
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>
         <span className={styles.title} onClick={handleFullscreen}>
           {isMaximized ? <Copy /> : <Square />}

@@ -1,19 +1,19 @@
 import styles from './index.module.scss'
-
 import { Outlet } from 'react-router-dom'
 import { Suspense, useState, useEffect } from 'react'
-
 import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
-
+import { useInitStore } from '@/stores/appConfig'
 const Layout = () => {
+  const changeInitStatus = useInitStore((state) => state.changeInitStatus)
   const [isInit, setIsInit] = useState(true)
   useEffect(() => {
     // 每次渲染后都会执行此处的代码
     const timer = setTimeout(()=>{
       setIsInit(false)
+      changeInitStatus()
     }, 3000)
     return ()=>{
       clearTimeout(timer)
