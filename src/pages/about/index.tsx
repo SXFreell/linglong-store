@@ -1,6 +1,7 @@
 import { Descriptions } from '@arco-design/web-react'
 import styles from './index.module.scss'
-import frame from '@/assets/icons/frame.svg'
+import feedback from '@/assets/icons/feedback.svg'
+import update from '@/assets/icons/update.svg'
 const AboutSoft = () => {
   const linglong_data = [
     {
@@ -74,8 +75,8 @@ const AboutSoft = () => {
         />
       </div>
       <div className={styles.feedback}>
-        <div className={styles.feed} onClick={feedbackClick}>  <img style={{ width: '1.1rem', height: '1.1rem' }} src={frame} alt="意见反馈" /><span>意见反馈</span></div>
-        <div className={styles.checkVersion} onClick={checkVersionClick}>检查玲珑版本</div>
+        <div className={styles.feed} onClick={feedbackClick}>  <img style={{ width: '1.1rem', height: '1.1rem' }} src={feedback} alt="意见反馈" /><span>意见反馈</span></div>
+        <div className={styles.checkVersion} onClick={checkVersionClick}><img style={{ width: '1.1rem', height: '1.1rem' }} src={update} alt="检查玲珑版本" /><span>检查玲珑版本</span></div>
       </div>
     </div>
   )
