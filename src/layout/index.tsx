@@ -8,12 +8,16 @@ import Loading from '../components/Loading'
 import { useInitStore } from '@/stores/appConfig'
 const Layout = () => {
   const changeInitStatus = useInitStore((state) => state.changeInitStatus)
+  const getUpdateAppSum = useInitStore((state) => state.getUpdateAppSum)
   const [isInit, setIsInit] = useState(true)
   useEffect(() => {
     // 每次渲染后都会执行此处的代码
     const timer = setTimeout(()=>{
+      // 首屏需要加载和查询的配置完成后更改初始化状态
       setIsInit(false)
       changeInitStatus()
+      // 获取需要更新的APP数量
+      getUpdateAppSum(Math.floor(Math.random() * 10))
     }, 3000)
     return ()=>{
       clearTimeout(timer)

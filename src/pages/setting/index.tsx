@@ -1,14 +1,16 @@
 import { Switch } from '@arco-design/web-react'
 import styles from './index.module.scss'
-import { useState } from 'react'
+import { useConfigStore } from '@/stores/appConfig'
 const BasicSetting = ()=>{
-  const [autoCheck, setAutoCheck] = useState(false)
-  const [showBaseService, setShowBaseService] = useState(false)
+  const checkVersion = useConfigStore((state) => state.checkVersion)
+  const showBaseService = useConfigStore((state) => state.showBaseService)
+  const changeCheckVersionStatus = useConfigStore((state) => state.changeCheckVersionStatus)
+  const changeBaseServiceStatus = useConfigStore((state) => state.changeBaseServiceStatus)
   const autoCheckClick = ()=>{
-    setAutoCheck(!autoCheck)
+    changeCheckVersionStatus(!checkVersion)
   }
   const showBaseServiceClick = ()=>{
-    setShowBaseService(!showBaseService)
+    changeBaseServiceStatus(!showBaseService)
   }
   const clearAbandonServiceClick = ()=>{
     console.log('清除废弃基础服务')
@@ -20,7 +22,7 @@ const BasicSetting = ()=>{
         <p className={styles.setting_name}>基础设置</p>
         <div className={styles.setting_content}>
           <div className={styles.content_item}>
-            <Switch size='small' checked={autoCheck} defaultChecked={autoCheck} onChange={autoCheckClick}/><span className={styles.item_label}>启动App自动检测商店版本</span>
+            <Switch size='small' checked={checkVersion} defaultChecked={checkVersion} onChange={autoCheckClick}/><span className={styles.item_label}>启动App自动检测商店版本</span>
           </div>
         </div>
       </div>
