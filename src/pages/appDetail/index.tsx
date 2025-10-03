@@ -74,7 +74,7 @@ const AppDetail = ()=>{
       },
       // 等接口数据出来再替换any
       render: (_col:any, record:any) => (
-        <Button type='primary' status='danger' onClick={()=>processClick(record)}>
+        <Button type='primary' onClick={()=>processClick(record)}>
           安装
         </Button>
       ),
@@ -195,8 +195,8 @@ const AppDetail = ()=>{
       <div className={styles.content}><Table
         columns={columns}
         data={data}
+        pagination={false}
         hover
-        pagePosition='bottomCenter'
         border={{
           wrapper: true,
           headerCell: true,
