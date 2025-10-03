@@ -163,7 +163,6 @@ export default [
       'indent': ['error', 2],
       'key-spacing': 'error',
       'keyword-spacing': 'error',
-      'linebreak-style': ['error', 'unix'],
       'no-multiple-empty-lines': ['error', { max: 2 }],
       'no-trailing-spaces': 'error',
       'object-curly-spacing': ['error', 'always'],
