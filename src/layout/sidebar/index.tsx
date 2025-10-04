@@ -5,14 +5,16 @@ import menuList from './components/menuList'
 import SpeedTool from './components/speedTool'
 import { Popover } from '@arco-design/web-react'
 import { Speed } from '@icon-park/react'
-import { useInitStore } from '@/stores/appConfig'
+import { useInitStore, useSearchStore } from '@/stores/appConfig'
 const Sidebar = ({ className }: { className: string }) => {
 
   const updateAppSum = useInitStore((state) => state.updateAppSum)
+  const resetKeyword = useSearchStore((state) => state.resetKeyword)
   const navigate = useNavigate()
   const location = useLocation()
 
   const handleMenuClick = (menuPath: string) => {
+    resetKeyword()
     navigate(menuPath)
   }
 
