@@ -12,6 +12,11 @@ type ConfigStore = {
   changeCheckVersionStatus:(value:boolean) => void;
   changeBaseServiceStatus:(value:boolean) => void;
 };
+type SearchStore = {
+ keyword: string;
+  changeKeyword:(value:string) => void;
+  resetKeyword:() => void;
+};
 // 软件初始化时，保存初始化状态
 export const useInitStore = create<InitStore>((set) => ({
   // 首页查询的各个基础服务是否完成
@@ -33,6 +38,17 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   })),
   changeBaseServiceStatus: (value:boolean) => set((_state) => ({
     showBaseService: value,
+  })),
+}))
+
+export const useSearchStore = create<SearchStore>((set) => ({
+  // 搜索关键字
+  keyword: '',
+  changeKeyword: (value:string) => set((_state) => ({
+    keyword: value,
+  })),
+  resetKeyword: () => set((_state) => ({
+    keyword: '',
   })),
 }))
 // A handle to the Tauri plugin.

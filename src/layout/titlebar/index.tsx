@@ -1,17 +1,20 @@
 import styles from './index.module.scss'
-import { useEffect, useState } from 'react'
+import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { useInitStore } from '@/stores/appConfig'
+import { useInitStore, useSearchStore } from '@/stores/appConfig'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
+import { useNavigate } from 'react-router-dom'
 const Titlebar = () => {
   const loadingInit = useInitStore((state) => state.loadingInit)
+  const keyword = useSearchStore((state) => state.keyword)
+  const changeKeyword = useSearchStore((state) => state.changeKeyword)
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
-
   const [downloadStatus, setDownloadStatus] = useState(false)
+  const navigate = useNavigate()
   const handleFullscreen = async() => {
     try {
       await appWindow.toggleMaximize()
@@ -54,6 +57,14 @@ const Titlebar = () => {
     setDownloadStatus(!downloadStatus)
 
   }
+  // 定义一个处理输入变化的函数
+  const handleInputChange = (event: { target: { value: SetStateAction<string> } }) => {
+    const keyword = event.target.value as string
+    changeKeyword(keyword)
+  }
+  const handleSearch = ()=>{
+    navigate('/search_list')
+  }
   return (
     <div className={styles.titlebar} data-tauri-drag-region="true">
       <div className={styles.titlebarLeft}>
@@ -63,10 +74,10 @@ const Titlebar = () => {
       {
         loadingInit ? <div className={styles.titlebarCenter}>
           <div className={styles.inputBox}>
-            <input type="text" className={styles.input} placeholder='搜索'/>
+            <input type="text" className={styles.input} value={keyword} onChange={handleInputChange} placeholder='搜索'/>
           </div>
           <div className={styles.inputIcon}>
-            <img src={searchIcon} width='100%' height='100%' alt="搜索" />
+            <img src={searchIcon} onClick={handleSearch} width='100%' height='100%' alt="搜索" />
           </div>
         </div> : null
       }
