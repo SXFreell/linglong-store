@@ -62,6 +62,13 @@ const Titlebar = () => {
     const keyword = event.target.value as string
     changeKeyword(keyword)
   }
+  const handleKeyDown = (event: { key: string; preventDefault: () => void }) => {
+    if (event.key === 'Enter') {
+      handleSearch()
+      // 可以阻止默认行为，例如提交表单的默认行为
+      event.preventDefault()
+    }
+  }
   const handleSearch = ()=>{
     navigate('/search_list')
   }
@@ -74,7 +81,7 @@ const Titlebar = () => {
       {
         loadingInit ? <div className={styles.titlebarCenter}>
           <div className={styles.inputBox}>
-            <input type="text" className={styles.input} value={keyword} onChange={handleInputChange} placeholder='搜索'/>
+            <input type="text" className={styles.input} value={keyword} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder='搜索'/>
           </div>
           <div className={styles.inputIcon}>
             <img src={searchIcon} onClick={handleSearch} width='100%' height='100%' alt="搜索" />
