@@ -1,3 +1,8 @@
+.SearchResult {
+    font-size: 1.25rem;
+    font-weight: 500;
+}
+
 .SearchList {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
