@@ -1,12 +1,30 @@
 import { Button, Typography } from '@arco-design/web-react'
 import styles from './index.module.scss'
 import { useNavigate } from 'react-router-dom'
-const Card = () => {
+const Card = ({ operateId = 1 }) => {
   const navigate = useNavigate()
-
   const toAppDetail = ()=>{
     navigate('/app_detail')
   }
+  const operateList = [
+    {
+      name: '卸载',
+      id: 0,
+
+    },
+    {
+      name: '安装',
+      id: 1,
+
+    }, {
+      name: '更新',
+      id: 2,
+
+    }, {
+      name: '已安装',
+      id: 3,
+
+    }]
   return (
     <div className={styles.applicationCard} onClick={toAppDetail}>
       <div className={styles.icon}>
@@ -25,7 +43,7 @@ const Card = () => {
         </div>
       </div>
       <div className={styles.actions}>
-        <Button type='primary' className={styles.installButton} size='mini'>安装</Button>
+        <Button type='primary' className={styles.installButton} size='mini'>{operateList[operateId]?.name || '安装'}</Button>
       </div>
     </div>
   )
