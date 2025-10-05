@@ -4,6 +4,7 @@ import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useInitStore, useSearchStore } from '@/stores/appConfig'
 import searchIcon from '@/assets/icons/searchIcon.svg'
+import cleanIcon from '@/assets/icons/clean.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +12,7 @@ const Titlebar = () => {
   const loadingInit = useInitStore((state) => state.loadingInit)
   const keyword = useSearchStore((state) => state.keyword)
   const changeKeyword = useSearchStore((state) => state.changeKeyword)
+  const resetKeyword = useSearchStore((state) => state.resetKeyword)
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
   const [downloadStatus, setDownloadStatus] = useState(false)
@@ -62,12 +64,23 @@ const Titlebar = () => {
     const keyword = event.target.value as string
     changeKeyword(keyword)
   }
+  // 按下enter则搜索，按下delete则删除
   const handleKeyDown = (event: { key: string; preventDefault: () => void }) => {
+    console.log(event.key, 'event.key')
+
     if (event.key === 'Enter') {
       handleSearch()
       // 可以阻止默认行为，例如提交表单的默认行为
       event.preventDefault()
     }
+    if (event.key === 'Delete') {
+      handleClean()
+      // 可以阻止默认行为，例如提交表单的默认行为
+      event.preventDefault()
+    }
+  }
+  const handleClean = ()=>{
+    resetKeyword()
   }
   const handleSearch = ()=>{
     navigate('/search_list')
@@ -83,8 +96,11 @@ const Titlebar = () => {
           <div className={styles.inputBox}>
             <input type="text" className={styles.input} value={keyword} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder='搜索'/>
           </div>
-          <div className={styles.inputIcon}>
-            <img src={searchIcon} onClick={handleSearch} width='100%' height='100%' alt="搜索" />
+          <div className={styles.inputIcon}>{
+            keyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt="清空" /> : null
+          }
+
+          <img src={searchIcon} onClick={handleSearch} width='50%' height='100%' alt="搜索" />
           </div>
         </div> : null
       }
