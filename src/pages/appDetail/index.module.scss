@@ -94,6 +94,11 @@
                             font-size: 0.75rem;
                             color: #5F5B5B;
                             text-align: left;
+                            cursor: pointer;
+                        }
+
+                        .history:hover {
+                            color: rgb(var(--primary-5));
                         }
                     }
                 }

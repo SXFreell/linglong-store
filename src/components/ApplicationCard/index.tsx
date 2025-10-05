@@ -21,10 +21,16 @@ const Card = ({ operateId = 1 }) => {
       id: 2,
 
     }, {
-      name: '已安装',
+      name: '打开',
       id: 3,
 
     }]
+  const handleOperateBtn = (operateId: number)=>{
+    if (operateId !== 3) {
+      console.log(operateId, '操作名称')
+    }
+
+  }
   return (
     <div className={styles.applicationCard} onClick={toAppDetail}>
       <div className={styles.icon}>
@@ -43,7 +49,10 @@ const Card = ({ operateId = 1 }) => {
         </div>
       </div>
       <div className={styles.actions}>
-        <Button type='primary' className={styles.installButton} size='mini'>{operateList[operateId]?.name || '安装'}</Button>
+        <Button type='primary' className={styles.installButton} size='mini' onClick={(e)=>{
+          e.stopPropagation() // 阻止事件冒泡
+          handleOperateBtn(operateId)
+        }}>{operateList[operateId]?.name || '安装'}</Button>
       </div>
     </div>
   )

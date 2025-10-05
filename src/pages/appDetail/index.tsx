@@ -2,12 +2,32 @@ import styles from './index.module.scss'
 import { Button, Image, Typography, Table } from '@arco-design/web-react'
 import goBack from '@/assets/icons/go_back.svg'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
-const AppDetail = ()=>{
+import { useState, useRef } from 'react'
+const AppDetail = ({ operateId = 1 })=>{
   const navigate = useNavigate()
+  const versionSectionRef = useRef<HTMLDivElement>(null) // 创建 ref 用于版本选择区域
   const handleGoBack = () => {
     navigate(-1) // 返回上一页
   }
+  const operateList = [
+    {
+      name: '卸载',
+      id: 0,
+
+    },
+    {
+      name: '安装',
+      id: 1,
+
+    }, {
+      name: '更新',
+      id: 2,
+
+    }, {
+      name: '打开',
+      id: 3,
+
+    }]
   const columns = [
     {
       title: '版本号',
@@ -107,6 +127,13 @@ const AppDetail = ()=>{
     console.log(item, '安装=>item==========')
 
   }
+  // 滚动到版本选择区域
+  const scrollToVersionSection = () => {
+    versionSectionRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+    })
+  }
   return <div className={styles.appDetail}>
     <div className={styles.ability}>
       <div className={styles.goBack} onClick={handleGoBack}><img src={goBack} alt="back" /></div>
@@ -123,8 +150,8 @@ const AppDetail = ()=>{
               <p className={styles.appClass}>社交通讯软件</p>
             </div>
             <div className={styles.install}>
-              <Button type='primary' shape='round' className={styles.installButton} size='default'>安 装</Button>
-              <p className={styles.history}>安装历史版本</p>
+              <Button type='primary' shape='round' className={styles.installButton} size='default'>{operateList[operateId]?.name || '安装'}</Button>
+              <p className={styles.history} onClick={scrollToVersionSection}>安装历史版本</p>
             </div>
           </div>
           <div className={styles.appDesc}>
@@ -175,11 +202,12 @@ const AppDetail = ()=>{
       <div className={styles.imgBox}>
         <div className={styles.imgList}>
           {
-            [1, 2, 3, 4, 5].map(()=>{
-            // eslint-disable-next-line react/jsx-key
+            [1, 2, 3, 4, 5].map((item)=>{
+
               return (<Image
                 width={200}
                 height={200}
+                key={item}
                 src={`//p1-arco.byteimg.com/tos-cn-i-uwbnlip3yd/a8c8cdb109cb051163646151a4a5083b.png~tplv-uwbnlip3yd-webp.webp?timestamp=${''}`}
                 loader={true}
                 alt='应用截图'
@@ -190,7 +218,7 @@ const AppDetail = ()=>{
         </div>
       </div>
     </div>
-    <div className={styles.version}>
+    <div className={styles.version} ref={versionSectionRef}>
       <div className={styles.title}>版本选择</div>
       <div className={styles.content}><Table
         columns={columns}
