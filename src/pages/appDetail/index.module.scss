@@ -15,13 +15,14 @@
             position: absolute;
             top: 0.5rem;
             left: 0.5rem;
-        }
-
-        .goBack:hover {
-            background: #F5F5F5;
             width: 1.375rem;
             height: 1.375rem;
             border-radius: 0.625rem;
+            background: #F5F5F5;
+        }
+
+        .goBack:hover {
+            background: #94BFFF;
         }
 
         .application {
@@ -98,6 +99,7 @@
                 }
 
                 .appDesc {
+                    width: 100%;
                     flex: 1;
                     display: flex;
                     align-items: center;
@@ -105,6 +107,7 @@
 
                     .modules {
                         min-width: 5rem;
+                        width: 18%;
                         font-size: 0.875rem;
                         margin-right: 1rem;
                         display: flex;
@@ -113,6 +116,8 @@
                         align-items: center;
 
                         :global(.arco-typography) {
+                            width: 100%;
+                            text-align: center;
                             margin-bottom: 0;
                         }
                     }
