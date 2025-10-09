@@ -33,7 +33,6 @@ export const getNewAppList = (data: any) => {
 export const getInstallAppList = (data: any) => {
   return post<BaseResponse>('/visit/getInstallAppList', data)
 }
-
 /**
 * 获取程序的详细信息
 */

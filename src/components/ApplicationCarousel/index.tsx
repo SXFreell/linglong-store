@@ -1,11 +1,9 @@
 import styles from './index.module.scss'
-
+import { Button } from '@arco-design/web-react'
 import { Carousel } from '@arco-design/web-react'
-// const imageSrc = [
-//   '1111111', '222222222', '3333333333333',
-// ]
+const AppCarousel = ({ carouselList })=> {
+  console.log(carouselList, 'carouselList')
 
-function AppCarousel() {
   return (
     <Carousel
       autoPlay
@@ -13,11 +11,20 @@ function AppCarousel() {
       showArrow='never'
       indicatorType='never'
       className={styles.carouselBox}
-    >
-      <div className={styles.carouselItem}>111111</div>
-      <div className={styles.carouselItem}>222222</div>
-      <div className={styles.carouselItem}>333333</div>
-      <div className={styles.carouselItem}>444444</div>
+    >{
+        carouselList.map((item:any)=>{
+          return <div className={styles.carouselItem} key={item.appId} >
+            <img src={item.icon} className={styles.carouselItemIcon} alt="" />
+            <div className={styles.carouselItemContent}>
+              <p style={{ fontSize: '1.5rem' }}>{item.zhName}</p>
+              <p>描述：{item.description}</p>
+              <p>版本：{item.version}</p>
+              <p>分类：{item.categoryName}</p>
+              <Button type='primary' shape='round' className={styles.installButton} size='default'>安 装</Button>
+            </div>
+          </div>
+        })
+      }
     </Carousel>
   )
 }

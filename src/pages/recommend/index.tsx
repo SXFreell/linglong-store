@@ -2,10 +2,24 @@ import { Button } from '@arco-design/web-react'
 import AppCarousel from '@/components/ApplicationCarousel'
 import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'
+import { getWelcomeCarouselList } from '@/apis/apps/index'
+import { useEffect, useState } from 'react'
+import { useConfigStore } from '@/stores/appConfig'
 const Recommend = () => {
+  const arch = useConfigStore((state) => state.arch)
+  useEffect(()=>{
+    getCarouselList()
+  }, [])
+  const [carouselList, setCarouselList] = useState([])
+  const getCarouselList = async()=>{
+    const result = await getWelcomeCarouselList({ repoName: 'stable', arch })
+    if (result.code === 200 && result.data.length > 0) {
+      setCarouselList(result.data)
+    }
+  }
   return <div style={{ padding: 20 }} className={styles.recommend}>
     <header className={styles.recommendHead}>
-      <AppCarousel />
+      <AppCarousel carouselList={carouselList}/>
     </header>
     <main className={styles.recommendMain}>
       <div className={styles.tabBtn}>

@@ -1,7 +1,6 @@
 import styles from './index.module.scss'
 import Logo from '@/assets/linyaps.svg'
 const LaunchPage = ()=>{
-
   return <div className={styles.launchPage} >
     <div className={styles.main}>
       <div className={

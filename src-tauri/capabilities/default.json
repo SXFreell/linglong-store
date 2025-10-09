@@ -19,6 +19,8 @@
     "core:window:allow-close",
     "core:window:allow-toggle-maximize",
     "zustand:default",
-    "core:event:default"
+    "core:event:default",
+    "os:default",
+    "os:allow-arch"
   ]
 }

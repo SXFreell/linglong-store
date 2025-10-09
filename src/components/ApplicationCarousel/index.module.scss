@@ -3,6 +3,24 @@
 
     .carouselItem {
         width: 100%;
-        background: #0094bd;
+        background: #5c65ee80;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding-left: 10rem;
+
+        .carouselItemIcon {
+            height: 12rem;
+            width: 12rem;
+        }
+
+        .carouselItemContent {
+            flex: 1;
+            margin-left: 2rem;
+
+            .installButton {
+                margin-top: 1rem;
+            }
+        }
     }
 }

@@ -7,10 +7,12 @@ type InitStore = {
   getUpdateAppSum: (num:number) => void;
 };
 type ConfigStore = {
+  arch:string,
   checkVersion: boolean;
   showBaseService:boolean;
   changeCheckVersionStatus:(value:boolean) => void;
   changeBaseServiceStatus:(value:boolean) => void;
+  changeArch:(value:string) => void;
 };
 type SearchStore = {
  keyword: string;
@@ -33,11 +35,16 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   checkVersion: false,
   // 显示基础运行服务
   showBaseService: false,
+  // 系统架构
+  arch: '',
   changeCheckVersionStatus: (value:boolean) => set((_state) => ({
     checkVersion: value,
   })),
   changeBaseServiceStatus: (value:boolean) => set((_state) => ({
     showBaseService: value,
+  })),
+  changeArch: (value:string) => set((_state) => ({
+    arch: value,
   })),
 }))
 
