@@ -2,20 +2,36 @@ import { Button } from '@arco-design/web-react'
 import AppCarousel from '@/components/ApplicationCarousel'
 import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'
-import { getWelcomeCarouselList } from '@/apis/apps/index'
+import { getWelcomeCarouselList, getWelcomeAppList } from '@/apis/apps/index'
 import { useEffect, useState } from 'react'
-import { useConfigStore } from '@/stores/appConfig'
+import { useInitStore } from '@/stores/appConfig'
 const Recommend = () => {
-  const arch = useConfigStore((state) => state.arch)
+  const arch = useInitStore((state) => state.arch)
+  const repoName = useInitStore((state) => state.repoName)
   useEffect(()=>{
     getCarouselList()
   }, [])
   const [carouselList, setCarouselList] = useState([])
+  const [recommendList, setRecommendList] = useState([])
   const getCarouselList = async()=>{
-    const result = await getWelcomeCarouselList({ repoName: 'stable', arch })
-    if (result.code === 200 && result.data.length > 0) {
-      setCarouselList(result.data)
+    try {
+      const result = await getWelcomeCarouselList({ repoName, arch })
+      if (result.code === 200 && result.data.length > 0) {
+        setCarouselList(result.data)
+        console.log(carouselList, 'carouselList=========')
+      }
+      const response = await getWelcomeAppList({ repoName, arch, pageNo: 1, pageSize: 10 })
+      if (response.code === 200 && response.data.records.length > 0) {
+        setRecommendList(response.data.records)
+        console.log(recommendList, 'recommendList=========')
+
+      }
+
+    } catch (error) {
+      console.log(error, 'error')
+
     }
+
   }
   return <div style={{ padding: 20 }} className={styles.recommend}>
     <header className={styles.recommendHead}>
@@ -31,11 +47,11 @@ const Recommend = () => {
       <div className={styles.appMain}>
         <p className={styles.name}>玲珑推荐</p>
         <div className={styles.appList}>
-          <ApplicationCard />
-          <ApplicationCard />
-          <ApplicationCard />
-          <ApplicationCard />
-          <ApplicationCard />
+          {
+            recommendList.map(item=>{
+              return <ApplicationCard key={item.appId} options={item} operateId={1}/>
+            })
+          }
         </div>
       </div>
     </main>

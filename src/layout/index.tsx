@@ -5,12 +5,12 @@ import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
-import { useInitStore, useConfigStore } from '@/stores/appConfig'
+import { useInitStore } from '@/stores/appConfig'
 import { arch } from '@tauri-apps/plugin-os'
 const Layout = () => {
   const changeInitStatus = useInitStore((state) => state.changeInitStatus)
   const getUpdateAppSum = useInitStore((state) => state.getUpdateAppSum)
-  const changeArch = useConfigStore((state) => state.changeArch)
+  const changeArch = useInitStore((state) => state.changeArch)
   const [isInit, setIsInit] = useState(true)
   useEffect(() => {
     // 获取系统架构
