@@ -1,6 +1,7 @@
 import { Button, Typography } from '@arco-design/web-react'
 import styles from './index.module.scss'
 import { useNavigate } from 'react-router-dom'
+import DefaultIcon from '@/assets/linyaps.svg'
 const Card = ({ operateId = 1, options = {} }) => {
   const navigate = useNavigate()
   const toAppDetail = ()=>{
@@ -34,17 +35,19 @@ const Card = ({ operateId = 1, options = {} }) => {
   return (
     <div className={styles.applicationCard} onClick={toAppDetail}>
       <div className={styles.icon}>
-        <img src={options.icon} alt="" />
+        {
+          options.icon ? <img src={options.icon} alt="icon" /> : <img src={DefaultIcon} alt="" />
+        }
       </div>
       <div className={styles.content}>
         <div className={styles.title}>
           <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
-            {options.name}
+            {options.name || '应用名称'}
           </Typography.Text>
         </div>
         <div className={styles.description}>
           <Typography.Text ellipsis={{ rows: 2, expandable: false }}>
-            {options.description}
+            {options.description || '这里是对应的应用描述'}
           </Typography.Text>
         </div>
       </div>
