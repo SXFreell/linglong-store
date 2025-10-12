@@ -3,49 +3,60 @@ import { createTauriStore } from '@tauri-store/zustand'
 type InitStore = {
   loadingInit: boolean;
   updateAppSum:number;
+  arch:string,
+  repoName:string,
   changeInitStatus: () => void;
   getUpdateAppSum: (num:number) => void;
+  changeArch:(value:string) => void;
+  changeRepoName:(value:string) => void;
 };
 type ConfigStore = {
-  arch:string,
+
   checkVersion: boolean;
   showBaseService:boolean;
   changeCheckVersionStatus:(value:boolean) => void;
   changeBaseServiceStatus:(value:boolean) => void;
-  changeArch:(value:string) => void;
+
 };
 type SearchStore = {
  keyword: string;
   changeKeyword:(value:string) => void;
   resetKeyword:() => void;
 };
-// 软件初始化时，保存初始化状态
+// 软件初始化时，保存初始化状态，每次打开软件需获取服务
 export const useInitStore = create<InitStore>((set) => ({
   // 首页查询的各个基础服务是否完成
   loadingInit: false,
   // 需要更新的APP总数量
   updateAppSum: 0,
-  // 首页加载完成后状态改为true
+  // 系统架构
+  arch: '',
+  // 仓库？默认是stable
+  repoName: 'stable',
+  // 首屏资源加载完成后状态改为true，就可以到首页了
   changeInitStatus: () => set((_state) => ({ loadingInit: true })),
   getUpdateAppSum: (num:number) => set((_state) => ({ updateAppSum: num })),
+  changeArch: (value:string) => set((_state) => ({
+    arch: value,
+  })),
+  changeRepoName: (value:string) => set((_state) => ({
+    repoName: value,
+  })),
 }))
-
+// 保持系统设置内的配置状态，持久存储
 export const useConfigStore = create<ConfigStore>((set) => ({
   // 启动App自动检测商店版本
   checkVersion: false,
   // 显示基础运行服务
   showBaseService: false,
-  // 系统架构
-  arch: '',
+
   changeCheckVersionStatus: (value:boolean) => set((_state) => ({
     checkVersion: value,
   })),
   changeBaseServiceStatus: (value:boolean) => set((_state) => ({
     showBaseService: value,
   })),
-  changeArch: (value:string) => set((_state) => ({
-    arch: value,
-  })),
+
 }))
 
 export const useSearchStore = create<SearchStore>((set) => ({

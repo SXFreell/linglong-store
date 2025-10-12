@@ -2,7 +2,7 @@ import styles from './index.module.scss'
 import { Button } from '@arco-design/web-react'
 import { Carousel } from '@arco-design/web-react'
 const AppCarousel = ({ carouselList })=> {
-  console.log(carouselList, 'carouselList')
+  // console.log(carouselList, 'carouselList')
 
   return (
     <Carousel

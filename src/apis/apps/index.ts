@@ -53,7 +53,7 @@ export const getSearchAppList = (data: any) => {
 * 获取应用分类
 */
 export const getDisCategoryList = () => {
-  return get<any[]>('/visit/getDisCategoryList')
+  return get<BaseResponse>('/visit/getDisCategoryList')
 }
 
 /**

@@ -1,7 +1,7 @@
 import { Button, Typography } from '@arco-design/web-react'
 import styles from './index.module.scss'
 import { useNavigate } from 'react-router-dom'
-const Card = ({ operateId = 1 }) => {
+const Card = ({ operateId = 1, options = {} }) => {
   const navigate = useNavigate()
   const toAppDetail = ()=>{
     navigate('/app_detail')
@@ -34,17 +34,17 @@ const Card = ({ operateId = 1 }) => {
   return (
     <div className={styles.applicationCard} onClick={toAppDetail}>
       <div className={styles.icon}>
-        Icon
+        <img src={options.icon} alt="" />
       </div>
       <div className={styles.content}>
         <div className={styles.title}>
           <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
-            应用名称
+            {options.name}
           </Typography.Text>
         </div>
         <div className={styles.description}>
           <Typography.Text ellipsis={{ rows: 2, expandable: false }}>
-            这里是应用的简短描述，介绍应用的主要功能和特点。
+            {options.description}
           </Typography.Text>
         </div>
       </div>
