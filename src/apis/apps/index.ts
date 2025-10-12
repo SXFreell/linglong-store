@@ -1,14 +1,14 @@
 import { get, post, BaseResponse } from '..'
 
 /**
- * 推荐页面-获取轮播图列表
+ * 推荐页面-获取轮播图列表已接入
  */
 export const getWelcomeCarouselList = (data: any) => {
   return post<BaseResponse>('/visit/getWelcomeCarouselList', data)
 }
 
 /**
-* 获取最受欢迎的推荐应用列表
+* 获取最受欢迎的推荐应用列表 已接入
 * @param data 入参条件(分页参数)
 * @returns
 */
