@@ -6,7 +6,7 @@
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
 
 // 基础响应接口
-export interface BaseResponse<T = any> {
+export interface BaseResponse<T> {
   code: number
   message: string
   data: T
@@ -17,7 +17,7 @@ export interface BaseResponse<T = any> {
 export interface RequestConfig {
   headers?: Record<string, string>
   timeout?: number
-  params?: Record<string, any>
+  params?: Record<string, unknown>
   cache?: boolean
   cacheTime?: number
 }
@@ -26,14 +26,14 @@ export interface RequestConfig {
 export interface UploadConfig extends RequestConfig {
   file: File | Blob
   name?: string
-  data?: Record<string, any>
+  data?: Record<string, unknown>
 }
 
 // 分页参数
 export interface PaginationParams {
   page?: number
   pageSize?: number
-  [key: string]: any
+  [key: string]: unknown
 }
 
 // 分页响应
@@ -42,24 +42,4 @@ export interface PaginationResponse<T> {
   total: number
   page: number
   pageSize: number
-}
-
-// 已安装应用信息
-export interface InstalledApp {
-  appId: string
-  name: string
-  version: string
-  arch: string
-  channel: string
-  description: string
-  icon: string
-  kind?: string
-  module: string
-  runtime: string
-  size: string
-  repoName: string
-  zhName?: string
-  categoryName?: string
-  loading?: boolean
-  occurrenceNumber?: number
 }

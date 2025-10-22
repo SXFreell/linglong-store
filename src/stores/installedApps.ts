@@ -1,6 +1,6 @@
 import { create } from 'zustand'
-import type { InstalledApp } from '@/apis/types'
-import { getInstalledLinglongApps, getAllInstalledLinglongApps } from '@/apis'
+import type { InstalledApp } from '@/apis/invoke/types'
+import { getInstalledLinglongApps, getAllInstalledLinglongApps } from '@/apis/invoke'
 import { getAppDetails } from '@/apis/apps'
 
 interface InstalledAppsStore {
@@ -57,7 +57,7 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
 
     try {
       // 调用后端API获取应用详情
-      const response = await getAppDetails(installedApps)
+      const response = await getAppDetails({ apps: installedApps })
 
       if (response.code === 200 && response.data) {
         const detailsData = Array.isArray(response.data) ? response.data : []
@@ -65,7 +65,7 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
         // 更新应用详情
         const updatedApps = installedApps.map(app => {
           const detail = detailsData.find(
-            (d: Record<string, unknown>) => d.appId === app.appId && d.name === app.name && d.version === app.version,
+            (d) => d.appId === app.appId && d.name === app.name && d.version === app.version,
           )
 
           if (detail) {

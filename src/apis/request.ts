@@ -2,7 +2,7 @@
  * 基于 alova 的最简单请求封装
  */
 
-import { createAlova } from 'alova'
+import { createAlova, RequestBody } from 'alova'
 import adapterFetch from 'alova/fetch'
 import ReactHook from 'alova/react'
 
@@ -41,37 +41,54 @@ export class Request {
   private alova = alovaInstance
 
   // GET 请求
-  async get<T = any>(url: string, config?: any): Promise<T> {
+  async get<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     const method = this.alova.Get(url, config)
     return method.send() as Promise<T>
   }
 
   // POST 请求
-  async post<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async post<T>(
+    url: string,
+    data?: RequestBody | undefined,
+    config?: Record<string, unknown>,
+  ): Promise<T> {
     const method = this.alova.Post(url, data, config)
     return method.send() as Promise<T>
   }
 
   // PUT 请求
-  async put<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async put<T>(
+    url: string,
+    data?: RequestBody | undefined,
+    config?: Record<string, unknown>,
+  ): Promise<T> {
     const method = this.alova.Put(url, data, config)
     return method.send() as Promise<T>
   }
 
   // DELETE 请求
-  async delete<T = any>(url: string, config?: any): Promise<T> {
+  async delete<T>(url: string, config?: Record<string, unknown>): Promise<T> {
     const method = this.alova.Delete(url, config)
     return method.send() as Promise<T>
   }
 
   // PATCH 请求
-  async patch<T = any>(url: string, data?: any, config?: any): Promise<T> {
+  async patch<T>(
+    url: string,
+    data?: RequestBody | undefined,
+    config?: Record<string, unknown>,
+  ): Promise<T> {
     const method = this.alova.Patch(url, data, config)
     return method.send() as Promise<T>
   }
 
   // 文件上传
-  async upload<T = any>(url: string, file: File, name = 'file', data?: Record<string, any>): Promise<T> {
+  async upload<T>(
+    url: string,
+    file: File,
+    name = 'file',
+    data?: Record<string, unknown>,
+  ): Promise<T> {
     const formData = new FormData()
     formData.append(name, file)
 
@@ -92,7 +109,12 @@ export class Request {
   }
 
   // 分页请求
-  async paginate<T = any>(url: string, page = 1, pageSize = 10, params?: Record<string, any>): Promise<T> {
+  async paginate<T>(
+    url: string,
+    page = 1,
+    pageSize = 10,
+    params?: Record<string, unknown>,
+  ): Promise<T> {
     return this.get<T>(url, {
       params: {
         page,

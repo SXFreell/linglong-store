@@ -1,6 +1,6 @@
 import { Table, Button, Message } from '@arco-design/web-react'
 import { useState, useEffect } from 'react'
-import { getRunningLinglongApps, killLinglongApp } from '@/apis'
+import { getRunningLinglongApps, killLinglongApp } from '@/apis/invoke'
 
 interface LinglongAppInfo {
   key: string
@@ -30,7 +30,6 @@ const Process = () => {
       }))
       setData(formattedApps)
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[fetchRunningApps] Error fetching apps:', error)
       Message.error(`获取运行中的玲珑应用失败: ${error}`)
     }
@@ -65,7 +64,6 @@ const Process = () => {
       // 刷新列表
       await fetchRunningApps()
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[processClick] Error killing app:', record.name, error)
       Message.error(`停止 ${record.name} 失败: ${error}`)
     } finally {

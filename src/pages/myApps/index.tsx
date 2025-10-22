@@ -4,7 +4,7 @@ import styles from './index.module.scss'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useConfigStore } from '@/stores/appConfig'
-import type { InstalledApp } from '@/apis/types'
+import type { InstalledApp } from '@/apis/invoke/types'
 
 const MyApplications = ()=>{
   const {

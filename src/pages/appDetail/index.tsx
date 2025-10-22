@@ -5,8 +5,8 @@ import type { TableColumnProps } from '@arco-design/web-react'
 import styles from './index.module.scss'
 import goBack from '@/assets/icons/go_back.svg'
 import DefaultIcon from '@/assets/linyaps.svg'
-import type { InstalledApp } from '@/apis/types'
-import { searchVersions, uninstallApp, runApp } from '@/apis'
+import type { InstalledApp } from '@/apis/invoke/types'
+import { searchVersions, uninstallApp, runApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 
 interface VersionInfo {
@@ -71,7 +71,6 @@ const AppDetail = () => {
       console.log('loadVersions: parsed versions', parsedVersions)
       setVersions(parsedVersions)
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('loadVersions: error', err)
       Message.error(`加载版本列表失败: ${err}`)
     } finally {
@@ -116,7 +115,6 @@ const AppDetail = () => {
             navigate('/my-apps')
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.error('[handleUninstall] Error uninstalling:', currentApp.appId, version, error)
           Message.error(`卸载失败: ${error}`)
         } finally {
