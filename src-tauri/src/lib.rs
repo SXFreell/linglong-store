@@ -1,6 +1,7 @@
 mod services;
 
 use services::network::{get_network_speed as network_get_speed, NetworkSpeed};
+use services::process::{get_running_linglong_apps as process_get_running_apps, kill_linglong_app as process_kill_app, LinglongAppInfo};
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -13,13 +14,23 @@ async fn get_network_speed() -> Result<NetworkSpeed, String> {
     network_get_speed().await
 }
 
+#[tauri::command]
+async fn get_running_linglong_apps() -> Result<Vec<LinglongAppInfo>, String> {
+    process_get_running_apps().await
+}
+
+#[tauri::command]
+async fn kill_linglong_app(app_name: String) -> Result<String, String> {
+    process_kill_app(app_name).await
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_zustand::init())
-        .invoke_handler(tauri::generate_handler![greet, get_network_speed])
+        .invoke_handler(tauri::generate_handler![greet, get_network_speed, get_running_linglong_apps, kill_linglong_app])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }

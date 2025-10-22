@@ -43,3 +43,12 @@ export {
 
 // 默认导出请求实例
 export { request as default } from './request'
+import { invoke } from '@tauri-apps/api/core'
+
+export const getRunningLinglongApps = async() => {
+  return await invoke('get_running_linglong_apps')
+}
+
+export const killLinglongApp = async(appName: string) => {
+  return await invoke('kill_linglong_app', { appName })
+}
