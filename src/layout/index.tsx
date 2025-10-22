@@ -5,13 +5,15 @@ import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
-import { useInitStore } from '@/stores/appConfig'
+import { useInitStore } from '@/stores/global'
 import { arch } from '@tauri-apps/plugin-os'
+
 const Layout = () => {
-  const changeInitStatus = useInitStore((state) => state.changeInitStatus)
-  const getUpdateAppSum = useInitStore((state) => state.getUpdateAppSum)
+  const onInited = useInitStore((state) => state.onInited)
+  const getUpdateAppNum = useInitStore((state) => state.getUpdateAppNum)
   const changeArch = useInitStore((state) => state.changeArch)
   const [isInit, setIsInit] = useState(true)
+
   useEffect(() => {
     // 获取系统架构
     const currentArch = arch()
@@ -20,14 +22,15 @@ const Layout = () => {
     const timer = setTimeout(()=>{
       // 首屏需要加载和查询的配置完成后更改初始化状态
       setIsInit(false)
-      changeInitStatus()
+      onInited()
       // 获取需要更新的APP数量
-      getUpdateAppSum(Math.floor(Math.random() * 10))
+      getUpdateAppNum(Math.floor(Math.random() * 10))
     }, 3000)
     return ()=>{
       clearTimeout(timer)
     }
   })
+
   return (
     <div className={styles.layout}>
       <Titlebar/>
@@ -43,8 +46,6 @@ const Layout = () => {
           </div>
         </div>
       }
-
-
     </div>
   )
 }

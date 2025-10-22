@@ -1,14 +1,13 @@
 import styles from './index.module.scss'
 import { useNavigate, useLocation } from 'react-router-dom'
-
 import menuList from './components/menuList'
 import SpeedTool from './components/speedTool'
 import { Popover } from '@arco-design/web-react'
 import { Speed } from '@icon-park/react'
-import { useInitStore, useSearchStore } from '@/stores/appConfig'
-const Sidebar = ({ className }: { className: string }) => {
+import { useInitStore, useSearchStore } from '@/stores/global'
 
-  const updateAppSum = useInitStore((state) => state.updateAppSum)
+const Sidebar = ({ className }: { className: string }) => {
+  const updateAppSum = useInitStore((state) => state.updateAppNum)
   const resetKeyword = useSearchStore((state) => state.resetKeyword)
   const navigate = useNavigate()
   const location = useLocation()

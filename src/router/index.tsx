@@ -13,6 +13,7 @@ const UpdateApp = lazy(()=>import('../pages/updateApp'))
 const MyApplication = lazy(()=>import('../pages/myApps'))
 const AppDetail = lazy(()=>import('../pages/appDetail'))
 const SearchList = lazy(()=>import('../pages/searchList'))
+
 // 路由配置
 const router = createBrowserRouter([
   {

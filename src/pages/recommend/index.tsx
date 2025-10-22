@@ -4,7 +4,7 @@ import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'
 import { getWelcomeCarouselList, getWelcomeAppList } from '@/apis/apps/index'
 import { useEffect, useState } from 'react'
-import { useInitStore } from '@/stores/appConfig'
+import { useInitStore } from '@/stores/global'
 const Recommend = () => {
   const arch = useInitStore((state) => state.arch)
   const repoName = useInitStore((state) => state.repoName)

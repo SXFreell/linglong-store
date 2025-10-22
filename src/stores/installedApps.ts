@@ -44,7 +44,6 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       set({ error: errorMessage, loading: false })
-      // eslint-disable-next-line no-console
       console.error('Failed to fetch installed apps:', error)
     }
   },
@@ -85,7 +84,6 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
         set({ installedApps: updatedApps })
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to update app details:', error)
       // 不阻断流程，只记录错误
     }

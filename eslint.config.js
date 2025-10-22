@@ -84,7 +84,7 @@ export default [
       'react-hooks/exhaustive-deps': 'warn',
       
       // 通用代码质量规则
-      'no-console': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',

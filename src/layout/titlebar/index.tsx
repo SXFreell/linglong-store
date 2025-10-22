@@ -2,12 +2,13 @@ import styles from './index.module.scss'
 import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { useInitStore, useSearchStore } from '@/stores/appConfig'
+import { useInitStore, useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import cleanIcon from '@/assets/icons/clean.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
 import { useNavigate } from 'react-router-dom'
+
 const Titlebar = () => {
   const loadingInit = useInitStore((state) => state.loadingInit)
   const keyword = useSearchStore((state) => state.keyword)
@@ -16,15 +17,16 @@ const Titlebar = () => {
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
   const [downloadStatus, setDownloadStatus] = useState(false)
+
   const navigate = useNavigate()
   const handleFullscreen = async() => {
     try {
       await appWindow.toggleMaximize()
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to toggle maximize:', error)
     }
   }
+
   useEffect(() => {
     // 初始化最大化状态
     appWindow.isMaximized().then(setIsMaximized)
@@ -41,7 +43,6 @@ const Titlebar = () => {
     try {
       await appWindow.minimize()
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to minimize:', error)
     }
   }
@@ -50,24 +51,22 @@ const Titlebar = () => {
     try {
       await appWindow.close()
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('Failed to close:', error)
     }
   }
-  const handleDownload = ()=>{
-    console.log('下载')
-    setDownloadStatus(!downloadStatus)
 
+  const handleDownload = ()=>{
+    setDownloadStatus(!downloadStatus)
   }
+
   // 定义一个处理输入变化的函数
   const handleInputChange = (event: { target: { value: SetStateAction<string> } }) => {
     const keyword = event.target.value as string
     changeKeyword(keyword)
   }
+
   // 按下enter则搜索，按下delete则删除
   const handleKeyDown = (event: { key: string; preventDefault: () => void }) => {
-    console.log(event.key, 'event.key')
-
     if (event.key === 'Enter') {
       handleSearch()
       // 可以阻止默认行为，例如提交表单的默认行为
@@ -79,12 +78,15 @@ const Titlebar = () => {
       event.preventDefault()
     }
   }
+
   const handleClean = ()=>{
     resetKeyword()
   }
+
   const handleSearch = ()=>{
     navigate('/search_list')
   }
+
   return (
     <div className={styles.titlebar} data-tauri-drag-region="true">
       <div className={styles.titlebarLeft}>
@@ -104,10 +106,8 @@ const Titlebar = () => {
           </div>
         </div> : null
       }
-
       <div className={styles.titlebarRight}>
         {loadingInit ? <span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span> : null}
-
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>
         <span className={styles.title} onClick={handleFullscreen}>
           {isMaximized ? <Copy /> : <Square />}

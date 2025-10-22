@@ -1,5 +1,6 @@
 import styles from './index.module.scss'
 import Logo from '@/assets/linyaps.svg'
+
 // 首屏页面
 const LaunchPage = ()=>{
   return <div className={styles.launchPage} >
@@ -28,4 +29,5 @@ const LaunchPage = ()=>{
     </div>
   </div>
 }
+
 export default LaunchPage

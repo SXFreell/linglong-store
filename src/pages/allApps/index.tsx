@@ -3,7 +3,7 @@ import { Button } from '@arco-design/web-react'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useEffect, useState } from 'react'
 import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'
-import { useInitStore } from '@/stores/appConfig'
+import { useInitStore } from '@/stores/global'
 const AllApps = () => {
   const arch = useInitStore((state) => state.arch)
   const repoName = useInitStore((state) => state.repoName)
