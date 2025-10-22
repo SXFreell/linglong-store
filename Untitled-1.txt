@@ -1,0 +1,110 @@
+[
+    {
+        "arch": [
+            "x86_64"
+        ],
+        "base": "main:org.deepin.base/25.2.1/x86_64",
+        "channel": "main",
+        "command": [
+            "deepin-calculator"
+        ],
+        "description": "Calculator for UOS\n",
+        "id": "org.deepin.calculator",
+        "install_time": 1761103787,
+        "kind": "app",
+        "module": "binary",
+        "name": "deepin-calculator",
+        "runtime": "main:org.deepin.runtime.dtk/25.2.1/x86_64",
+        "schema_version": "1.0",
+        "size": 5510888,
+        "version": "6.5.26.1"
+    },
+    {
+        "arch": [
+            "x86_64"
+        ],
+        "base": "org.deepin.base/25.2.1",
+        "channel": "main",
+        "description": "Qt is a cross-platform C++ application framework. Qt's primary feature\nis its rich set of widgets that provide standard GUI functionality.\n",
+        "id": "org.deepin.runtime.dtk",
+        "install_time": 1761103923,
+        "kind": "runtime",
+        "module": "binary",
+        "name": "deepin runtime",
+        "schema_version": "1.0",
+        "size": 536712193,
+        "version": "25.2.1.2"
+    },
+    {
+        "arch": [
+            "x86_64"
+        ],
+        "base": "org.deepin.empty/20.0.0",
+        "channel": "main",
+        "description": "deepin base environment.\n",
+        "extensions": [
+            {
+                "allow_env": {
+                    "VK_ADD_DRIVER_FILES": "",
+                    "__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS": "",
+                    "__EGL_VENDOR_LIBRARY_DIRS": "/usr/share/glvnd/egl_vendor.d"
+                },
+                "directory": "opt/extensions/org.deepin.driver.display.nvidia",
+                "name": "org.deepin.driver.display.nvidia",
+                "version": "1.0.0"
+            },
+            {
+                "allow_env": {
+                    "GBM_BACKENDS_PATH": "/usr/lib/x86_64-linux-gnu/gbm",
+                    "LIBGL_DRIVERS_PATH": "/usr/lib/x86_64-linux-gnu/dri",
+                    "__EGL_VENDOR_LIBRARY_DIRS": "/usr/share/glvnd/egl_vendor.d"
+                },
+                "directory": "opt/extensions/com.glenfly.driver.display.arise",
+                "name": "com.glenfly.driver.display.arise",
+                "version": "1.0.0"
+            },
+            {
+                "allow_env": {
+                    "LIBVA_DRIVERS_PATH": "/usr/lib/x86_64-linux-gnu/dri"
+                },
+                "directory": "opt/extensions/org.deepin.driver.media.intel",
+                "name": "org.deepin.driver.media.intel",
+                "version": "25.0.0"
+            },
+            {
+                "allow_env": {
+                    "GBM_BACKENDS_PATH": "/usr/lib/x86_64-linux-gnu/gbm",
+                    "LIBGL_DRIVERS_PATH": "/usr/lib/x86_64-linux-gnu/dri",
+                    "LIBVA_DRIVERS_PATH": "/usr/lib/x86_64-linux-gnu/dri",
+                    "VK_ADD_DRIVER_FILES": "",
+                    "__EGL_VENDOR_LIBRARY_DIRS": "/usr/share/glvnd/egl_vendor.d"
+                },
+                "directory": "opt/extensions/com.mthreads.driver.musa",
+                "name": "com.mthreads.driver.musa",
+                "version": "1.0.0"
+            },
+            {
+                "allow_env": {
+                    "GBM_BACKENDS_PATH": "/usr/lib/x86_64-linux-gnu/gbm",
+                    "LIBGL_DRIVERS_PATH": "/usr/lib/x86_64-linux-gnu/dri",
+                    "VDPAU_DRIVER_PATH": "usr/lib/x86_64-linux-gnu/vdpau",
+                    "VK_ADD_DRIVER_FILES": "",
+                    "__EGL_VENDOR_LIBRARY_DIRS": "/usr/share/glvnd/egl_vendor.d"
+                },
+                "directory": "opt/extensions/com.zhaoxin.driver.cx4",
+                "name": "com.zhaoxin.driver.cx4",
+                "version": "25.2.0"
+            }
+        ],
+        "id": "org.deepin.base",
+        "install_time": 1761104229,
+        "kind": "base",
+        "module": "binary",
+        "name": "deepin-base",
+        "permissions": {},
+        "runtime": "latest",
+        "schema_version": "1.0",
+        "size": 10485760,
+        "version": "25.2.1.1"
+    }
+]

@@ -41,9 +41,13 @@ export {
   ENV,
 } from './constants'
 
+// 导出类型
+export type { InstalledApp } from './types'
+
 // 默认导出请求实例
 export { request as default } from './request'
 import { invoke } from '@tauri-apps/api/core'
+import type { InstalledApp } from './types'
 
 export const getRunningLinglongApps = async() => {
   return await invoke('get_running_linglong_apps')
@@ -51,4 +55,12 @@ export const getRunningLinglongApps = async() => {
 
 export const killLinglongApp = async(appName: string) => {
   return await invoke('kill_linglong_app', { appName })
+}
+
+export const getInstalledLinglongApps = async(): Promise<InstalledApp[]> => {
+  return await invoke('get_installed_linglong_apps')
+}
+
+export const getAllInstalledLinglongApps = async(): Promise<InstalledApp[]> => {
+  return await invoke('get_all_installed_linglong_apps')
 }
