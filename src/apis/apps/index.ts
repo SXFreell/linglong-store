@@ -62,3 +62,10 @@ export const getDisCategoryList = () => {
 export const getSearchAppVersionList = (data: any) => {
   return post<BaseResponse>('/visit/getSearchAppVersionList', data)
 }
+
+/**
+* 获取程序的详细信息（包括图标等）
+*/
+export const getAppDetails = (data: any) => {
+  return post<BaseResponse>('/visit/getAppDetails', data)
+}

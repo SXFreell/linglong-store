@@ -55,6 +55,16 @@
         margin: 0.25rem 0;
       }
     }
+
+    .version {
+      font-size: 0.7rem;
+      color: var(--color-text-3);
+      margin-top: 0.25rem;
+
+      :global(.arco-typography) {
+        margin: 0;
+      }
+    }
   }
 
   .actions {
