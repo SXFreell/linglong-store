@@ -1,0 +1,34 @@
+{
+  "name": "linglong-store",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "license": "MIT",
+  "author": "Shirosu <xfreell@163.com>",
+  "description": "玲珑商店客户端",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "dependencies": {
+    "@arco-design/web-react": "^2.66.2",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^7.7.0"
+  },
+  "devDependencies": {
+    "@arco-plugins/vite-react": "^1.3.3",
+    "@tauri-apps/cli": "^2",
+    "@types/react": "^18.3.1",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "less": "^4.4.0",
+    "sass-embedded": "^1.89.2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
+  }
+}

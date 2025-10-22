@@ -1,0 +1,10 @@
+#!/bin/bash
+
+# 在此处执行你的环境脚本
+HERE="$(dirname "$(readlink -f "${0}")")"
+
+echo "正在执行安装前脚本..."
+bash "$HERE/setup-env.sh"
+
+# 启动 Electron 应用
+exec "$HERE/resources/app/linglong-store" "$@"
