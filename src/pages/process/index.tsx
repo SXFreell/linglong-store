@@ -1,8 +1,64 @@
-import { Table, Button } from '@arco-design/web-react'
-import { useState } from 'react'
+import { Table, Button, Message } from '@arco-design/web-react'
+import { useState, useEffect } from 'react'
+import { getRunningLinglongApps, killLinglongApp } from '../../apis'
 
+interface LinglongAppInfo {
+  key: string
+  name: string
+  version: string
+  arch: string
+  channel: string
+  source: string
+  pid: string
+  container_id: string
+}
 
 const Process = () => {
+  const [data, setData] = useState<LinglongAppInfo[]>([])
+  const [loading, setLoading] = useState<string | null>(null)
+
+  const fetchRunningApps = async() => {
+    try {
+      const apps = await getRunningLinglongApps() as LinglongAppInfo[]
+      const formattedApps = apps.map((app, index) => ({
+        ...app,
+        key: (index + 1).toString(),
+      }))
+      setData(formattedApps)
+    } catch {
+      Message.error('获取运行中的玲珑应用失败')
+    }
+  }
+
+  useEffect(() => {
+    // 初始加载
+    fetchRunningApps()
+
+    // 设置定时器，每秒刷新一次
+    const intervalId = setInterval(() => {
+      fetchRunningApps()
+    }, 1000)
+
+    // 清理函数：组件卸载时清除定时器
+    return () => {
+      clearInterval(intervalId)
+    }
+  }, [])
+
+  const processClick = async(record: LinglongAppInfo) => {
+    try {
+      setLoading(record.name)
+      await killLinglongApp(record.name)
+      Message.success(`成功停止 ${record.name}`)
+      // 刷新列表
+      await fetchRunningApps()
+    } catch (error) {
+      Message.error(`停止 ${record.name} 失败: ${error}`)
+    } finally {
+      setLoading(null)
+    }
+  }
+
   const columns = [
     {
       title: '包名',
@@ -15,15 +71,15 @@ const Process = () => {
     {
       title: '版本号',
       dataIndex: 'version',
-      align: 'center',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
     },
     {
       title: '架构',
-      dataIndex: 'framework',
-      align: 'center',
+      dataIndex: 'arch',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
@@ -31,7 +87,7 @@ const Process = () => {
     {
       title: '渠道',
       dataIndex: 'channel',
-      align: 'center',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
@@ -39,15 +95,15 @@ const Process = () => {
     {
       title: '来源',
       dataIndex: 'source',
-      align: 'center',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
     },
     {
       title: '进程ID',
-      dataIndex: 'process_id',
-      align: 'center',
+      dataIndex: 'pid',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
@@ -63,45 +119,23 @@ const Process = () => {
     {
       title: '操作',
       dataIndex: 'operate',
-      align: 'center',
+      align: 'center' as const,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
-      // 等接口数据出来再替换any
-      render: (_col:any, record:any) => (
-        <Button type='primary' status='danger' onClick={()=>processClick(record)}>
-        停止
+      render: (_col: unknown, record: LinglongAppInfo) => (
+        <Button
+          type='primary'
+          status='danger'
+          onClick={() => processClick(record)}
+          loading={loading === record.name}
+        >
+          停止
         </Button>
       ),
     },
   ]
 
-  const [data] = useState([
-    {
-      key: '1',
-      name: 'org.dde.calendar',
-      version: '5.14.7.3',
-      framework: 'x86_64',
-      channel: 'main',
-      source: 'stable',
-      process_id: '6363',
-      container_id: '003f05894ac4',
-    },
-    {
-      key: '2',
-      name: 'org.dde.calendar',
-      version: '5.14.7.3',
-      framework: 'x86_64',
-      channel: 'main',
-      source: 'stable',
-      process_id: '6363',
-      container_id: '003f05894ac4',
-    },
-  ])
-  const processClick = (item:any)=>{
-    console.log(item, '删除=>item==========')
-
-  }
   return (
     <div style={{ padding: 20 }}>
       <Table
