@@ -175,3 +175,140 @@ pub async fn get_all_installed_apps() -> Result<Vec<InstalledApp>, String> {
 
     Ok(apps)
 }
+
+/// 卸载指定的玲珑应用
+pub async fn uninstall_linglong_app(app_id: String, version: String) -> Result<String, String> {
+    let app_ref = format!("{}/{}", app_id, version);
+    
+    let output = Command::new("ll-cli")
+        .arg("uninstall")
+        .arg(&app_ref)
+        .output()
+        .map_err(|e| format!("Failed to execute 'll-cli uninstall': {}", e))?;
+
+    if !output.status.success() {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("ll-cli uninstall command failed: {}", error_msg));
+    }
+
+    Ok(format!("Successfully uninstalled {} version {}", app_id, version))
+}
+
+/// 搜索指定appId的所有已安装版本
+pub async fn search_app_versions(app_id: String) -> Result<Vec<InstalledApp>, String> {
+    println!("[search_app_versions] Searching for installed versions of app_id: {}", app_id);
+    
+    // 使用 ll-cli list 获取所有已安装的应用，而不是
+    let output = Command::new("ll-cli")
+        .arg("list")
+        .arg("--json")
+        .arg("--type=all")
+        .output()
+        .map_err(|e| {
+            let err_msg = format!("Failed to execute 'll-cli list': {}", e);
+            println!("[search_app_versions] Error: {}", err_msg);
+            err_msg
+        })?;
+
+    if !output.status.success() {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        let err = format!("ll-cli list command failed: {}", error_msg);
+        println!("[search_app_versions] {}", err);
+        return Err(err);
+    }
+
+    let output_string = String::from_utf8_lossy(&output.stdout);
+    let trimmed = output_string.trim();
+    
+    println!("[search_app_versions] Output length: {} bytes", trimmed.len());
+    
+    if trimmed.is_empty() {
+        println!("[search_app_versions] Empty output, returning empty vec");
+        return Ok(Vec::new());
+    }
+
+    // 解析 JSON 输出
+    let list_items: Vec<LLCliListItem> = serde_json::from_str(trimmed)
+        .map_err(|e| {
+            let err_msg = format!("Failed to parse ll-cli list output: {}", e);
+            println!("[search_app_versions] Parse error: {}", err_msg);
+            err_msg
+        })?;
+    
+    println!("[search_app_versions] Found {} installed items", list_items.len());
+    
+    // 过滤出指定 app_id 的所有版本
+    let apps: Vec<InstalledApp> = list_items
+        .into_iter()
+        .filter(|item| {
+            // 匹配 app_id 或 name
+            let matches = item.app_id.as_ref().map_or(false, |id| id == &app_id) 
+                || item.name == app_id;
+            if matches {
+                println!("[search_app_versions] Found matching app: {} ({})", 
+                         item.name, 
+                         item.app_id.as_ref().unwrap_or(&item.name));
+            }
+            matches
+        })
+        .map(|item| {
+            let arch = match item.arch {
+                serde_json::Value::String(s) => s,
+                serde_json::Value::Array(arr) => {
+                    arr.first()
+                        .and_then(|v| v.as_str())
+                        .unwrap_or("")
+                        .to_string()
+                }
+                _ => String::new(),
+            };
+
+            let size = match item.size {
+                Some(serde_json::Value::String(s)) => s,
+                Some(serde_json::Value::Number(n)) => n.to_string(),
+                _ => "0".to_string(),
+            };
+
+            InstalledApp {
+                app_id: item.app_id.unwrap_or_else(|| item.name.clone()),
+                name: item.name,
+                version: item.version,
+                arch,
+                channel: item.channel,
+                description: item.description.unwrap_or_default(),
+                icon: String::new(),
+                kind: item.kind,
+                module: item.module.unwrap_or_default(),
+                runtime: item.runtime.unwrap_or_default(),
+                size,
+                repo_name: "stable".to_string(),
+            }
+        })
+        .collect();
+
+    println!("[search_app_versions] Found {} installed versions for app_id: {}", apps.len(), app_id);
+    for app in &apps {
+        println!("[search_app_versions] - {} version: {}, channel: {}, module: {}", 
+                 app.app_id, app.version, app.channel, app.module);
+    }
+
+    Ok(apps)
+}
+
+/// 运行指定的玲珑应用
+pub async fn run_linglong_app(app_id: String, version: String) -> Result<String, String> {
+    let app_ref = format!("{}/{}", app_id, version);
+    
+    let output = Command::new("ll-cli")
+        .arg("run")
+        .arg(&app_ref)
+        .output()
+        .map_err(|e| format!("Failed to execute 'll-cli run': {}", e))?;
+
+    if !output.status.success() {
+        let error_msg = String::from_utf8_lossy(&output.stderr);
+        return Err(format!("ll-cli run command failed: {}", error_msg));
+    }
+
+    Ok(format!("Successfully launched {} version {}", app_id, version))
+}

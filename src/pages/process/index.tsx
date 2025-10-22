@@ -1,6 +1,6 @@
 import { Table, Button, Message } from '@arco-design/web-react'
 import { useState, useEffect } from 'react'
-import { getRunningLinglongApps, killLinglongApp } from '../../apis'
+import { getRunningLinglongApps, killLinglongApp } from '@/apis'
 
 interface LinglongAppInfo {
   key: string
@@ -19,14 +19,20 @@ const Process = () => {
 
   const fetchRunningApps = async() => {
     try {
+      // eslint-disable-next-line no-console
+      console.log('[fetchRunningApps] Fetching running apps...')
       const apps = await getRunningLinglongApps() as LinglongAppInfo[]
+      // eslint-disable-next-line no-console
+      console.log('[fetchRunningApps] Got apps:', apps.length)
       const formattedApps = apps.map((app, index) => ({
         ...app,
         key: (index + 1).toString(),
       }))
       setData(formattedApps)
-    } catch {
-      Message.error('获取运行中的玲珑应用失败')
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[fetchRunningApps] Error fetching apps:', error)
+      Message.error(`获取运行中的玲珑应用失败: ${error}`)
     }
   }
 
@@ -46,13 +52,21 @@ const Process = () => {
   }, [])
 
   const processClick = async(record: LinglongAppInfo) => {
+    // eslint-disable-next-line no-console
+    console.log('[processClick] Starting to kill app:', record.name)
     try {
       setLoading(record.name)
+      // eslint-disable-next-line no-console
+      console.log('[processClick] Calling killLinglongApp for:', record.name)
       await killLinglongApp(record.name)
+      // eslint-disable-next-line no-console
+      console.log('[processClick] Successfully killed app:', record.name)
       Message.success(`成功停止 ${record.name}`)
       // 刷新列表
       await fetchRunningApps()
     } catch (error) {
+      // eslint-disable-next-line no-console
+      console.error('[processClick] Error killing app:', record.name, error)
       Message.error(`停止 ${record.name} 失败: ${error}`)
     } finally {
       setLoading(null)
