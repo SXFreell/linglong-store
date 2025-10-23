@@ -38,11 +38,9 @@ const Layout = () => {
         isInit ? <LaunchPage /> : <div className={styles.layoutContent}>
           <Sidebar className={styles.sider} />
           <div className={styles.content}>
-            <div className={styles.contentInner}>
-              <Suspense fallback={<Loading />}>
-                <Outlet />
-              </Suspense>
-            </div>
+            <Suspense fallback={<Loading />}>
+              <Outlet />
+            </Suspense>
           </div>
         </div>
       }

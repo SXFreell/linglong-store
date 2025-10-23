@@ -1,7 +1,7 @@
 import { Button, Typography } from '@arco-design/web-react'
 import styles from './index.module.scss'
 import { useNavigate } from 'react-router-dom'
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, useState, useEffect } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg'
 import type { ApplicationCardProps, OperateItem } from './types'
 import { OperateType } from './types'
@@ -21,6 +21,16 @@ const ApplicationCard = ({
   onOperate,
 }: ApplicationCardProps) => {
   const navigate = useNavigate()
+
+  const [cardLoading, setCardLoading] = useState(false)
+
+  useEffect(() => {
+    if (options && options.appId && !options.appId.startsWith('empty-')) {
+      setCardLoading(false)
+    } else {
+      setCardLoading(true)
+    }
+  }, [options])
 
   // 缓存当前操作按钮配置
   const currentOperate = useMemo(() => {
@@ -51,7 +61,10 @@ const ApplicationCard = ({
   }, [operateId, onOperate])
 
   return (
-    <div className={styles.applicationCard} onClick={handleNavigateToDetail}>
+    <div
+      className={`${styles.applicationCard} ${cardLoading ? styles.cardLoading : ''}`}
+      onClick={handleNavigateToDetail}
+    >
       <div className={styles.icon}>
         <img src={iconUrl} alt={options.name || '应用图标'} />
       </div>

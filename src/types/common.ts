@@ -22,10 +22,11 @@ export interface PaginationParams {
 
 // 分页响应数据
 export interface PaginationData<T> {
+  pages: number
   records: T[]
   total: number
-  pageNo?: number
-  pageSize?: number
+  current: number
+  size: number
 }
 
 // 通用列表响应类型别名

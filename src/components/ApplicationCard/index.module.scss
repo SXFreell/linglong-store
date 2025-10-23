@@ -1,3 +1,12 @@
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
 .applicationCard {
   flex: 1;
   background-color: var(--color-fill-1);
@@ -6,12 +15,40 @@
   border: 1px solid var(--color-fill-1);
   min-width: 18rem;
   padding: 0.5rem 1rem;
-  height: 6rem;
+  height: 7.5rem;
   cursor: pointer;
   align-items: center;
+  transition: opacity 0.3s ease;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
     border: 1px solid rgb(var(--primary-3));
+  }
+
+  &.cardLoading {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(240, 240, 240, 0.2) 25%,
+        rgba(217, 217, 217, 0.4) 50%,
+        rgba(240, 240, 240, 0.2) 75%,
+        transparent 100%
+      );
+      animation: shimmer 1.5s infinite;
+      z-index: 11;
+    }
   }
 
   .icon {
@@ -21,7 +58,6 @@
     align-items: center;
     justify-content: center;
     margin-right: 1rem;
-    // background-color: antiquewhite;
     border-radius: 0.25rem;
 
     img {

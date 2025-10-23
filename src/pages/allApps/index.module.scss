@@ -1,19 +1,78 @@
-.applicationList {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-  gap: 16px;
-}
-
-.tabBtn {
+.allAppsPage {
   display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  flex-flow: row wrap;
-  margin-bottom: 2rem;
+  flex-direction: column;
+  height: 100%;
+  padding: 1.5rem;
+  overflow-y: auto;
 
-  .btn {
-    width: 6.5rem;
-    font-size: 1rem;
-    margin: 0 0.75rem 0.75rem 0;
+  .tabBtn {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    flex-flow: row wrap;
+    margin-bottom: 2rem;
+    flex-shrink: 0;
+
+    .btn {
+      width: 6.5rem;
+      font-size: 1rem;
+      margin: 0 0.75rem 0.75rem 0;
+    }
+  }
+
+  .applicationList {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    gap: 16px;
+    align-content: start;
+    padding-bottom: 2rem;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-fill-2);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-fill-3);
+      border-radius: 4px;
+
+      &:hover {
+        background: var(--color-fill-4);
+      }
+    }
+  }
+
+  .loadingTip,
+  .noMoreTip {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+    color: var(--color-text-3);
+    font-size: 0.875rem;
+  }
+
+  .loadingTip {
+    color: var(--color-text-2);
+  }
+
+  .loadMoreContainer {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+  }
+
+  .noMore {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 0;
+    color: var(--color-text-3);
+    font-size: 0.875rem;
   }
 }

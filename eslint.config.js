@@ -81,7 +81,7 @@ export default [
       
       // React Hooks 规则
       'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': 'off',
       
       // 通用代码质量规则
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
