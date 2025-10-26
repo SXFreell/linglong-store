@@ -1,12 +1,14 @@
 import styles from './index.module.scss'
 import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
+import { Popover } from '@arco-design/web-react'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useInitStore, useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import cleanIcon from '@/assets/icons/clean.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
+import DownloadProgress from '@/components/DownloadProgress'
 import { useNavigate } from 'react-router-dom'
 
 const Titlebar = () => {
@@ -107,7 +109,9 @@ const Titlebar = () => {
         </div> : null
       }
       <div className={styles.titlebarRight}>
-        {loadingInit ? <span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span> : null}
+        {loadingInit ? <Popover trigger='click' position='br'
+          title='下载管理'
+          content={<DownloadProgress/>}><span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span> </Popover> : null}
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>
         <span className={styles.title} onClick={handleFullscreen}>
           {isMaximized ? <Copy /> : <Square />}
