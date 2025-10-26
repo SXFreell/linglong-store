@@ -6,6 +6,8 @@ import DefaultIcon from '@/assets/linyaps.svg'
 import type { ApplicationCardProps, OperateItem } from './types'
 import { OperateType } from './types'
 
+type AppMainDto = API.APP.AppMainDto
+
 // 操作按钮配置（提取为常量）
 const OPERATE_LIST: OperateItem[] = [
   { name: '卸载', id: OperateType.UNINSTALL },
@@ -16,9 +18,8 @@ const OPERATE_LIST: OperateItem[] = [
 
 const ApplicationCard = ({
   operateId = OperateType.INSTALL,
-  options = {},
+  options = {} as AppMainDto,
   loading = false,
-  onOperate,
 }: ApplicationCardProps) => {
   const navigate = useNavigate()
 
@@ -46,9 +47,6 @@ const ApplicationCard = ({
   const handleNavigateToDetail = useCallback(() => {
     navigate('/app_detail', {
       state: {
-        appId: options.appId,
-        name: options.name,
-        version: options.version,
         ...options,
       },
     })
@@ -57,8 +55,7 @@ const ApplicationCard = ({
   // 处理操作按钮点击
   const handleOperateClick = useCallback((e: Event) => {
     e.stopPropagation() // 阻止事件冒泡到卡片点击事件
-    onOperate?.(operateId)
-  }, [operateId, onOperate])
+  }, [operateId])
 
   return (
     <div
@@ -78,7 +75,7 @@ const ApplicationCard = ({
 
         <div className={styles.description}>
           <Typography.Text ellipsis={{ rows: 2, expandable: false }}>
-            {options.description || '这里是对应的应用描述'}
+            {options.description || '应用描述'}
           </Typography.Text>
         </div>
 
@@ -94,7 +91,7 @@ const ApplicationCard = ({
           type="primary"
           className={styles.installButton}
           size="mini"
-          loading={loading || options.loading}
+          loading={loading}
           onClick={handleOperateClick}
         >
           {currentOperate.name}

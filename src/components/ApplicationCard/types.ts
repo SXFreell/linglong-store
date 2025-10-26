@@ -1,9 +1,3 @@
-/**
- * ApplicationCard 组件类型定义
- */
-
-import type { InstalledApp } from '@/apis/invoke/types'
-
 // 操作类型枚举
 export enum OperateType {
   UNINSTALL = 0, // 卸载
@@ -23,11 +17,9 @@ export interface ApplicationCardProps {
   /** 操作类型 ID，默认为安装 */
   operateId?: OperateType
   /** 应用信息 */
-  options?: Partial<InstalledApp> & Record<string, unknown>
+  options?: API.APP.AppMainDto
   /** 加载状态 */
   loading?: boolean
-  /** 操作回调函数 */
-  onOperate?: (operateId: OperateType) => void
 }
 
 // 导出操作类型常量，方便外部使用

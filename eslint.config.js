@@ -23,6 +23,8 @@ export default [
         ecmaVersion: 'latest',
         ecmaFeatures: { jsx: true },
         sourceType: 'module',
+        project: './tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     settings: {
@@ -89,7 +91,7 @@ export default [
       'prefer-const': 'error',
       'no-var': 'error',
       'no-unused-vars': 'off', // 使用 TypeScript 版本
-      'no-undef': 'error',
+      'no-undef': 'off', // 使用 TypeScript 版本
       'no-unreachable': 'error',
       'no-duplicate-case': 'error',
       'no-empty': 'warn',

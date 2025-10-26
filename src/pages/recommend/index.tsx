@@ -6,7 +6,8 @@ import { getWelcomeCarouselList, getWelcomeAppList } from '@/apis/apps/index'
 import { useCallback, useEffect, useState } from 'react'
 import { useInitStore } from '@/stores/global'
 import type { CarouselItem } from '@/components/ApplicationCarousel/types'
-import type { AppInfo } from '@/apis/apps/types'
+
+type AppInfo = API.APP.AppMainDto
 
 const Recommend = () => {
   const arch = useInitStore((state) => state.arch)
@@ -25,7 +26,7 @@ const Recommend = () => {
 
       // 更新轮播图数据
       if (carouselResult.code === 200 && carouselResult.data?.length > 0) {
-        setCarouselList(carouselResult.data)
+        setCarouselList(carouselResult.data as unknown as CarouselItem[])
       }
 
       // 更新推荐列表数据
@@ -35,8 +36,7 @@ const Recommend = () => {
     } catch (error) {
       console.error('Failed to fetch recommend data:', error)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [repoName, arch])
 
   useEffect(() => {
     fetchData()
