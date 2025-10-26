@@ -4,11 +4,14 @@ import ApplicationCard from '@/components/ApplicationCard'
 import { useEffect, useState, useRef } from 'react'
 import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'
 import { useInitStore } from '@/stores/global'
-import type { Category, AppInfo } from '@/apis/apps/types'
 import { generateEmptyCards, generateEmptyCategories } from './utils'
 
 const defaultPageSize = 30 // 每页显示数量
 const defaultCategorySize = 22 // 默认分类数量
+
+type Category = API.APP.AppCategories
+type AppInfo = API.APP.AppMainDto
+
 
 const AllApps = () => {
   const arch = useInitStore((state) => state.arch)
@@ -65,7 +68,7 @@ const AllApps = () => {
         } else {
           // 追加新数据时，过滤掉空卡片后再追加
           setAllAppList(prev => {
-            const filteredPrev = prev.filter(item => !item.appId.startsWith('empty-'))
+            const filteredPrev = prev.filter(item => !item.appId?.startsWith('empty-'))
             return [...filteredPrev, ...newRecords]
           })
         }

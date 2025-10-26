@@ -1,28 +1,7 @@
 import { create } from 'zustand'
-import type { InstalledApp } from '@/apis/invoke/types'
+import type { InstalledAppsStore } from '@/types/store'
 import { getInstalledLinglongApps, getAllInstalledLinglongApps } from '@/apis/invoke'
 import { getAppDetails } from '@/apis/apps'
-
-interface InstalledAppsStore {
-  installedApps: InstalledApp[]
-  loading: boolean
-  error: string | null
-
-  // 获取已安装应用列表
-  fetchInstalledApps: (includeBaseService?: boolean) => Promise<void>
-
-  // 更新应用详情（图标等）
-  updateAppDetails: () => Promise<void>
-
-  // 更新单个应用的loading状态
-  updateAppLoading: (appId: string, version: string, loading: boolean) => void
-
-  // 移除已卸载的应用
-  removeApp: (appId: string, version: string) => void
-
-  // 清空列表
-  clearApps: () => void
-}
 
 export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
   installedApps: [],
@@ -56,8 +35,18 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
     }
 
     try {
+      // 将已安装应用转换为请求格式
+      const appDetailsVOs: API.APP.AppDetailsVO[] = installedApps.map(app => ({
+        appId: app.appId,
+        name: app.name,
+        version: app.version,
+        channel: app.channel,
+        module: app.module,
+        arch: app.arch,
+      }))
+
       // 调用后端API获取应用详情
-      const response = await getAppDetails({ apps: installedApps })
+      const response = await getAppDetails(appDetailsVOs)
 
       if (response.code === 200 && response.data) {
         const detailsData = Array.isArray(response.data) ? response.data : []
