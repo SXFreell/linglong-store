@@ -1,7 +1,7 @@
 import styles from './index.module.scss'
 import { useMemo, useState } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg'
-import { Progress } from '@arco-design/web-react'
+import { Progress } from 'antd'
 import { Pause, PlayOne } from '@icon-park/react'
 const DownloadIcon = ({ percent = 10, isDownload = true })=>{
   return <>
@@ -13,12 +13,12 @@ const DownloadIcon = ({ percent = 10, isDownload = true })=>{
     </div>
   </>
 }
-const DownloadProgress = ()=>{
+const DownloadProgress = () => {
   const [isFinished] = useState(false)
   // 获取图标 URL
   const iconUrl = useMemo(() => {
     return DefaultIcon
-  })
+  }, [])
   return <>
     <div className={styles.downloadContainer}>
       <div className={styles.downloadBox} >
@@ -35,7 +35,7 @@ const DownloadProgress = ()=>{
             </div>
           </div>
           <div className={styles.itemRight}>
-            {isFinished ? <Progress className={styles.downloadProgress} percent={30} formatText={(percent: number)=><DownloadIcon percent={percent}/>} type='circle' size='small' trailColor='var(--color-primary-light-1)' /> : <button className={styles.downloadBtn}>打开</button>}
+            {isFinished ? <Progress className={styles.downloadProgress} percent={30} format={(percent) => <DownloadIcon percent={percent}/> } type='circle' width={80} strokeColor='var(--color-primary-light-1)' trailColor='var(--color-primary-light-1)' /> : <button className={styles.downloadBtn}>打开</button>}
 
           </div>
         </div>
@@ -52,7 +52,7 @@ const DownloadProgress = ()=>{
             </div>
           </div>
           <div className={styles.itemRight}>
-            <Progress className={styles.downloadProgress} percent={30} formatText={(percent: number)=><DownloadIcon percent={percent}/>} type='circle' size='small' trailColor='var(--color-primary-light-1)' />
+            <Progress className={styles.downloadProgress} percent={30} format={(percent) => <DownloadIcon percent={percent}/> } type='circle' width={80} strokeColor='var(--color-primary-light-1)' trailColor='var(--color-primary-light-1)' />
 
           </div>
         </div>

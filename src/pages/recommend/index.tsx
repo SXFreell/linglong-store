@@ -1,4 +1,4 @@
-import { Button } from '@arco-design/web-react'
+import { Button } from 'antd'
 import AppCarousel from '@/components/ApplicationCarousel'
 import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'

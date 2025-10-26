@@ -1,6 +1,6 @@
 import styles from './index.module.scss'
 import { Outlet } from 'react-router-dom'
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
@@ -8,7 +8,10 @@ import Loading from '../components/Loading'
 import { useInitStore } from '@/stores/global'
 import { arch } from '@tauri-apps/plugin-os'
 
-const Layout = () => {
+// import { Layout } from 'antd'
+// const { Header, Sider, Content } = Layout
+
+const AppLayout = () => {
   const onInited = useInitStore((state) => state.onInited)
   const getUpdateAppNum = useInitStore((state) => state.getUpdateAppNum)
   const changeArch = useInitStore((state) => state.changeArch)
@@ -46,6 +49,23 @@ const Layout = () => {
       }
     </div>
   )
+  // return (
+  //   <Layout>
+  //     <Header>
+  //       <Titlebar/>
+  //     </Header>
+  //     <Layout>
+  //       <Sider>
+  //         <Sidebar className={styles.sider} />
+  //       </Sider>
+  //       <Content className={styles.content}>
+  //         <Suspense fallback={<Loading />}>
+  //           <Outlet />
+  //         </Suspense>
+  //       </Content>
+  //     </Layout>
+  //   </Layout>
+  // )
 }
 
-export default Layout
+export default AppLayout

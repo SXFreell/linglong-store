@@ -2,7 +2,7 @@ import styles from './index.module.scss'
 import { useNavigate, useLocation } from 'react-router-dom'
 import menuList from './components/menuList'
 import SpeedTool from './components/speedTool'
-import { Popover } from '@arco-design/web-react'
+import { Popover } from 'antd'
 import { Speed } from '@icon-park/react'
 import { useInitStore, useSearchStore } from '@/stores/global'
 
@@ -46,13 +46,11 @@ const Sidebar = ({ className }: { className: string }) => {
         <div className={styles.speedToolIcon}>
           <Popover
             trigger='click'
-            position='right'
-            unmountOnExit={false}
             content={
               <SpeedTool />
             }
           >
-            <Speed theme="outline" size="16" fill="var(--color-text-1)"/>
+            <Speed theme="outline" size="16" fill="var(--ant-color-text-secondary)"/>
           </Popover>
         </div>
       </div>

@@ -48,14 +48,14 @@
     }
 
     &:hover {
-      background-color: var(--fill-color-3);
+      background-color: var(--ant-color-fill-secondary);
     }
 
     &.active {
-      background-color: rgb(var(--primary-2));
+      background-color: var(--ant-color-primary-bg-hover);
 
       .menuItemText {
-        color: rgb(var(--primary-6));
+        color: var(--ant-color-primary-text);
         font-weight: 500;
       }
     }

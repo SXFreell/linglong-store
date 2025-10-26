@@ -58,7 +58,7 @@ const SpeedTool = () => {
     <div className={styles.speedTool}>
       <div className={styles.speedToolItem}>
         <div className={styles.speedToolItemIcon}>
-          <Upload theme="outline" size="16" fill="var(--color-text-1)"/>
+          <Upload theme="outline" size="16" fill="var(--ant-color-text-secondary)"/>
         </div>
         <div className={styles.speedToolItemText}>
           <span className={styles.speedToolItemTextTitle}>上传速度</span>
@@ -67,7 +67,7 @@ const SpeedTool = () => {
       </div>
       <div className={styles.speedToolItem}>
         <div className={styles.speedToolItemIcon}>
-          <Download theme="outline" size="16" fill="var(--color-text-1)"/>
+          <Download theme="outline" size="16" fill="var(--ant-color-text-secondary)"/>
         </div>
         <div className={styles.speedToolItemText}>
           <span className={styles.speedToolItemTextTitle}>下载速度</span>

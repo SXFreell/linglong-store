@@ -1,10 +1,12 @@
-import { Button, Typography } from '@arco-design/web-react'
+import { Button, Typography } from 'antd'
 import styles from './index.module.scss'
 import { useNavigate } from 'react-router-dom'
 import { useMemo, useCallback, useState, useEffect } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg'
 import type { ApplicationCardProps, OperateItem } from './types'
 import { OperateType } from './types'
+
+const { Text, Paragraph, Title } = Typography
 
 type AppMainDto = API.APP.AppMainDto
 
@@ -53,7 +55,7 @@ const ApplicationCard = ({
   }, [navigate, options])
 
   // 处理操作按钮点击
-  const handleOperateClick = useCallback((e: Event) => {
+  const handleOperateClick = useCallback((e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation() // 阻止事件冒泡到卡片点击事件
   }, [operateId])
 
@@ -68,21 +70,21 @@ const ApplicationCard = ({
 
       <div className={styles.content}>
         <div className={styles.title}>
-          <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+          <Title level={5} ellipsis={{ tooltip: options.zhName || options.name || '应用名称' }}>
             {options.zhName || options.name || '应用名称'}
-          </Typography.Text>
+          </Title>
         </div>
 
         <div className={styles.description}>
-          <Typography.Text ellipsis={{ rows: 2, expandable: false }}>
+          <Paragraph ellipsis={{ tooltip: options.description || '应用描述', rows: 2, expandable: false }}>
             {options.description || '应用描述'}
-          </Typography.Text>
+          </Paragraph>
         </div>
 
         <div className={styles.version}>
-          <Typography.Text type="secondary" style={{ fontSize: '12px' }}>
+          <Text type="secondary" style={{ fontSize: '12px' }}>
             版本: {options.version || '-'}
-          </Typography.Text>
+          </Text>
         </div>
       </div>
 
@@ -90,7 +92,7 @@ const ApplicationCard = ({
         <Button
           type="primary"
           className={styles.installButton}
-          size="mini"
+          size="small"
           loading={loading}
           onClick={handleOperateClick}
         >

@@ -11,7 +11,7 @@ export default [
     ignores: ['dist', 'node_modules', 'build', 'src-tauri/target/**/*']
   },
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: {
@@ -187,6 +187,21 @@ export default [
           'balanced': true
         }
       }],
+    },
+  },
+  // 配置文件的 ESLint 规则（不需要类型检查）
+  {
+    files: ['eslint.config.js'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    rules: {
+      ...js.configs.recommended.rules,
+      'no-console': 'off',
     },
   },
 ] 

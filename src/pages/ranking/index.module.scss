@@ -10,11 +10,11 @@
 
 .customTabs {
     :global {
-        .arco-tabs-header-nav::before {
+        .ant-tabs-nav::before {
             height: 0;
         }
 
-        .arco-tabs-header-ink-inner {
+        .ant-tabs-ink-bar {
             border-radius: 1rem;
         }
     }

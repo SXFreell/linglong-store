@@ -1,5 +1,5 @@
 import styles from './index.module.scss'
-import { Button } from '@arco-design/web-react'
+import { Button } from 'antd'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useEffect, useState, useRef } from 'react'
 import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'

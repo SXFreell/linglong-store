@@ -9,8 +9,6 @@
     -webkit-user-select: none;
     user-select: none;
     cursor: default;
-    background-color: var(--color-fill-2);
-    color: var(--text-color-1);
     padding: 0 1rem;
 
     .titlebarLeft {
@@ -84,7 +82,7 @@
         .title {
             cursor: pointer;
 
-            :global(.arco-icon) {
+            :global(.ant-icon) {
                 font-size: 1.2rem;
             }
         }

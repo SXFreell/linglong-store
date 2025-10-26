@@ -1,4 +1,4 @@
-import { Table, Button, Message } from '@arco-design/web-react'
+import { Table, Button, message } from 'antd'
 import { useState, useEffect } from 'react'
 import { getRunningLinglongApps, killLinglongApp } from '@/apis/invoke'
 
@@ -31,7 +31,7 @@ const Process = () => {
       setData(formattedApps)
     } catch (error) {
       console.error('[fetchRunningApps] Error fetching apps:', error)
-      Message.error(`获取运行中的玲珑应用失败: ${error}`)
+      message.error(`获取运行中的玲珑应用失败: ${error}`)
     }
   }
 
@@ -60,12 +60,12 @@ const Process = () => {
       await killLinglongApp(record.name)
       // eslint-disable-next-line no-console
       console.log('[processClick] Successfully killed app:', record.name)
-      Message.success(`成功停止 ${record.name}`)
+      message.success(`成功停止 ${record.name}`)
       // 刷新列表
       await fetchRunningApps()
     } catch (error) {
       console.error('[processClick] Error killing app:', record.name, error)
-      Message.error(`停止 ${record.name} 失败: ${error}`)
+      message.error(`停止 ${record.name} 失败: ${error}`)
     } finally {
       setLoading(null)
     }
@@ -81,9 +81,9 @@ const Process = () => {
       // 复制命令到剪贴板
       await navigator.clipboard.writeText(command)
 
-      Message.success('命令已复制到剪贴板，请粘贴到终端中执行')
+      message.success('命令已复制到剪贴板，请粘贴到终端中执行')
     } catch (error) {
-      Message.error(`复制命令失败: ${error}`)
+      message.error(`复制命令失败: ${error}`)
     }
   }
 

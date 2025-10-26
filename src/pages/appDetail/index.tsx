@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Typography, Table, Message, Modal, Spin, Space } from '@arco-design/web-react'
-import type { TableColumnProps } from '@arco-design/web-react'
+import { Button, Typography, Table, message, Modal, Spin, Space } from 'antd'
+import type { TableColumnProps } from 'antd'
 import styles from './index.module.scss'
 import goBack from '@/assets/icons/go_back.svg'
 import DefaultIcon from '@/assets/linyaps.svg'
@@ -72,7 +72,7 @@ const AppDetail = () => {
       setVersions(parsedVersions)
     } catch (err) {
       console.error('loadVersions: error', err)
-      Message.error(`加载版本列表失败: ${err}`)
+      message.error(`加载版本列表失败: ${err}`)
     } finally {
       setLoading(false)
     }
@@ -103,7 +103,7 @@ const AppDetail = () => {
           await uninstallApp(currentApp.appId, version)
           // eslint-disable-next-line no-console
           console.log('[handleUninstall] Successfully uninstalled:', currentApp.appId, version)
-          Message.success('卸载成功')
+          message.success('卸载成功')
 
           // 重新加载版本列表
           await loadVersions()
@@ -116,7 +116,7 @@ const AppDetail = () => {
           }
         } catch (error) {
           console.error('[handleUninstall] Error uninstalling:', currentApp.appId, version, error)
-          Message.error(`卸载失败: ${error}`)
+          message.error(`卸载失败: ${error}`)
         } finally {
           setUninstallingVersion(null)
         }
@@ -138,7 +138,7 @@ const AppDetail = () => {
       await runApp(currentApp.appId, version)
       // eslint-disable-next-line no-console
       console.log('[handleRun] Command executed successfully:', currentApp.appId)
-      Message.success('启动命令已执行')
+      message.success('启动命令已执行')
     } catch { /* empty */ }
   }
 
@@ -223,7 +223,7 @@ const AppDetail = () => {
                   shape='round'
                   className={styles.installButton}
                   size='default'
-                  onClick={() => Message.info('安装功能开发中...')}
+                  onClick={() => message.info('安装功能开发中...')}
                 >
                   安装新版本
                 </Button>

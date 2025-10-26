@@ -1,4 +1,4 @@
-import { Descriptions } from '@arco-design/web-react'
+import { Descriptions } from 'antd'
 import styles from './index.module.scss'
 import feedback from '@/assets/icons/feedback.svg'
 import update from '@/assets/icons/update.svg'

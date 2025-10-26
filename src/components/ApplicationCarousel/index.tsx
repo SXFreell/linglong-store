@@ -1,16 +1,15 @@
 import styles from './index.module.scss'
-import { Button } from '@arco-design/web-react'
-import { Carousel } from '@arco-design/web-react'
+import { Button } from 'antd'
+import { Carousel } from 'antd'
 import type { ApplicationCarouselProps } from './types'
 
 const AppCarousel = ({ carouselList }: ApplicationCarouselProps) => {
   return (
     <Carousel
-      autoPlay
-      animation='fade'
-      showArrow='never'
-      indicatorType='never'
+      autoplay
+      effect='fade'
       className={styles.carouselBox}
+      dotPosition='bottom'
     >
       {carouselList.map((item) => (
         <div className={styles.carouselItem} key={item.appId}>
@@ -20,7 +19,7 @@ const AppCarousel = ({ carouselList }: ApplicationCarouselProps) => {
             <p>描述：{item.description}</p>
             <p>版本：{item.version}</p>
             <p>分类：{item.categoryName}</p>
-            <Button type='primary' shape='round' className={styles.installButton} size='default'>
+            <Button type='primary' shape='round' className={styles.installButton} >
               安 装
             </Button>
           </div>

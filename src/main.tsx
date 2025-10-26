@@ -1,7 +1,8 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import '@arco-design/web-react/dist/css/arco.css'
+import { ConfigProvider, App } from 'antd'
 import './styles/App.scss'
+import { Token, ComponentsTheme } from './styles/Theme'
 import Router from './router'
 import { tauriAppConfigHandler } from './stores/appConfig'
 
@@ -15,9 +16,15 @@ const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 if (import.meta.env.DEV) {
   root.render(
     <React.StrictMode>
-      <Router />
+      <ConfigProvider theme={{ cssVar: true, hashed: false, token: Token, components: ComponentsTheme }}>
+        <App><Router /></App>
+      </ConfigProvider>
     </React.StrictMode>,
   )
 } else {
-  root.render(<Router />)
+  root.render(
+    <ConfigProvider theme={{ cssVar: true, hashed: false, token: Token, components: ComponentsTheme }}>
+      <App><Router /></App>
+    </ConfigProvider>,
+  )
 }

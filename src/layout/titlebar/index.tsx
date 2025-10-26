@@ -1,7 +1,7 @@
 import styles from './index.module.scss'
 import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
-import { Popover } from '@arco-design/web-react'
+import { Popover } from 'antd'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useInitStore, useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'

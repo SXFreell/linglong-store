@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import { vitePluginForArco } from '@arco-plugins/vite-react'
 import eslint from 'vite-plugin-eslint2'
 import path from 'path'
 
@@ -17,7 +16,6 @@ export default defineConfig(async() => ({
   },
   plugins: [
     react(),
-    vitePluginForArco(),
     eslint({
       include: ['src/**/*.{ts,tsx}'],
       exclude: ['node_modules', 'dist'],

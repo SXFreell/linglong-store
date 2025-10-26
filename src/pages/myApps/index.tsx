@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Spin, Empty, Badge, Message } from '@arco-design/web-react'
+import { Spin, Empty, Badge, message } from 'antd'
 import styles from './index.module.scss'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useInstalledAppsStore } from '@/stores/installedApps'
@@ -82,7 +82,7 @@ const MyApplications = ()=>{
   }
 
   const handleUninstall = (_app: InstalledApp) => {
-    Message.info('卸载功能开发中...')
+    message.info('卸载功能开发中...')
     // TODO: 实现卸载逻辑
   }
 

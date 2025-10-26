@@ -12,7 +12,7 @@
   background-color: var(--color-fill-1);
   border-radius: 0.5rem;
   display: flex;
-  border: 1px solid var(--color-fill-1);
+  border: 1px solid rgb(var(--primary-1));
   min-width: 18rem;
   padding: 0.5rem 1rem;
   height: 7.5rem;
@@ -52,6 +52,7 @@
   }
 
   .icon {
+    flex: 0 0 auto;
     width: 4rem;
     height: 4rem;
     display: flex;
@@ -72,13 +73,13 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    min-width: 0;
 
     .title {
-      font-size: 1rem;
-      font-weight: 500;
       color: var(--color-text-1);
+      min-width: 0;
 
-      :global(.arco-typography) {
+      :global(.ant-typography) {
         margin: 0;
       }
     }
@@ -86,8 +87,9 @@
     .description {
       font-size: 0.75rem;
       color: var(--color-text-2);
+      min-width: 0;
 
-      :global(.arco-typography) {
+      :global(.ant-typography) {
         margin: 0.25rem 0;
       }
     }
@@ -97,13 +99,14 @@
       color: var(--color-text-3);
       margin-top: 0.25rem;
 
-      :global(.arco-typography) {
+      :global(.ant-typography) {
         margin: 0;
       }
     }
   }
 
   .actions {
+    flex: 0 0 auto;
     display: flex;
     flex-direction: column;
     margin-left: 0.5rem;

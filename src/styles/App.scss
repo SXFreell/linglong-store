@@ -1,5 +1,3 @@
-@import './Theme.scss';
-
 /* 全局样式 */
 // 重置默认样式
 * {
@@ -21,11 +19,6 @@
   -webkit-text-size-adjust: 100%;
 }
 
-html, body {
-  background-color: var(--fill-color-2);
-  color: var(--color-text-1);
-}
-
 // 响应式设计基础
 // html {
 //   @media (max-width: 768px) {
@@ -37,12 +30,10 @@ html, body {
   min-height: 100vh;
   margin: 0;
   padding: 0;
-  background-color: var(--fill-color-2);
 }
 
-.arco-icon {
+.ant-icon {
   font-size: 1rem;
-  stroke-width: 2;
 }
 
 // 常用工具类
