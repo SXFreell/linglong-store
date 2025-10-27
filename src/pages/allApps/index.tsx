@@ -132,7 +132,7 @@ const AllApps = () => {
 
   return <div className={styles.allAppsPage} ref={listRef} >
     <div className={styles.tabBtn}>
-      <div className={styles.tabBtnList} style={{ height: tabOpen ? 'auto' : '2.25rem' }}>
+      <div className={styles.tabBtnList} style={{ height: tabOpen ? '12rem' : '2.25rem' }}>
         {categoryList.map(item=>{
           return <Button shape='round' type={activeCategory === item.categoryId ? 'primary' : 'default'} key={item.id} className={styles.btn} onClick={()=>handleCategoryChange(item.categoryId)}>
             {item.categoryName}
@@ -141,6 +141,7 @@ const AllApps = () => {
       </div>
       <div className={styles.openOrClose} onClick={handleOpenOrClose}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>
     </div>
+    <div className={styles.placeholder} style={{ height: tabOpen ? '12rem' : '2.25rem' }}/>
     <div className={styles.applicationList}>
       {
         allAppList.map((item, index) => {

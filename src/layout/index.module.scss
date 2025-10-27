@@ -4,16 +4,19 @@
     display: flex;
     flex-direction: column;
     background-color: var(--ant-color-bg-layout);
+
     .header {
         flex: 0 0 3.6rem;
         width: 100%;
     }
+
     .layoutContent {
         flex: 1;
         width: 100%;
         height: calc(100vh - 3.6rem);
         display: flex;
         position: relative;
+
         .sider {
             flex: 0 0 12rem;
             width: 12rem;
@@ -21,12 +24,14 @@
             overflow: hidden;
             transition: all 0.2s ease-in-out;
         }
+
         .content {
             flex: 1;
             height: 100%;
             overflow: auto;
             background-color: var(--ant-color-bg-container);
             border-radius: 0.5rem 0 0 0;
+            position: relative;
         }
     }
 }

@@ -1,21 +1,29 @@
 .allAppsPage {
-  display: flex;
-  flex-direction: column;
   height: 100%;
   padding: 1.5rem;
   overflow-y: auto;
 
+  .placeholder {
+    transition: 0.5s;
+    margin-bottom: 0.5rem;
+  }
+
   .tabBtn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 2;
+    background: #fff;
+    padding: 1.5rem 1.5rem 0 1.5rem;
 
     .tabBtnList {
-      transition: width 1s;
+      transition: 0.5s;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: flex-start;
       flex-flow: row wrap;
-      // margin-bottom: 2rem;
-      flex-shrink: 0;
+      gap: 0.25rem;
 
       .btn {
         width: 6.5rem;
