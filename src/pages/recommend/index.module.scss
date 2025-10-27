@@ -1,4 +1,7 @@
 .recommend {
+    height: 100%;
+    padding: 1.5rem;
+    overflow-y: auto;
 
     .recommendHead {
         width: 100%;
@@ -31,6 +34,21 @@
                 display: grid;
                 grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
                 gap: 16px;
+            }
+
+            .loadingTip,
+            .noMoreTip {
+                grid-column: 1 / -1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 2rem 0;
+                color: var(--color-text-3);
+                font-size: 0.875rem;
+            }
+
+            .loadingTip {
+                color: var(--color-text-2);
             }
         }
     }

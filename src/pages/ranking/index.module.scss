@@ -1,21 +1,58 @@
-.appBox {
-    padding-top: 1rem;
+.rankContainer {
+    height: 100%;
+    padding: 1.5rem;
+    overflow-y: auto;
 
-    .appList {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-        gap: 16px;
+    .rankHeader {
+        width: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 2;
+        background: #fff;
+        padding: 1.5rem 1.5rem 0 1.5rem;
+
     }
-}
 
-.customTabs {
-    :global {
-        .ant-tabs-nav::before {
-            height: 0;
+    .placeholder {
+        height: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .appBox {
+        padding-top: 1rem;
+
+        .appList {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+            gap: 16px;
+
+            .loadingTip,
+            .noMoreTip {
+                grid-column: 1 / -1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                padding: 2rem 0;
+                color: var(--color-text-3);
+                font-size: 0.875rem;
+            }
+
+            .loadingTip {
+                color: var(--color-text-2);
+            }
         }
+    }
 
-        .ant-tabs-ink-bar {
-            border-radius: 1rem;
+    .customTabs {
+        :global {
+            .ant-tabs-nav::before {
+                height: 0;
+            }
+
+            .ant-tabs-ink-bar {
+                border-radius: 1rem;
+            }
         }
     }
 }

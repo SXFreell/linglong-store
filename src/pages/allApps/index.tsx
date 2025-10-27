@@ -85,6 +85,7 @@ const AllApps = () => {
       setLoading(false)
     }
   }
+  // 设置分类展开或者折叠
   const [tabOpen, setTabOpen] = useState(false)
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId)
@@ -108,6 +109,7 @@ const AllApps = () => {
       }
       const listElement = listRef.current
       if (listElement) {
+        setTabOpen(false)
         const { scrollTop, scrollHeight, clientHeight } = listElement
         if (scrollTop + clientHeight >= scrollHeight - 100) {
           if (pageNo < totalPages) {
