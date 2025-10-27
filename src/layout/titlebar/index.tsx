@@ -109,7 +109,7 @@ const Titlebar = () => {
         </div> : null
       }
       <div className={styles.titlebarRight}>
-        {loadingInit ? <Popover trigger='click' position='br'
+        {loadingInit ? <Popover trigger='click' placement="bottomRight"
           title='下载管理'
           content={<DownloadProgress/>}><span className={styles.title} onClick={handleDownload}><img src={downloadStatus ? downloadA : download} alt="下载" /></span> </Popover> : null}
         <span className={styles.title} onClick={handleMinimize}><Minus size={18} /></span>

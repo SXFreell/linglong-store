@@ -48,31 +48,41 @@ const AboutSoft = () => {
 
   }
   return (
-    <div style={{ padding: 20 }}>
+    <div className={styles.aboutPage}>
       <p className={styles.about_app}>关于程序</p>
       <div className={styles.app_info}>
         <Descriptions
-          colon=" :"
-          layout="inline-horizontal"
-          column={1}
-          title='玲珑信息'
-          data={linglong_data}
-          style={{ marginBottom: 10, marginLeft: 10 }}
-          labelStyle={{ paddingRight: 10 }}
           className={styles.des_name}
-        />
+          styles={{
+            header: {
+              marginBottom: 0,
+            },
+          }}
+          colon={true}
+          layout="horizontal"
+          column={1}
+          title='玲珑信息'> {linglong_data.map((item, index) => (
+            <Descriptions.Item label={item.label} key={`${item.value}_${index}`}>{item.value}</Descriptions.Item>
+          ))}
+
+        </ Descriptions>
       </div>
       <div className={styles.version_info}>
         <Descriptions
-          colon=" :"
-          layout="inline-horizontal"
-          column={1}
-          title='版本信息'
-          data={version_data}
-          style={{ marginBottom: 10, marginLeft: 10 }}
-          labelStyle={{ paddingRight: 10 }}
           className={styles.des_name}
-        />
+          styles={{
+            header: {
+              marginBottom: 0,
+            },
+          }}
+          colon={true}
+          layout="horizontal"
+          column={1}
+          title='版本信息'> {version_data.map((item, index) => (
+            <Descriptions.Item label={item.label} key={`${item.value}_${index}`}>{item.value}</Descriptions.Item>
+          ))}
+
+        </ Descriptions>
       </div>
       <div className={styles.feedback}>
         <div className={styles.feed} onClick={feedbackClick}>  <img style={{ width: '1.1rem', height: '1.1rem' }} src={feedback} alt="意见反馈" /><span>意见反馈</span></div>

@@ -4,11 +4,17 @@ import DefaultIcon from '@/assets/linyaps.svg'
 import { Progress } from 'antd'
 import { Pause, PlayOne } from '@icon-park/react'
 const DownloadIcon = ({ percent = 10, isDownload = true })=>{
+
+
+  const changeDownload = ()=>{
+    console.log('暂停/开始下载')
+
+  }
   return <>
     <div className={styles.downloadIcon}>
-      <span className={styles.downloadPercent}>{percent}%</span>
-      <div className={styles.downloadStatus}>
-        {isDownload ? <Pause theme="outline" size="32" fill="var(--color-primary-light-1)"/> : <PlayOne theme="outline" size="32" fill='var(--color-primary-light-1)'/>}
+      <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/>
+      <div className={styles.downloadStatus} onClick={changeDownload}>
+        {isDownload ? <Pause theme="outline" size="32" fill="#ddd"/> : <PlayOne theme="outline" size="32" fill='#ddd'/>}
       </div>
     </div>
   </>
@@ -35,8 +41,7 @@ const DownloadProgress = () => {
             </div>
           </div>
           <div className={styles.itemRight}>
-            {isFinished ? <Progress className={styles.downloadProgress} percent={30} format={(percent) => <DownloadIcon percent={percent}/> } type='circle' width={80} strokeColor='var(--color-primary-light-1)' trailColor='var(--color-primary-light-1)' /> : <button className={styles.downloadBtn}>打开</button>}
-
+            {isFinished ? <Progress className={styles.downloadProgress} percent={30} size={30} type='circle'/> : <button className={styles.downloadBtn}>打开</button>}
           </div>
         </div>
         <div className={styles.downloadItem} >
@@ -52,8 +57,7 @@ const DownloadProgress = () => {
             </div>
           </div>
           <div className={styles.itemRight}>
-            <Progress className={styles.downloadProgress} percent={30} format={(percent) => <DownloadIcon percent={percent}/> } type='circle' width={80} strokeColor='var(--color-primary-light-1)' trailColor='var(--color-primary-light-1)' />
-
+            <DownloadIcon percent={30}/>
           </div>
         </div>
       </div>
