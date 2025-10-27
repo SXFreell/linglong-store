@@ -13,7 +13,7 @@
     top: 0;
     left: 0;
     z-index: 2;
-    background: #fff;
+    background: var(--ant-color-bg-container);
     padding: 1.5rem 1.5rem 0 1.5rem;
 
     .tabBtnList {

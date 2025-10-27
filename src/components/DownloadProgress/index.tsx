@@ -14,7 +14,7 @@ const DownloadIcon = ({ percent = 10, isDownload = true })=>{
     <div className={styles.downloadIcon}>
       <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/>
       <div className={styles.downloadStatus} onClick={changeDownload}>
-        {isDownload ? <Pause theme="outline" size="32" fill="#ddd"/> : <PlayOne theme="outline" size="32" fill='#ddd'/>}
+        {isDownload ? <Pause theme="outline" size="32" fill="var(--ant-color-fill)"/> : <PlayOne theme="outline" size="32" fill='var(--ant-color-fill)'/>}
       </div>
     </div>
   </>

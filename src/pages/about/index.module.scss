@@ -6,7 +6,7 @@
     .about_app {
         font-weight: 500;
         font-size: 1.5rem;
-        color: #383838;
+        color: var(--ant-color-text);
         text-align: left;
         margin-bottom: 1.625rem;
 
@@ -30,7 +30,7 @@
             left: -0.5rem;
             width: 0.375rem;
             height: 0.8125rem;
-            background: #016FFD;
+            background: var(--ant-color-info-text-active);
             border-radius: 0.3125rem;
         }
     }
@@ -42,7 +42,7 @@
         .checkVersion {
             display: flex;
             align-items: center;
-            color: #016FFD;
+            color: var(--ant-color-primary-text);
             line-height: 1.25rem;
             text-align: left;
             margin: 1rem 1rem 0 0;

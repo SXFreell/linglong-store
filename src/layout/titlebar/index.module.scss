@@ -27,12 +27,12 @@
     .titlebarCenter {
         width: 33.4375rem;
         height: 2.25rem;
-        background: rgb(231, 231, 231);
+        background: var(--ant-color-border-bg);
         border-radius: 1rem;
         display: flex;
         align-items: center;
         padding: 0 0.5rem 0 1rem;
-        border: 1px solid transparent; // 添加透明边框保持布局稳定
+        border: 1px solid rgb(var(--ant-color-border-secondary));
 
         .inputBox {
             flex: 1;
@@ -40,17 +40,11 @@
             .input {
                 width: 100%;
                 border: none;
-                background: rgb(231, 231, 231);
+                background: var(--ant-color-border-bg);
 
                 &:focus {
                     outline: none;
-                    background: rgb(255, 255, 255);
-
-                    // 通过兄弟选择器影响父元素
-                    &~.titlebarCenter {
-                        border-color: rgb(var(--primary-6));
-                        // background: rgb(255, 255, 255);
-                    }
+                    background: var(--ant-color-bg-container);
                 }
             }
         }
@@ -58,7 +52,7 @@
         // 当包含聚焦的 input 时
         &:focus-within {
             border-color: rgb(var(--primary-6));
-            background: rgb(255, 255, 255);
+            background: var(--ant-color-bg-elevated);
         }
 
         .inputIcon {

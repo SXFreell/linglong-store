@@ -12,13 +12,13 @@
         .name {
             font-weight: 600;
             font-size: 2rem;
-            color: #383838;
+            color: var(--ant-color-text);
             text-align: left;
         }
 
         .progress {
             font-size: 1.25rem;
-            color: #383838;
+            color: var(--ant-color-text-secondary);
             text-align: left;
         }
     }
@@ -29,7 +29,7 @@
 
         .notice {
             font-size: 0.9375rem;
-            color: #383838;
+            color: var(--ant-color-text-tertiary);
             line-height: 1.5625rem;
             text-align: left;
         }

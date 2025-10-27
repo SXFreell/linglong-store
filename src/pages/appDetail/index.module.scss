@@ -18,11 +18,11 @@
             width: 1.375rem;
             height: 1.375rem;
             border-radius: 0.625rem;
-            background: #F5F5F5;
+            background: var(--ant-color-primary-bg);
         }
 
         .goBack:hover {
-            background: #94BFFF;
+            background: var(--ant-color-primary-bg-hover);
         }
 
         .application {
@@ -40,7 +40,7 @@
                     align-items: center;
                     justify-content: center;
                     margin-right: 1rem;
-                    background-color: antiquewhite;
+                    background-color: var(--ant-color-primary-bg);
                     border-radius: 0.25rem;
 
                     img {
@@ -69,13 +69,13 @@
 
                         .nameId {
                             font-size: 1.625rem;
-                            color: #383838;
+                            color: var(--ant-color-text);
                             text-align: left;
                         }
 
                         .appClass {
                             font-size: 0.75rem;
-                            color: #5F5B5B;
+                            color: var(--ant-color-text-secondary);
                             text-align: left;
                         }
                     }
@@ -92,13 +92,13 @@
 
                         .history {
                             font-size: 0.75rem;
-                            color: #5F5B5B;
+                            color: var(--ant-color-text-tertiary);
                             text-align: left;
                             cursor: pointer;
                         }
 
                         .history:hover {
-                            color: rgb(var(--primary-5));
+                            color: var(--ant-color-primary-bg-hover);
                         }
                     }
                 }
@@ -135,7 +135,7 @@
                         content: '';
                         width: 1px;
                         height: 1.5rem;
-                        background: #7E7E7E;
+                        background: var(--ant-color-border-secondary);
                         position: absolute;
                         right: -0.5rem;
                         top: 50%;
@@ -154,16 +154,16 @@
         .title {
             font-weight: 500;
             font-size: 1.5rem;
-            color: #383838;
+            color: var(--ant-color-fill-tertiary);
             text-align: left;
             padding-bottom: 1rem;
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid #EAEAEA;
+            border-bottom: 1px solid rgb(var(--ant-color-border-secondary));
         }
 
         .content {
             font-size: 1rem;
-            color: #000000;
+            color: var(--ant-color-fill-tertiary);
             text-align: left;
         }
     }
@@ -175,11 +175,11 @@
         .title {
             font-weight: 500;
             font-size: 1.5rem;
-            color: #383838;
+            color: var(--ant-color-fill-tertiary);
             text-align: left;
             padding-bottom: 1rem;
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid #EAEAEA;
+            border-bottom: 1px solid rgb(var(--ant-color-border-secondary));
         }
 
         .imgBox {
@@ -202,11 +202,11 @@
         .title {
             font-weight: 500;
             font-size: 1.5rem;
-            color: #383838;
+            color: var(--ant-color-fill-tertiary);
             text-align: left;
             padding-bottom: 1rem;
             margin-bottom: 1.5rem;
-            border-bottom: 1px solid #EAEAEA;
+            border-bottom: 1px solid rgb(var(--ant-color-border-secondary));
         }
     }
 }
