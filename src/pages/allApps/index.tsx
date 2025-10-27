@@ -1,5 +1,6 @@
 import styles from './index.module.scss'
 import { Button } from 'antd'
+import { DoubleUp, DoubleDown } from '@icon-park/react'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useEffect, useState, useRef } from 'react'
 import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'
@@ -51,7 +52,6 @@ const AllApps = () => {
       // 初始化时先显示空卡片占位
       setAllAppList(generateEmptyCards(defaultPageSize))
     }
-
     try {
       getSearchAppList({
         categoryId,
@@ -85,13 +85,16 @@ const AllApps = () => {
       setLoading(false)
     }
   }
-
+  const [tabOpen, setTabOpen] = useState(false)
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId)
     setPageNo(1)
     getAllAppList({ categoryId, init: true })
   }
+  const handleOpenOrClose = ():void=>{
+    setTabOpen((tabOpen)=>!tabOpen)
 
+  }
   // 初始化获取数据
   useEffect(() => {
     getCategoryList()
@@ -129,11 +132,14 @@ const AllApps = () => {
 
   return <div className={styles.allAppsPage} ref={listRef} >
     <div className={styles.tabBtn}>
-      {categoryList.map(item=>{
-        return <Button shape='round' type={activeCategory === item.categoryId ? 'primary' : 'default'} key={item.id} className={styles.btn} onClick={()=>handleCategoryChange(item.categoryId)}>
-          {item.categoryName}
-        </Button>
-      })}
+      <div className={styles.tabBtnList} style={{ height: tabOpen ? 'auto' : '2.25rem' }}>
+        {categoryList.map(item=>{
+          return <Button shape='round' type={activeCategory === item.categoryId ? 'primary' : 'default'} key={item.id} className={styles.btn} onClick={()=>handleCategoryChange(item.categoryId)}>
+            {item.categoryName}
+          </Button>
+        })}
+      </div>
+      <div className={styles.openOrClose} onClick={handleOpenOrClose}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>
     </div>
     <div className={styles.applicationList}>
       {

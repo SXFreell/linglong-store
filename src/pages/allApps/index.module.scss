@@ -6,17 +6,33 @@
   overflow-y: auto;
 
   .tabBtn {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    flex-flow: row wrap;
-    margin-bottom: 2rem;
-    flex-shrink: 0;
 
-    .btn {
-      width: 6.5rem;
-      font-size: 1rem;
-      margin: 0 0.75rem 0.75rem 0;
+    .tabBtnList {
+      transition: width 1s;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      flex-flow: row wrap;
+      // margin-bottom: 2rem;
+      flex-shrink: 0;
+
+      .btn {
+        width: 6.5rem;
+        font-size: 1rem;
+        margin: 0 0.75rem 0.75rem 0;
+      }
+    }
+
+    .openOrClose {
+      background: rgba(221, 221, 221, .3);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      height: 1rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      color: aquamarine;
     }
   }
 
