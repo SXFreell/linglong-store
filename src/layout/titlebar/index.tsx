@@ -1,7 +1,7 @@
 import styles from './index.module.scss'
 import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
-import { Popover } from 'antd'
+import { Popover, message } from 'antd'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useInitStore, useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
@@ -9,7 +9,7 @@ import cleanIcon from '@/assets/icons/clean.svg'
 import download from '@/assets/icons/download.svg'
 import downloadA from '@/assets/icons/downloadA.svg'
 import DownloadProgress from '@/components/DownloadProgress'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 const Titlebar = () => {
   const loadingInit = useInitStore((state) => state.loadingInit)
@@ -19,8 +19,10 @@ const Titlebar = () => {
   const appWindow = getCurrentWindow()
   const [isMaximized, setIsMaximized] = useState(false)
   const [downloadStatus, setDownloadStatus] = useState(false)
+  const [realKeyword, setRealKeyword] = useState('')
 
   const navigate = useNavigate()
+  const location = useLocation()
   const handleFullscreen = async() => {
     try {
       await appWindow.toggleMaximize()
@@ -64,7 +66,7 @@ const Titlebar = () => {
   // 定义一个处理输入变化的函数
   const handleInputChange = (event: { target: { value: SetStateAction<string> } }) => {
     const keyword = event.target.value as string
-    changeKeyword(keyword)
+    setRealKeyword(keyword)
   }
 
   // 按下enter则搜索，按下delete则删除
@@ -82,11 +84,22 @@ const Titlebar = () => {
   }
 
   const handleClean = ()=>{
+    setRealKeyword('')
     resetKeyword()
   }
 
   const handleSearch = ()=>{
-    navigate('/search_list')
+    console.log(location, 'locationlocationlocationlocationlocation')
+
+    if (realKeyword) {
+      changeKeyword(realKeyword)
+      if (location.pathname !== '/search_list') {
+        navigate('/search_list')
+        return
+      }
+      return
+    }
+    message.info('请输入查询条件！')
   }
 
   return (
@@ -98,7 +111,7 @@ const Titlebar = () => {
       {
         loadingInit ? <div className={styles.titlebarCenter}>
           <div className={styles.inputBox}>
-            <input type="text" className={styles.input} value={keyword} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder='搜索'/>
+            <input type="text" className={styles.input} value={realKeyword} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder='搜索'/>
           </div>
           <div className={styles.inputIcon}>{
             keyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt="清空" /> : null

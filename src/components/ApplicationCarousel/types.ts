@@ -5,6 +5,7 @@
 export interface CarouselItem {
   appId: string
   zhName?: string
+  name?: string
   description: string
   version: string
   categoryName?: string

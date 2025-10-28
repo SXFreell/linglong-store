@@ -80,7 +80,7 @@ const AppDetail = () => {
 
   useEffect(() => {
     loadVersions()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [currentApp?.appId])
 
   const handleGoBack = () => {
@@ -178,7 +178,7 @@ const AppDetail = () => {
             </Button>
             <Button
               type='primary'
-              status='danger'
+              danger
               size='small'
               onClick={() => handleUninstall(versionInfo.version)}
               loading={isUninstalling}
@@ -222,7 +222,6 @@ const AppDetail = () => {
                   type='primary'
                   shape='round'
                   className={styles.installButton}
-                  size='default'
                   onClick={() => message.info('安装功能开发中...')}
                 >
                   安装新版本
@@ -231,34 +230,34 @@ const AppDetail = () => {
             </div>
             <div className={styles.appDesc}>
               <div className={[styles.modules, styles.separate].join(' ')}>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   {currentApp.kind}
                 </Typography.Text>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   应用类型
                 </Typography.Text>
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   {currentApp.channel}
                 </Typography.Text>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   通道
                 </Typography.Text>
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   {currentApp.version}
                 </Typography.Text>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   当前版本
                 </Typography.Text>
               </div>
               <div className={styles.modules}>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   {currentApp.appId}
                 </Typography.Text>
-                <Typography.Text ellipsis={{ rows: 1, expandable: false }}>
+                <Typography.Text ellipsis>
                   应用ID
                 </Typography.Text>
               </div>
@@ -277,17 +276,12 @@ const AppDetail = () => {
       <div className={styles.version}>
         <div className={styles.title}>已安装版本</div>
         <div className={styles.content}>
-          <Spin loading={loading}>
+          <Spin spinning={loading}>
             <Table
               columns={columns}
-              data={versions}
+              dataSource={versions}
               pagination={false}
-              hover
               rowKey='version'
-              border={{
-                wrapper: true,
-                headerCell: true,
-              }}
             />
           </Spin>
         </div>

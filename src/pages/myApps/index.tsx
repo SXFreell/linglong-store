@@ -98,14 +98,15 @@ const MyApplications = ()=>{
   return (
     <div style={{ padding: 20 }}>
       <p className={styles.myAppTitle}>我的应用：</p>
-      <Spin loading={loading} style={{ display: 'block' }}>
+      <Spin spinning={loading} style={{ display: 'block' }}>
         {mergedApps.length > 0 ? (
           <div className={styles.myApplicationList}>
             {mergedApps.map((app, index) => (
               <Badge
+                className={styles.badgeBox}
                 key={`${app.appId}-${index}`}
                 count={app.occurrenceNumber && app.occurrenceNumber > 1 ? app.occurrenceNumber : 0}
-                maxCount={99}
+                overflowCount={99}
               >
                 <ApplicationCard
                   operateId={0}

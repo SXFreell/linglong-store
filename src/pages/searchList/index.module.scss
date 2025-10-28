@@ -1,11 +1,32 @@
-.SearchResult {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
+.searchPage {
+    height: 100%;
+    padding: 1.5rem;
+    overflow-y: auto;
 
-.SearchList {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
-    gap: 16px;
+    .SearchResult {
+        font-size: 1.25rem;
+        font-weight: 500;
+        margin-bottom: 0.5rem;
+    }
+
+    .SearchList {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+        gap: 16px;
+
+        .loadingTip,
+        .noMoreTip {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 0;
+            color: var(--color-text-3);
+            font-size: 0.875rem;
+        }
+
+        .loadingTip {
+            color: var(--color-text-2);
+        }
+    }
 }
