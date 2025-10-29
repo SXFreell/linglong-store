@@ -32,7 +32,7 @@ const AppLayout = () => {
     return ()=>{
       clearTimeout(timer)
     }
-  })
+  }, [])
 
   return (
     <div className={styles.layout}>

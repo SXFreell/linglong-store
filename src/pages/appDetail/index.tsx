@@ -231,7 +231,7 @@ const AppDetail = () => {
             <div className={styles.appDesc}>
               <div className={[styles.modules, styles.separate].join(' ')}>
                 <Typography.Text ellipsis>
-                  {currentApp.kind}
+                  {currentApp.kind || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
                   应用类型
@@ -239,7 +239,7 @@ const AppDetail = () => {
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
                 <Typography.Text ellipsis>
-                  {currentApp.channel}
+                  {currentApp.channel || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
                   通道
@@ -247,7 +247,7 @@ const AppDetail = () => {
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
                 <Typography.Text ellipsis>
-                  {currentApp.version}
+                  {currentApp.version || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
                   当前版本
