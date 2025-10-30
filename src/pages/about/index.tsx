@@ -125,7 +125,7 @@ const AboutSoft = () => {
             <Input />
           </Form.Item>
           <Form.Item colon label="描述">
-            <TextArea rows={4} />
+            <TextArea rows={6} />
           </Form.Item>
           <Form.Item>
             <div style={{ textAlign: 'right' }}>
