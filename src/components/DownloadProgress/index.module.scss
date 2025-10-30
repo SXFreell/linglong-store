@@ -6,6 +6,7 @@
     align-items: center;
     justify-content: space-between;
 
+
     .downloadBox {
         flex: 1;
         display: flex;
@@ -78,23 +79,58 @@
                 .downloadIcon {
                     height: 100%;
                     width: 100%;
-                    position: relative;
-                    margin: 0 auto;
+                    display: flex;
+                    justify-content: end;
+                    align-items: center;
 
-                    .downloadProgress {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        // display: none;
+                    .downloadSetting {
+                        height: 100%;
+                        width: 70%;
+                        position: relative;
+
+                        .downloadProgress {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            // display: none;
+                        }
+
+                        .downloadStatus {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            display: none;
+                        }
+
+                        .downloadStatusA {
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            // display: none;
+                        }
                     }
 
-                    .downloadStatus {
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
+                    .downloadSetting:hover .downloadProgress {
                         display: none;
+                    }
+
+                    .downloadSetting:hover .downloadStatus {
+                        display: block;
+                    }
+
+                    .cancelDownload {
+                        width: 30%;
+                        height: auto;
+                        aspect-ratio: 1/1;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: var(--ant-color-error);
+                        // background: var(--ant-red-2);
                     }
                 }
 
@@ -107,16 +143,6 @@
                     background: var(--ant-color-primary);
                 }
             }
-
-            .itemRight:hover .downloadIcon .downloadProgress {
-                display: none;
-            }
-
-            .itemRight:hover .downloadIcon .downloadStatus {
-                display: block;
-            }
-
-
         }
 
         .downloadItem::after {
@@ -134,7 +160,7 @@
         width: 100%;
         font-size: 0.625rem;
         text-align: right;
-        color: #91d5ff;
+        color: var(--ant-color-primary-text);
         cursor: pointer;
     }
 }

@@ -1,21 +1,39 @@
 import styles from './index.module.scss'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg'
 import { Progress } from 'antd'
-import { Pause, PlayOne } from '@icon-park/react'
-const DownloadIcon = ({ percent = 10, isDownload = true })=>{
-
-
+import { PauseOutlined, CaretRightOutlined } from '@ant-design/icons'
+const DownloadIcon = ({ percent = 10, appId = '123', downloadStatus = '1' })=>{
+  const [isDownload, setIsDownloading] = useState(true)
+  useEffect(()=>{
+    if (downloadStatus === '1') {
+      setIsDownloading(true)
+    } else {
+      setIsDownloading(false)
+    }
+  }, [downloadStatus])
   const changeDownload = ()=>{
-    console.log('暂停/开始下载')
+    console.log(appId, 'appId')
 
+    setIsDownloading(prev => !prev)
+
+
+  }
+  const handleDelete = ()=>{
+    console.log('删除下载任务')
   }
   return <>
     <div className={styles.downloadIcon}>
-      <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/>
-      <div className={styles.downloadStatus} onClick={changeDownload}>
-        {isDownload ? <Pause theme="outline" size="32" fill="var(--ant-color-fill)"/> : <PlayOne theme="outline" size="32" fill='var(--ant-color-fill)'/>}
+      <div className={styles.cancelDownload} onClick={handleDelete}>
+        ×
       </div>
+      <div className={styles.downloadSetting}>
+        {isDownload ? <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/> : null}
+        <div className={isDownload ? styles.downloadStatus : styles.downloadStatusA} onClick={changeDownload}>
+          {isDownload ? <CaretRightOutlined /> : <PauseOutlined />}
+        </div>
+      </div>
+
     </div>
   </>
 }
@@ -57,7 +75,7 @@ const DownloadProgress = () => {
             </div>
           </div>
           <div className={styles.itemRight}>
-            <DownloadIcon percent={30}/>
+            <DownloadIcon percent={30} appId={'123456'} downloadStatus={'1'}/>
           </div>
         </div>
       </div>
@@ -66,3 +84,5 @@ const DownloadProgress = () => {
   </>
 }
 export default DownloadProgress
+
+
