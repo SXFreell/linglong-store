@@ -1,44 +1,23 @@
 import styles from './index.module.scss'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg'
 import { Progress } from 'antd'
-import { PauseOutlined, CaretRightOutlined } from '@ant-design/icons'
-const DownloadIcon = ({ percent = 10, appId = '123', downloadStatus = '1' })=>{
-  const [isDownload, setIsDownloading] = useState(true)
-  useEffect(()=>{
-    if (downloadStatus === '1') {
-      setIsDownloading(true)
-    } else {
-      setIsDownloading(false)
-    }
-  }, [downloadStatus])
-  const changeDownload = ()=>{
-    console.log(appId, 'appId')
+const DownloadIcon = ({ percent = 10, appId = '123' })=>{
 
-    setIsDownloading(prev => !prev)
-
-
-  }
   const handleDelete = ()=>{
-    console.log('删除下载任务')
+    console.log(appId, '删除下载任务')
   }
   return <>
     <div className={styles.downloadIcon}>
-      <div className={styles.cancelDownload} onClick={handleDelete}>
+      <span className={styles.cancelDownload} onClick={handleDelete}>
         ×
-      </div>
-      <div className={styles.downloadSetting}>
-        {isDownload ? <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/> : null}
-        <div className={isDownload ? styles.downloadStatus : styles.downloadStatusA} onClick={changeDownload}>
-          {isDownload ? <CaretRightOutlined /> : <PauseOutlined />}
-        </div>
-      </div>
-
+      </span>
+      <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle'/>
     </div>
   </>
 }
 const DownloadProgress = () => {
-  const [isFinished] = useState(false)
+  // const [isFinished] = useState(false)
   // 获取图标 URL
   const iconUrl = useMemo(() => {
     return DefaultIcon
@@ -59,7 +38,7 @@ const DownloadProgress = () => {
             </div>
           </div>
           <div className={styles.itemRight}>
-            {isFinished ? <Progress className={styles.downloadProgress} percent={30} size={30} type='circle'/> : <button className={styles.downloadBtn}>打开</button>}
+            <button className={styles.downloadBtn}>打开</button>
           </div>
         </div>
         <div className={styles.downloadItem} >
@@ -75,7 +54,7 @@ const DownloadProgress = () => {
             </div>
           </div>
           <div className={styles.itemRight}>
-            <DownloadIcon percent={30} appId={'123456'} downloadStatus={'1'}/>
+            <DownloadIcon percent={30} appId={'123456'}/>
           </div>
         </div>
       </div>

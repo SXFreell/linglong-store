@@ -80,57 +80,18 @@
                     height: 100%;
                     width: 100%;
                     display: flex;
-                    justify-content: end;
+                    justify-content: space-between;
                     align-items: center;
 
-                    .downloadSetting {
-                        height: 100%;
-                        width: 70%;
-                        position: relative;
-
-                        .downloadProgress {
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            // display: none;
-                        }
-
-                        .downloadStatus {
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            display: none;
-                        }
-
-                        .downloadStatusA {
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            // display: none;
-                        }
-                    }
-
-                    .downloadSetting:hover .downloadProgress {
-                        display: none;
-                    }
-
-                    .downloadSetting:hover .downloadStatus {
-                        display: block;
-                    }
-
                     .cancelDownload {
-                        width: 30%;
-                        height: auto;
-                        aspect-ratio: 1/1;
-                        border-radius: 50%;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
+                        border-radius: 1rem;
+                        font-size: 1rem;
+                        color: var(--ant-color-warning);
+                    }
+
+                    .cancelDownload:hover {
                         color: var(--ant-color-error);
-                        // background: var(--ant-red-2);
+
                     }
                 }
 
