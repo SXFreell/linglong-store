@@ -140,8 +140,9 @@ const AllApps = () => {
             {item.categoryName}
           </Button>
         })}
-      </div>
-      <div className={styles.openOrClose} onClick={handleOpenOrClose}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>
+      </div>{
+        categoryList.length > 0 ? (<div className={styles.openOrClose} onClick={handleOpenOrClose}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>) : null
+      }
     </div>
     <div className={styles.placeholder} style={{ height: tabOpen ? '12rem' : '2.25rem' }}/>
     <div className={styles.applicationList}>

@@ -148,6 +148,7 @@ const Process = () => {
       title: '操作',
       dataIndex: 'operate',
       align: 'center' as const,
+      minWidth: 200,
       headerCellStyle: {
         backgroundColor: 'var(--color-bg-2)',
       },
@@ -155,13 +156,15 @@ const Process = () => {
         <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
           <Button
             type='primary'
+            size='small'
             onClick={() => enterContainerClick(record)}
           >
             进入容器
           </Button>
           <Button
             type='primary'
-            status='danger'
+            size='small'
+            danger
             onClick={() => processClick(record)}
             loading={loading === record.name}
           >
@@ -176,13 +179,9 @@ const Process = () => {
     <div style={{ padding: 20 }}>
       <Table
         columns={columns}
-        data={data}
-        hover
-        pagePosition='bottomCenter'
-        border={{
-          wrapper: true,
-          headerCell: true,
-        }}
+        dataSource={data}
+        loading={loading !== null}
+        scroll={{ x: 'max-content' }}
       />
     </div>
   )

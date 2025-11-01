@@ -12,6 +12,14 @@
     }
 
     .carouselItemContent {
+        .carouselItemName {
+            font-size: 1.5rem;
+        }
+
+        .carouselItemSmall {
+            font-size: 1rem;
+        }
+
         // flex: 1;
         min-width: 12rem;
         margin-left: 2rem;
@@ -20,4 +28,35 @@
             margin-top: 1rem;
         }
     }
+}
+
+@media screen and (max-width: 768px) {
+    .carouselItem {
+
+        .carouselItemIcon {
+            height: 4rem;
+            width: 4rem;
+        }
+
+        .carouselItemContent {
+            // flex: 1;
+            min-width: 5rem;
+            margin-left: 0.5rem;
+
+            .carouselItemName {
+                font-size: 1rem;
+            }
+
+            .carouselItemSmall {
+                font-size: 0.5rem;
+            }
+
+            .installButton {
+                margin-top: 0.5rem;
+                font-size: 0.625rem;
+            }
+        }
+    }
+
+
 }

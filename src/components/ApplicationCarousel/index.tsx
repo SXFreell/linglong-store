@@ -29,10 +29,10 @@ const AppCarousel = ({ carouselList }: ApplicationCarouselProps) => {
         <div className={styles.carouselItem} key={item.appId} onClick={()=>handleNavigateToDetail(item)}>
           <img src={item.icon || DefaultIcon} className={styles.carouselItemIcon} alt={item.name || '应用图标'} />
           <div className={styles.carouselItemContent}>
-            <p style={{ fontSize: '1.5rem' }}>{item.zhName || item.name || '应用名称'}</p>
-            <p>描述：{item.description || '应用描述'}</p>
-            <p>版本：{item.version || '-'}</p>
-            <p>分类：{item.categoryName || '分类名称'}</p>
+            <p className={styles.carouselItemName}>{item.zhName || item.name || '应用名称'}</p>
+            <p className={styles.carouselItemSmall}>描述：{item.description || '应用描述'}</p>
+            <p className={styles.carouselItemSmall}>版本：{item.version || '-'}</p>
+            <p className={styles.carouselItemSmall}>分类：{item.categoryName || '分类名称'}</p>
             <Button type='primary' shape='round' className={styles.installButton}>
               安 装
             </Button>

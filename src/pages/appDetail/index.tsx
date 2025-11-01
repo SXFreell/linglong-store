@@ -282,6 +282,7 @@ const AppDetail = () => {
               dataSource={versions}
               pagination={false}
               rowKey='version'
+              scroll={{ x: 'max-content' }}
             />
           </Spin>
         </div>

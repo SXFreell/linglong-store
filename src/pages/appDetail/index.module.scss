@@ -26,7 +26,7 @@
         }
 
         .application {
-            flex: 1;
+            // flex: 1;
             padding: 2rem 2.625rem;
             display: flex;
             justify-content: space-between;
@@ -111,8 +111,8 @@
                     justify-content: flex-start;
 
                     .modules {
-                        min-width: 5rem;
                         width: 18%;
+                        min-width: 5rem;
                         font-size: 0.875rem;
                         margin-right: 1rem;
                         display: flex;
@@ -209,4 +209,29 @@
             border-bottom: 1px solid rgb(var(--ant-color-border-secondary));
         }
     }
+}
+
+@media screen and (max-width: 768px) {
+    .appDetail {
+        .ability {
+            .application {
+                .appRight {
+                    .appDesc {
+                        display: none;
+
+                        .modules {}
+
+                        .separate {}
+
+                    }
+
+                }
+            }
+        }
+
+
+    }
+
+
+
 }
