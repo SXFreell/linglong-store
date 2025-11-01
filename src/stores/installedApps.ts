@@ -5,6 +5,7 @@ import { getAppDetails } from '@/apis/apps'
 
 export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
   installedApps: [],
+  needUpdateApps: [],
   loading: false,
   error: null,
 
@@ -69,8 +70,49 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
 
           return app
         })
-
         set({ installedApps: updatedApps })
+        // 计算需要更新的应用（same appId，detail.version > installed version）
+        const compareVersions = (v1: string, v2: string): number => {
+          const a = String(v1).split(/[._-]/).map(s => (s === '' ? 0 : (Number.isNaN(Number(s)) ? s : Number(s))))
+          const b = String(v2).split(/[._-]/).map(s => (s === '' ? 0 : (Number.isNaN(Number(s)) ? s : Number(s))))
+          const len = Math.max(a.length, b.length)
+          for (let i = 0; i < len; i++) {
+            const aa: any = a[i] ?? 0
+            const bb: any = b[i] ?? 0
+            if (typeof aa === 'number' && typeof bb === 'number') {
+              if (aa > bb) {
+                return 1
+              }
+              if (aa < bb) {
+                return -1
+              }
+            } else {
+              const sa = String(aa)
+              const sb = String(bb)
+              if (sa > sb) {
+                return 1
+              }
+              if (sa < sb) {
+                return -1
+              }
+            }
+          }
+          return 0
+        }
+
+        const needUpdateApps = installedApps.filter(app => {
+          const detail = detailsData.find(d => d.appId === app.appId)
+
+          if (!detail || !detail.version) {
+            return false
+          }
+          // 如果 detail.version 比已安装的 app.version 新，则视为需要更新
+          return compareVersions(detail.version, app.version) > 0
+        })
+
+        // console.log(needUpdateApps, 'detail for update check')
+        // 保存需要更新的应用列表到 store（用于 UI 提示/批量更新等）
+        set({ needUpdateApps: needUpdateApps })
       }
     } catch (error) {
       console.error('Failed to update app details:', error)
@@ -91,6 +133,9 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
   removeApp: (appId: string, version: string) => {
     set(state => ({
       installedApps: state.installedApps.filter(
+        app => !(app.appId === appId && app.version === version),
+      ),
+      needUpdateApps: state.installedApps.filter(
         app => !(app.appId === appId && app.version === version),
       ),
     }))

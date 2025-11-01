@@ -6,6 +6,8 @@ import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
 import { useInitStore } from '@/stores/global'
+import { useConfigStore } from '@/stores/appConfig'
+import { useInstalledAppsStore } from '@/stores/installedApps'
 import { arch } from '@tauri-apps/plugin-os'
 
 // import { Layout } from 'antd'
@@ -16,22 +18,25 @@ const AppLayout = () => {
   const getUpdateAppNum = useInitStore((state) => state.getUpdateAppNum)
   const changeArch = useInitStore((state) => state.changeArch)
   const [isInit, setIsInit] = useState(true)
-
+  const {
+    needUpdateApps,
+    fetchInstalledApps,
+  } = useInstalledAppsStore()
+  const { showBaseService } = useConfigStore()
+  useEffect(() => {
+    // 加载已安装应用列表
+    fetchInstalledApps(showBaseService)
+  }, [showBaseService, fetchInstalledApps])
   useEffect(() => {
     // 获取系统架构
     const currentArch = arch()
     changeArch(currentArch)
-    // 每次渲染后都会执行此处的代码
-    const timer = setTimeout(()=>{
-      // 首屏需要加载和查询的配置完成后更改初始化状态
-      setIsInit(false)
-      onInited()
-      // 获取需要更新的APP数量
-      getUpdateAppNum(Math.floor(Math.random() * 10))
-    }, 3000)
-    return ()=>{
-      clearTimeout(timer)
-    }
+    // 首屏需要加载和查询的配置完成后更改初始化状态
+    setIsInit(false)
+    // 加载已安装应用列表
+    onInited()
+    // 获取需要更新的APP数量
+    getUpdateAppNum(needUpdateApps.length || 0)
   }, [])
 
   return (

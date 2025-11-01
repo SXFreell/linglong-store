@@ -77,6 +77,8 @@ export interface SearchStore {
 export interface InstalledAppsStore {
   /** 已安装应用列表 */
   installedApps: API.Invoke.InstalledApp[]
+   /** 需要更新的应用列表 */
+  needUpdateApps: API.Invoke.InstalledApp[]
   /** 加载状态 */
   loading: boolean
   /** 错误信息 */
