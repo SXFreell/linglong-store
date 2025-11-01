@@ -35,7 +35,7 @@ const UpdateApp = ()=>{
               overflowCount={99}
             >
               <ApplicationCard
-                operateId={0}
+                operateId={2}
                 options={app as Partial<InstalledApp> & Record<string, unknown>}
                 loading={app.loading}
                 onOperate={() => handleUpdateApp(app)}
