@@ -27,11 +27,12 @@
 
         .setting_content {
             display: flex;
-            align-items: center;
+            align-items: start;
+            flex-direction: column;
             font-size: 0.875rem;
 
             .content_item {
-                margin-right: 1rem;
+                margin-bottom: 1.5rem;
                 display: flex;
                 align-items: center;
 
