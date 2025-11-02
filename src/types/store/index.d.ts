@@ -16,10 +16,14 @@ export interface ConfigStore {
   checkVersion: boolean
   /** 是否显示基础运行服务 */
   showBaseService: boolean
+  /** 点击关闭时是直接关闭还是最小化到托盘 */
+  closeOrHide: string
   /** 切换版本检查状态 */
   changeCheckVersionStatus: (value: boolean) => void
   /** 切换基础服务显示状态 */
   changeBaseServiceStatus: (value: boolean) => void
+  /** 切换点击关闭时记录的状态 */
+  changeCloseOrHide: (value: string) => void
 }
 
 // ============================================================================

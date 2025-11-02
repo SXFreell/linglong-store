@@ -16,9 +16,9 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
     let menu = Menu::with_items(
         app,
         &[
-            &MenuItem::with_id(app, "hidden", "隐藏窗口", true, None::<&str>)?,  // 隐藏窗口菜单项
-            &MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?,    // 显示窗口菜单项
-            &MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?,        // 退出程序
+            &MenuItem::with_id(app, "show", "显示界面", true, None::<&str>)?,    // 显示窗口菜单项
+            &MenuItem::with_id(app, "hidden", "隐藏界面", true, None::<&str>)?,  // 隐藏窗口菜单项
+            &MenuItem::with_id(app, "quit", "退出程序", true, None::<&str>)?,        // 退出程序
         ],
     )?;
     // 创建系统托盘图标

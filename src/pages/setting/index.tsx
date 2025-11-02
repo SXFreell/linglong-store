@@ -1,11 +1,15 @@
 import { Switch } from 'antd'
 import styles from './index.module.scss'
 import { useConfigStore } from '@/stores/appConfig'
+import { useState } from 'react'
 const BasicSetting = ()=>{
   const checkVersion = useConfigStore((state) => state.checkVersion)
+  const closeOrHide = useConfigStore((state) => state.closeOrHide)
   const showBaseService = useConfigStore((state) => state.showBaseService)
   const changeCheckVersionStatus = useConfigStore((state) => state.changeCheckVersionStatus)
   const changeBaseServiceStatus = useConfigStore((state) => state.changeBaseServiceStatus)
+  const changeCloseOrHide = useConfigStore((state) => state.changeCloseOrHide)
+  const [isHide, setIsHide] = useState(closeOrHide === 'hide')
   const autoCheckClick = ()=>{
     changeCheckVersionStatus(!checkVersion)
   }
@@ -15,6 +19,12 @@ const BasicSetting = ()=>{
   const clearAbandonServiceClick = () => {
     console.info('清除废弃基础服务')
   }
+  const handleCloseOrHide = (e:boolean)=>{
+    console.log(e, 'isHide')
+    setIsHide(e)
+    const newValue = e ? 'hide' : 'close'
+    changeCloseOrHide(newValue)
+  }
   return (
     <div className={styles.setting} style={{ padding: 20 }}>
       <div className={styles.basic_setting}>
@@ -22,6 +32,9 @@ const BasicSetting = ()=>{
         <div className={styles.setting_content}>
           <div className={styles.content_item}>
             <Switch checked={checkVersion} onChange={autoCheckClick}/><span className={styles.item_label}>启动App自动检测商店版本</span>
+          </div>
+          <div className={styles.content_item}>
+            <Switch checked={isHide} onChange={handleCloseOrHide}/><span className={styles.item_label}>关闭App时最小化到托盘</span>
           </div>
         </div>
       </div>

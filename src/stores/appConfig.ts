@@ -16,6 +16,8 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   /** 是否显示基础服务应用的标志 */
   showBaseService: false,
 
+  /** 点击关闭时是直接关闭还是最小化到托盘 */
+  closeOrHide: 'hide',
   /**
    * 更改版本检查功能的状态
    * @param value - 新的版本检查状态
@@ -30,6 +32,11 @@ export const useConfigStore = create<ConfigStore>((set) => ({
    */
   changeBaseServiceStatus: (value: boolean) => set((_state) => ({
     showBaseService: value,
+  })),
+  /** 更改点击关闭时记录的状态 */
+
+  changeCloseOrHide: (value: string) => set((_state) => ({
+    closeOrHide: value,
   })),
 }))
 
