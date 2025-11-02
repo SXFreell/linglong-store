@@ -10,6 +10,7 @@ use services::installed::{
     run_linglong_app,
     InstalledApp,
 };
+pub mod modules;
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
@@ -63,6 +64,10 @@ pub fn run() {
         .plugin(tauri_plugin_os::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_zustand::init())
+        .setup(|app| {
+            modules::tray::setup_tray(app.handle())?;
+            Ok(())
+        })
         .invoke_handler(tauri::generate_handler![
             greet,
             get_network_speed,
