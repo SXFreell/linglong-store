@@ -1,4 +1,4 @@
-import { Star, Ranking, Info, SettingTwo, Hourglass, ApplicationOne, UpdateRotation, ApplicationTwo } from '@icon-park/react'
+import { Star, Info, SettingTwo, Hourglass, ApplicationOne, UpdateRotation, ApplicationTwo } from '@icon-park/react'
 
 export default [
   {
@@ -8,13 +8,13 @@ export default [
     activeIcon: <Star theme="filled" size="16" fill="var(--ant-color-primary-text)"/>,
     index: 0,
   },
-  {
-    menuName: '排行榜',
-    menuPath: '/ranking',
-    icon: <Ranking theme="outline" size="16" fill="var(--ant-color-text-secondary)"/>,
-    activeIcon: <Ranking theme="outline" size="16" fill="var(--ant-color-primary-text)"/>,
-    index: 1,
-  },
+  // {
+  //   menuName: '排行榜',
+  //   menuPath: '/ranking',
+  //   icon: <Ranking theme="outline" size="16" fill="var(--ant-color-text-secondary)"/>,
+  //   activeIcon: <Ranking theme="outline" size="16" fill="var(--ant-color-primary-text)"/>,
+  //   index: 1,
+  // },
   {
     menuName: '全部应用',
     menuPath: '/allapps',
