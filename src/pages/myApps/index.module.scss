@@ -1,15 +1,48 @@
-.myAppTitle {
-    font-size: 1.25rem;
-    font-weight: 500;
-    margin-bottom: 0.5rem;
-}
+.myAppsPage {
+  height: 100%;
+  padding: 1.5rem;
+  overflow-y: auto;
 
-.myApplicationList {
+  .title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .applicationList {
+    flex: 1;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
     gap: 16px;
+    align-content: start;
+    padding-bottom: 2rem;
 
-    .badgeBox {
-        width: 20rem;
+    &::-webkit-scrollbar {
+      width: 8px;
     }
+
+    &::-webkit-scrollbar-track {
+      background: var(--color-fill-2);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: var(--color-fill-3);
+      border-radius: 4px;
+
+      &:hover {
+        background: var(--color-fill-4);
+      }
+    }
+  }
+
+  .loadingTip {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 2rem 0;
+    color: var(--color-text-2);
+    font-size: 0.875rem;
+  }
 }

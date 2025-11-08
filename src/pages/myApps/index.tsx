@@ -1,21 +1,22 @@
-import { useEffect, useState } from 'react'
-import { Spin, Empty, Badge, message } from 'antd'
+import { useEffect, useState, useRef } from 'react'
+import { Empty } from 'antd'
 import styles from './index.module.scss'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useConfigStore } from '@/stores/appConfig'
 import type { InstalledApp } from '@/apis/invoke/types'
 
-const MyApplications = ()=>{
+const MyApplications = () => {
   const {
     installedApps,
-    loading,
+    // loading,
     error,
     fetchInstalledApps,
   } = useInstalledAppsStore()
 
   const { showBaseService } = useConfigStore()
   const [mergedApps, setMergedApps] = useState<InstalledApp[]>([])
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // 加载已安装应用列表
@@ -81,46 +82,31 @@ const MyApplications = ()=>{
     return 0
   }
 
-  const handleUninstall = (_app: InstalledApp) => {
-    message.info('卸载功能开发中...')
-    // TODO: 实现卸载逻辑
-  }
+  // const handleUninstall = (_app: InstalledApp) => {
+  //   message.info('卸载功能开发中...')
+  //   // TODO: 实现卸载逻辑
+  // }
 
   if (error) {
     return (
-      <div style={{ padding: 20 }}>
-        <p className={styles.myAppTitle}>我的应用：</p>
-        <Empty description={`加载失败: ${error}`} />
+      <div className={styles.myAppsPage}>
+        <div className={styles.applicationList}>
+          <Empty description={`加载失败: ${error}`} />
+        </div>
       </div>
     )
   }
 
   return (
-    <div style={{ padding: 20 }}>
-      <p className={styles.myAppTitle}>我的应用：</p>
-      <Spin spinning={loading} style={{ display: 'block' }}>
-        {mergedApps.length > 0 ? (
-          <div className={styles.myApplicationList}>
-            {mergedApps.map((app, index) => (
-              <Badge
-                className={styles.badgeBox}
-                key={`${app.appId}-${index}`}
-                count={app.occurrenceNumber && app.occurrenceNumber > 1 ? app.occurrenceNumber : 0}
-                overflowCount={99}
-              >
-                <ApplicationCard
-                  operateId={0}
-                  options={app as Partial<InstalledApp> & Record<string, unknown>}
-                  loading={app.loading}
-                  onOperate={() => handleUninstall(app)}
-                />
-              </Badge>
-            ))}
-          </div>
-        ) : (
-          <Empty description="暂无已安装应用" />
-        )}
-      </Spin>
+    <div className={styles.myAppsPage} ref={listRef}>
+      <div className={styles.title}>我的应用</div>
+      {mergedApps.length > 0 ? <div className={styles.applicationList}>
+        {
+          mergedApps.map((item, index) => {
+            return <ApplicationCard key={`${item.appId}_${index}`} options={item} operateId={0} />
+          })
+        }
+      </div> : <Empty description="暂无已安装应用" />}
     </div>
   )
 }
