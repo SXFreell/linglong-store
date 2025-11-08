@@ -87,14 +87,17 @@ const AllApps = () => {
   }
 
   const handleCategoryChange = (categoryId: string) => {
+    // 立即滚动到顶部（异步以确保 DOM 已更新）
+    setTimeout(() => {
+      const listElement = listRef.current
+      if (listElement) {
+        listElement.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }, 0)
+
     setActiveCategory(categoryId)
     setPageNo(1)
     getAllAppList({ categoryId, init: true })
-    // 切换分类时滚动到顶部
-    const listElement = listRef.current
-    if (listElement) {
-      listElement.scrollTo({ top: 0, behavior: 'smooth' })
-    }
     setTabOpen(true)
   }
 
