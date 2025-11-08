@@ -1,11 +1,9 @@
-import { Button } from 'antd'
 import AppCarousel from '@/components/ApplicationCarousel'
 import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'
 import { getWelcomeCarouselList, getWelcomeAppList } from '@/apis/apps/index'
 import { useCallback, useEffect, useState, useRef } from 'react'
 import { useInitStore } from '@/stores/global'
-import type { CarouselItem } from '@/components/ApplicationCarousel/types'
 import { generateEmptyCards } from './utils'
 
 type AppInfo = API.APP.AppMainDto
@@ -15,7 +13,7 @@ const Recommend = () => {
   const arch = useInitStore((state) => state.arch)
   const repoName = useInitStore((state) => state.repoName)
 
-  const [carouselList, setCarouselList] = useState<CarouselItem[]>([])
+  const [carouselList, setCarouselList] = useState<AppInfo[]>([])
   const [recommendList, setRecommendList] = useState<AppInfo[]>([])
   const listRef = useRef<HTMLDivElement>(null)
   const [pageNo, setPageNo] = useState<number>(1)
@@ -34,12 +32,12 @@ const Recommend = () => {
 
       // 更新轮播图数据
       if (carouselResult.code === 200 && carouselResult.data?.length > 0) {
-        setCarouselList(carouselResult.data as unknown as CarouselItem[])
+        setCarouselList(carouselResult.data as AppInfo[])
       }
 
       // 更新推荐列表数据
       if (recommendResult.code === 200 && recommendResult.data?.records?.length > 0) {
-        setRecommendList(recommendResult.data.records)
+        setRecommendList(recommendResult.data.records as AppInfo[])
         setTotalPages(recommendResult.data.pages || 1)
       }
     } catch (error) {
@@ -109,11 +107,11 @@ const Recommend = () => {
         <AppCarousel carouselList={carouselList} />
       </header>
       <main className={styles.recommendMain}>
-        <div className={styles.tabBtn}>
+        {/* <div className={styles.tabBtn}>
           <Button shape='round' type='default' className={styles.btn}>
             全部应用
           </Button>
-        </div>
+        </div> */}
         <div className={styles.appMain}>
           <p className={styles.name}>玲珑推荐</p>
           <div className={styles.appList}>

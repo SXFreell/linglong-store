@@ -1,4 +1,4 @@
-import type { AppInfo } from '@/apis/apps/types'
+type AppInfo = API.APP.AppMainDto;
 
 /**
  * 生成空数据应用卡片
@@ -6,12 +6,16 @@ import type { AppInfo } from '@/apis/apps/types'
  * @returns 空应用数据数组
  */
 export const generateEmptyCards = (count: number): AppInfo[] => {
-  return Array.from({ length: count }, (_, index) => ({
-    appId: `empty-${index}`,
-    appName: '',
-    version: '',
-    description: '',
-    zhName: '',
-    icon: '',
-  } as AppInfo))
+  return Array.from(
+    { length: count },
+    (_, index) =>
+      ({
+        appId: `empty-${index}`,
+        appName: '',
+        version: '',
+        description: '',
+        zhName: '',
+        icon: '',
+      } as AppInfo),
+  )
 }

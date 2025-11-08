@@ -1,10 +1,11 @@
 .carouselItem {
     width: 100%;
     padding: 2rem;
-    background: var(--ant-blue-4);
+    background: var(--ant-color-primary-bg-hover);
     display: flex !important;
     align-items: center;
     justify-content: center;
+    border-radius: 0.5rem;
 
     .carouselItemIcon {
         height: 8rem;
