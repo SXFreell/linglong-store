@@ -85,23 +85,57 @@ const AllApps = () => {
       setLoading(false)
     }
   }
-  // 设置分类展开或者折叠
-  const [tabOpen, setTabOpen] = useState(false)
+
   const handleCategoryChange = (categoryId: string) => {
     setActiveCategory(categoryId)
     setPageNo(1)
     getAllAppList({ categoryId, init: true })
+    // 切换分类时滚动到顶部
+    const listElement = listRef.current
+    if (listElement) {
+      listElement.scrollTo({ top: 0, behavior: 'smooth' })
+    }
+    setTabOpen(true)
   }
-  const handleOpenOrClose = ():void=>{
-    setTabOpen((tabOpen)=>!tabOpen)
 
+  // 设置分类展开或者折叠
+  const [tabOpen, setTabOpen] = useState(true)
+  const handleTabToggle = () => {
+    setTabOpen(tabOpen => !tabOpen)
   }
+
   // 初始化获取数据
   useEffect(() => {
     getCategoryList()
     getAllAppList({ init: true })
   }, [])
 
+  // 监听窗口 resize 事件，调整分类栏高度
+  const [tabHeight, setTabHeight] = useState(0)
+  const [tabTranslateY, setTabTranslateY] = useState(0)
+  const tabListRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const updateTabHeight = () => {
+      const tabListElement = tabListRef.current
+      const activeButton = tabListElement?.querySelector<HTMLButtonElement>('button[data-active="true"]')
+      // 获取激活的按钮当前高度
+      const collapsedHeight = activeButton ? activeButton.offsetTop : 0
+      if (tabListElement) {
+        const fullHeight = tabListElement.scrollHeight
+        setTabHeight(fullHeight + 24) // 高度加上内边距
+        setTabTranslateY(collapsedHeight - 8)
+      }
+    }
+
+    updateTabHeight() // 初始调用一次
+
+    window.addEventListener('resize', updateTabHeight)
+    return () => {
+      window.removeEventListener('resize', updateTabHeight)
+    }
+  }, [categoryList, activeCategory])
+
+  // 监听滚动
   useEffect(() => {
     const handleScroll = () => {
       if (loading) {
@@ -109,8 +143,16 @@ const AllApps = () => {
       }
       const listElement = listRef.current
       if (listElement) {
-        setTabOpen(false)
         const { scrollTop, scrollHeight, clientHeight } = listElement
+
+        // 滚动到顶部时打开标签栏，否则关闭
+        if (scrollTop <= 10) {
+          setTabOpen(true)
+        } else {
+          setTabOpen(false)
+        }
+
+        // 滚动到底部时加载更多
         if (scrollTop + clientHeight >= scrollHeight - 100) {
           if (pageNo < totalPages) {
             setPageNo(pageNo + 1)
@@ -133,19 +175,24 @@ const AllApps = () => {
   }, [activeCategory, pageNo, totalPages, loading])
 
   return <div className={styles.allAppsPage} ref={listRef} >
-    <div className={styles.tabBtn}>
-      <div className={styles.tabBtnList} style={{ height: tabOpen ? '12rem' : '2.25rem' }}>
+    <div className={styles.tabBtn} style={{ height: tabOpen ? 'auto' : '3.6em' }}>
+      <div className={styles.tabBtnList} ref={tabListRef} style={{ transform: tabOpen ? 'none' : `translateY(-${tabTranslateY}px)` }}>
         {categoryList.map(item=>{
-          return <Button shape='round' type={activeCategory === item.categoryId ? 'primary' : 'default'} key={item.id} className={styles.btn} onClick={()=>handleCategoryChange(item.categoryId)}>
+          return <Button
+            shape='round'
+            type={activeCategory === item.categoryId ? 'primary' : 'default'}
+            key={item.id}
+            data-active={activeCategory === item.categoryId}
+            className={styles.btn}
+            onClick={()=>handleCategoryChange(item.categoryId)}
+          >
             {item.categoryName}
           </Button>
         })}
-      </div>{
-        categoryList.length > 0 ? (<div className={styles.openOrClose} onClick={handleOpenOrClose}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>) : null
-      }
+      </div>
+      <div className={styles.tabShrink} onClick={handleTabToggle}>{tabOpen ? <DoubleUp theme="outline" size="16" fill="#333"/> : <DoubleDown theme="outline" size="16" fill="#333"/>}</div>
     </div>
-    <div className={styles.placeholder} style={{ height: tabOpen ? '12rem' : '2.25rem' }}/>
-    <div className={styles.applicationList}>
+    <div className={styles.applicationList} style={{ marginTop: `${tabHeight}px` }}>
       {
         allAppList.map((item, index) => {
           return <ApplicationCard key={`${item.appId}_${index}`} options={item} operateId={1} />
