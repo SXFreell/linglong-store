@@ -1,10 +1,14 @@
-import { Descriptions, Drawer, Form, Input, Button, Checkbox, Modal, GetProp, message } from 'antd'
+import { Descriptions, Drawer, Form, FormProps, Input, Button, Checkbox, Modal, message } from 'antd'
 import styles from './index.module.scss'
 import feedback from '@/assets/icons/feedback.svg'
 import update from '@/assets/icons/update.svg'
 import { useState } from 'react'
 import TextArea from 'antd/es/input/TextArea'
-
+type FieldType = {
+  classification?: string[];
+  overview?: string;
+  description?: string;
+};
 // 问题类型
 const feedOptions = ['商店缺陷', '应用更新', '应用故障']
 
@@ -12,6 +16,7 @@ const AboutSoft = () => {
   const [open, setOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [messageApi, contextHolder] = message.useMessage()
+  const [form] = Form.useForm()
   const linglong_data = [
     {
       label: '玲珑官网',
@@ -59,14 +64,17 @@ const AboutSoft = () => {
 
   }
   const feedbackClick = ()=>{
-    console.log('意见反馈！！！！！')
+    // console.log('意见反馈！！！！！')
     setOpen(true)
   }
   const onClose = () => {
     setOpen(false)
   }
-  const onChange: GetProp<typeof Checkbox.Group, 'onChange'> = (checkedValues) => {
-    console.log('checked = ', checkedValues)
+
+  const onClickSubmitForm:FormProps<FieldType>['onFinish'] = (values) => {
+    console.log('提交表单数据：', values)
+    messageApi.success('感谢您的反馈！', 1)
+    setOpen(false)
   }
   return (
     <div className={styles.aboutPage}>
@@ -116,15 +124,16 @@ const AboutSoft = () => {
         open={open}
         closable={false}
         getContainer={false}
+        destroyOnHidden={true}
       >
-        <Form layout="horizontal" labelAlign="right">
-          <Form.Item colon label="分类" name="disabled" valuePropName="checked">
-            <Checkbox.Group options={feedOptions} defaultValue={['Apple']} onChange={onChange} />
+        <Form layout="horizontal" labelAlign="right" form={form} onFinish={onClickSubmitForm} clearOnDestroy={true}>
+          <Form.Item colon label="分类" name="classification">
+            <Checkbox.Group options={feedOptions} />
           </Form.Item>
-          <Form.Item colon label="概述">
+          <Form.Item colon label="概述" name='overview'>
             <Input />
           </Form.Item>
-          <Form.Item colon label="描述">
+          <Form.Item colon label="描述" name='description'>
             <TextArea rows={6} />
           </Form.Item>
           <Form.Item>
