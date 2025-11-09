@@ -130,7 +130,7 @@ export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
           }
           return 0
         }
-
+        // 需要更新的应用列表
         const needUpdateApps = installedApps.filter(app => {
           const detail = detailsData.find(d => d.appId === app.appId)
 

@@ -4,7 +4,7 @@
  */
 import { create } from 'zustand'
 import { createTauriStore } from '@tauri-store/zustand'
-import type { ConfigStore } from '@/types/store'
+import type { ConfigStore, downloadConfigStore, DownloadApp } from '@/types/store'
 
 /**
  * 创建应用配置状态管理store
@@ -40,6 +40,35 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   })),
 }))
 
+export const useDownloadConfigStore = create<downloadConfigStore>((set) => ({
+  // 下载应用保存列表
+  downloadList: [],
+  // 追加app到下载列表
+  addAppToDownloadList: (app: API.APP.AppMainDto | DownloadApp) => set((state) => ({
+    // 确保 push 的对象包含 flag 字段（默认空字符串）
+    downloadList: [...state.downloadList, { ...(app as API.APP.AppMainDto), flag: 'downloading' }],
+  })),
+  // 改变APP下载状态(已下载和下载中)
+  changeAppDownloadStatus: (appId: string, status = 'downloaded') => set((state) => ({
+    downloadList: state.downloadList.map((app: DownloadApp) => {
+      if (app.appId === appId) {
+        // 返回新的对象以保持不可变性
+        return { ...app, flag: status }
+      }
+      return app
+    }),
+
+  })),
+  // 清空下载列表
+  clearDownloadList: () => set((state) => ({
+    downloadList: state.downloadList.filter((app: DownloadApp) => app.flag === 'downloading'),
+  })),
+  // 移除下载中的应用
+  removeDownloadingApp: (appId: string) => set((state) => ({
+    downloadList: state.downloadList.filter((app: DownloadApp) => app.appId !== appId),
+  })),
+}))
+
 /**
  * 全局应用配置的持久化存储实例
  * 使用 @tauri-store/zustand 将配置保存到本地磁盘
@@ -48,6 +77,12 @@ export const useConfigStore = create<ConfigStore>((set) => ({
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const tauriAppConfigHandler = createTauriStore('ConfigStore', useConfigStore as any, {
+  saveOnChange: true, // 配置变更时自动保存到磁盘
+  autoStart: true, // 应用启动时自动从磁盘加载配置
+})
+
+// 保存下载列表
+export const tauriDownloadConfigHandler = createTauriStore('downloadConfigStore', useDownloadConfigStore as any, {
   saveOnChange: true, // 配置变更时自动保存到磁盘
   autoStart: true, // 应用启动时自动从磁盘加载配置
 })

@@ -8,7 +8,7 @@ import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { Popover, message } from 'antd'
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { useConfigStore } from '@/stores/appConfig'
+import { useConfigStore, useDownloadConfigStore } from '@/stores/appConfig'
 import { useInitStore, useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import cleanIcon from '@/assets/icons/clean.svg'
@@ -25,6 +25,7 @@ const Titlebar = () => {
   /** 应用初始化状态 */
   const loadingInit = useInitStore((state) => state.loadingInit)
   const closeOrHide = useConfigStore((state) => state.closeOrHide)
+  const downloadList = useDownloadConfigStore((state) => state.downloadList)
   /** 全局搜索关键词 */
   const keyword = useSearchStore((state) => state.keyword)
   /** 更新搜索关键词的方法 */
@@ -36,7 +37,9 @@ const Titlebar = () => {
   /** 窗口最大化状态 */
   const [isMaximized, setIsMaximized] = useState(false)
   /** 下载管理面板显示状态 */
-  const [downloadStatus, setDownloadStatus] = useState(false)
+  const [hasDownloading, setHasDownloading] = useState(false)
+
+
   /** 搜索框实时输入的关键词 */
   const [realKeyword, setRealKeyword] = useState('')
 
@@ -54,7 +57,13 @@ const Titlebar = () => {
       console.error('Failed to toggle maximize:', error)
     }
   }
-
+  /**
+   * 监听下载列表变化，更新是否有下载中的应用标志
+   */
+  useEffect(() => {
+    const downloading = downloadList.some((app) => app.flag === 'downloading')
+    setHasDownloading(downloading)
+  }, [downloadList])
   /**
    * 监听窗口状态变化
    * 初始化最大化状态并监听窗口大小变化
@@ -106,12 +115,6 @@ const Titlebar = () => {
     }
   }
 
-  /**
-   * 切换下载管理面板的显示状态
-   */
-  const handleDownload = ()=>{
-    setDownloadStatus(!downloadStatus)
-  }
 
   /**
    * 处理搜索框输入变化
@@ -203,8 +206,8 @@ const Titlebar = () => {
           trigger='click'
           title='下载管理'
           content={<DownloadProgress/>}>
-          <span className={styles.title} onClick={handleDownload}>
-            <img src={downloadStatus ? downloadA : download} alt="下载" />
+          <span className={styles.title}>
+            <img src={hasDownloading ? downloadA : download} alt="下载" />
           </span>
         </Popover> : null}
         {/* 窗口控制按钮 */}

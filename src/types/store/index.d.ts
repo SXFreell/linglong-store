@@ -119,3 +119,24 @@ export interface InstalledAppsStore {
    */
   clearApps: () => void
 }
+
+export interface downloadConfigStore{
+  // 下载应用保存列表
+  /** 单个下载项，基于后端 AppMainDto 并附加本地状态字段 */
+  downloadList: DownloadApp[]
+  // 追加app到下载列表
+  addAppToDownloadList: (app:DownloadApp) => void;
+  // 改变APP下载状态(已下载和下载中)
+  changeAppDownloadStatus: (appId: string, status:string) => void;
+  // 清空下载列表
+  clearDownloadList: () =>void;
+  // 移除下载中的应用
+  removeDownloadingApp: (appId: string) => void;
+}
+
+/**
+ * 本地下载项类型：在后端 AppMainDto 基础上，增加本地标记字段 `flag`（例如："pending", "downloading", "done"）
+ */
+export interface DownloadApp extends API.APP.AppMainDto {
+  flag?: string
+}

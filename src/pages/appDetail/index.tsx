@@ -8,7 +8,7 @@ import DefaultIcon from '@/assets/linyaps.svg'
 import type { InstalledApp } from '@/apis/invoke/types'
 import { searchVersions, uninstallApp, runApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
-
+import { useDownloadConfigStore } from '@/stores/appConfig'
 interface VersionInfo {
   version: string
   channel: string
@@ -25,7 +25,7 @@ const AppDetail = () => {
   const [uninstallingVersion, setUninstallingVersion] = useState<string | null>(null)
   const removeApp = useInstalledAppsStore((state) => state.removeApp)
   const installedApps = useInstalledAppsStore((state) => state.installedApps)
-
+  const { addAppToDownloadList } = useDownloadConfigStore()
   // 从 store 中获取最新的应用信息（包括图标）
   const currentApp = useMemo(() => {
     if (!app?.appId) {
@@ -198,6 +198,14 @@ const AppDetail = () => {
       </div>
     )
   }
+  const handleInstallBtnClick = () => {
+    if (!currentApp) {
+      return
+    }
+    message.info('安装功能开发中...')
+    addAppToDownloadList(currentApp)
+
+  }
 
   return (
     <div className={styles.appDetail}>
@@ -222,7 +230,7 @@ const AppDetail = () => {
                   type='primary'
                   shape='round'
                   className={styles.installButton}
-                  onClick={() => message.info('安装功能开发中...')}
+                  onClick={handleInstallBtnClick}
                 >
                   安装新版本
                 </Button>
