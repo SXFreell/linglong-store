@@ -1,6 +1,6 @@
 import styles from './index.module.scss'
 import ApplicationCard from '@/components/ApplicationCard'
-import { useInitStore, useSearchStore } from '@/stores/global'
+import { useGlobalStore, useSearchStore } from '@/stores/global'
 import { getSearchAppList } from '@/apis/apps/index'
 import { useState, useEffect, useRef } from 'react'
 import { generateEmptyCards } from './utils'
@@ -9,8 +9,8 @@ const defaultPageSize = 10 // 每页显示数量
 type AppInfo = API.APP.AppMainDto
 const SearchList = ()=>{
   const keyword = useSearchStore((state) => state.keyword)
-  const arch = useInitStore((state) => state.arch)
-  const repoName = useInitStore((state) => state.repoName)
+  const arch = useGlobalStore((state) => state.arch)
+  const repoName = useGlobalStore((state) => state.repoName)
   const [pageNo, setPageNo] = useState<number>(1)
   const [loading, setLoading] = useState<boolean>(false)
   const [totalPages, setTotalPages] = useState<number>(1)

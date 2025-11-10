@@ -1,7 +1,7 @@
 import { Tabs } from 'antd'
 import ApplicationCard from '@/components/ApplicationCard'
 import { getNewAppList, getInstallAppList } from '@/apis/apps/index'
-import { useInitStore } from '@/stores/global'
+import { useGlobalStore } from '@/stores/global'
 import styles from './index.module.scss'
 import { useEffect, useState, useRef } from 'react'
 import { generateEmptyCards } from './utils'
@@ -10,8 +10,8 @@ const defaultPageSize = 10 // 每页显示数量
 
 type AppInfo = API.APP.AppMainDto
 const Ranking = () => {
-  const arch = useInitStore((state) => state.arch)
-  const repoName = useInitStore((state) => state.repoName)
+  const arch = useGlobalStore((state) => state.arch)
+  const repoName = useGlobalStore((state) => state.repoName)
   const [activeTab, setActiveTab] = useState('101')
   const listRef = useRef<HTMLDivElement>(null)
   const [RankList, setRankList] = useState<AppInfo[]>([])

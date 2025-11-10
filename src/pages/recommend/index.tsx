@@ -3,15 +3,15 @@ import ApplicationCard from '@/components/ApplicationCard'
 import styles from './index.module.scss'
 import { getWelcomeCarouselList, getWelcomeAppList } from '@/apis/apps/index'
 import { useCallback, useEffect, useState, useRef } from 'react'
-import { useInitStore } from '@/stores/global'
+import { useGlobalStore } from '@/stores/global'
 import { generateEmptyCards } from './utils'
 
 type AppInfo = API.APP.AppMainDto
 const defaultPageSize = 10 // 每页显示数量
 
 const Recommend = () => {
-  const arch = useInitStore((state) => state.arch)
-  const repoName = useInitStore((state) => state.repoName)
+  const arch = useGlobalStore((state) => state.arch)
+  const repoName = useGlobalStore((state) => state.repoName)
 
   const [carouselList, setCarouselList] = useState<AppInfo[]>([])
   const [recommendList, setRecommendList] = useState<AppInfo[]>([])

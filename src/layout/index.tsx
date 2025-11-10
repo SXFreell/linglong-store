@@ -11,7 +11,7 @@ import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
-import { useInitStore } from '@/stores/global'
+import { useGlobalStore } from '@/stores/global'
 import { useConfigStore } from '@/stores/appConfig'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { arch } from '@tauri-apps/plugin-os'
@@ -26,9 +26,9 @@ import { arch } from '@tauri-apps/plugin-os'
  */
 const AppLayout = () => {
   // 从全局状态store中获取初始化相关方法
-  const onInited = useInitStore((state) => state.onInited)
-  const getUpdateAppNum = useInitStore((state) => state.getUpdateAppNum)
-  const changeArch = useInitStore((state) => state.changeArch)
+  const onInited = useGlobalStore((state) => state.onInited)
+  const getUpdateAppNum = useGlobalStore((state) => state.getUpdateAppNum)
+  const changeArch = useGlobalStore((state) => state.setArch)
 
   /** 初始化状态标志，控制是否显示启动页面 */
   const [isInit, setIsInit] = useState(true)
@@ -72,7 +72,7 @@ const AppLayout = () => {
       <Titlebar/>
       {
         // 根据初始化状态决定显示启动页还是主布局
-        isInit ? <LaunchPage /> : <div className={styles.layoutContent}>
+        !isInit ? <LaunchPage /> : <div className={styles.layoutContent}>
           {/* 侧边栏导航 */}
           <Sidebar className={styles.sider} />
           {/* 主内容区域，使用 Suspense 处理异步加载 */}

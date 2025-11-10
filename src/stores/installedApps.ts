@@ -2,7 +2,6 @@
  * 已安装应用状态管理模块
  */
 import { create } from 'zustand'
-import type { InstalledAppsStore } from '@/types/store'
 import { getInstalledLinglongApps, getAllInstalledLinglongApps } from '@/apis/invoke'
 import { getAppDetails } from '@/apis/apps'
 
@@ -10,7 +9,7 @@ import { getAppDetails } from '@/apis/apps'
  * 创建已安装应用的状态管理store
  * 管理已安装应用列表、需要更新的应用列表、加载状态和错误信息
  */
-export const useInstalledAppsStore = create<InstalledAppsStore>((set, get) => ({
+export const useInstalledAppsStore = create<Store.InstalledApps>((set, get) => ({
   /** 已安装的应用列表 */
   installedApps: [],
   /** 需要更新的应用列表 */

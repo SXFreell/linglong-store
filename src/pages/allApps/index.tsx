@@ -4,7 +4,7 @@ import { DoubleUp, DoubleDown } from '@icon-park/react'
 import ApplicationCard from '@/components/ApplicationCard'
 import { useEffect, useState, useRef } from 'react'
 import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'
-import { useInitStore } from '@/stores/global'
+import { useGlobalStore } from '@/stores/global'
 import { generateEmptyCards, generateEmptyCategories } from './utils'
 
 const defaultPageSize = 30 // 每页显示数量
@@ -15,8 +15,8 @@ type AppInfo = API.APP.AppMainDto
 
 
 const AllApps = () => {
-  const arch = useInitStore((state) => state.arch)
-  const repoName = useInitStore((state) => state.repoName)
+  const arch = useGlobalStore((state) => state.arch)
+  const repoName = useGlobalStore((state) => state.repoName)
   const [activeCategory, setActiveCategory] = useState<string>('')
   const [pageNo, setPageNo] = useState<number>(1)
   const [loading, setLoading] = useState<boolean>(false)

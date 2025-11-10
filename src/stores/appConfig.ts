@@ -4,13 +4,12 @@
  */
 import { create } from 'zustand'
 import { createTauriStore } from '@tauri-store/zustand'
-import type { ConfigStore, downloadConfigStore, DownloadApp } from '@/types/store'
 
 /**
  * 创建应用配置状态管理store
  * 管理更新检查和基础服务显示等全局配置
  */
-export const useConfigStore = create<ConfigStore>((set) => ({
+export const useConfigStore = create<Store.Config>((set) => ({
   /** 是否启用版本检查功能的标志 */
   checkVersion: false,
   /** 是否显示基础服务应用的标志 */
@@ -40,17 +39,17 @@ export const useConfigStore = create<ConfigStore>((set) => ({
   })),
 }))
 
-export const useDownloadConfigStore = create<downloadConfigStore>((set) => ({
+export const useDownloadConfigStore = create<Store.DownloadConfig>((set) => ({
   // 下载应用保存列表
   downloadList: [],
   // 追加app到下载列表
-  addAppToDownloadList: (app: API.APP.AppMainDto | DownloadApp) => set((state) => ({
+  addAppToDownloadList: (app: API.APP.AppMainDto | Store.DownloadApp) => set((state) => ({
     // 确保 push 的对象包含 flag 字段（默认空字符串）
     downloadList: [...state.downloadList, { ...(app as API.APP.AppMainDto), flag: 'downloading' }],
   })),
   // 改变APP下载状态(已下载和下载中)
   changeAppDownloadStatus: (appId: string, status = 'downloaded') => set((state) => ({
-    downloadList: state.downloadList.map((app: DownloadApp) => {
+    downloadList: state.downloadList.map((app: Store.DownloadApp) => {
       if (app.appId === appId) {
         // 返回新的对象以保持不可变性
         return { ...app, flag: status }
@@ -61,11 +60,11 @@ export const useDownloadConfigStore = create<downloadConfigStore>((set) => ({
   })),
   // 清空下载列表
   clearDownloadList: () => set((state) => ({
-    downloadList: state.downloadList.filter((app: DownloadApp) => app.flag === 'downloading'),
+    downloadList: state.downloadList.filter((app: Store.DownloadApp) => app.flag === 'downloading'),
   })),
   // 移除下载中的应用
   removeDownloadingApp: (appId: string) => set((state) => ({
-    downloadList: state.downloadList.filter((app: DownloadApp) => app.appId !== appId),
+    downloadList: state.downloadList.filter((app: Store.DownloadApp) => app.appId !== appId),
   })),
 }))
 
@@ -82,6 +81,7 @@ export const tauriAppConfigHandler = createTauriStore('ConfigStore', useConfigSt
 })
 
 // 保存下载列表
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const tauriDownloadConfigHandler = createTauriStore('downloadConfigStore', useDownloadConfigStore as any, {
   saveOnChange: true, // 配置变更时自动保存到磁盘
   autoStart: true, // 应用启动时自动从磁盘加载配置
