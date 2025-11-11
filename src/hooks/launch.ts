@@ -13,22 +13,11 @@ import { useGlobalStore } from '@/stores/global'
 import { useConfigStore } from '@/stores/appConfig'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 
-interface UseLaunchReturn {
-  /** 初始化状态标识 */
-  isInit: boolean
-  /** 初始化进度（0-100） */
-  progress: number
-  /** 初始化错误信息 */
-  error: string | null
-  /** 重新初始化方法 */
-  retry: () => void
-}
-
 /**
  * 应用启动初始化 Hook
- * @returns {UseLaunchReturn} 初始化状态和控制方法
+ * @returns {Hooks.Launch.UseLaunchReturn} 初始化状态和控制方法
  */
-export const useLaunch = (): UseLaunchReturn => {
+export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
   // ==================== 状态管理 ====================
   /** 初始化完成标识 */
   const [isInit, setIsInit] = useState(false)
@@ -36,6 +25,8 @@ export const useLaunch = (): UseLaunchReturn => {
   const [progress, setProgress] = useState(0)
   /** 错误信息 */
   const [error, setError] = useState<string | null>(null)
+  /** 当前步骤 */
+  const [currentStep, setCurrentStep] = useState<string>('初始化应用')
 
   // ==================== Store 状态和方法 ====================
   // 全局状态
@@ -130,15 +121,19 @@ export const useLaunch = (): UseLaunchReturn => {
       setProgress(0)
 
       // 步骤1: 获取系统信息
+      setCurrentStep('获取系统信息')
       await initSystemInfo()
 
       // 步骤2: 加载已安装应用
+      setCurrentStep('加载已安装应用')
       await loadInstalledApps()
 
       // 步骤3: 检查应用更新
+      setCurrentStep('检查应用更新')
       await checkAppUpdates()
 
       // 步骤4: 检查商店版本（可选）
+      setCurrentStep('检查商店版本')
       await checkStoreVersion()
 
       // 完成初始化
@@ -161,10 +156,10 @@ export const useLaunch = (): UseLaunchReturn => {
   /**
    * 重试初始化
    */
-  const retry = useCallback(() => {
+  const retry = useCallback(async() => {
     setIsInit(false)
     setError(null)
-    initialize()
+    await initialize()
   }, [initialize])
 
   // ==================== 生命周期 ====================
@@ -181,6 +176,7 @@ export const useLaunch = (): UseLaunchReturn => {
   return {
     isInit,
     progress,
+    currentStep,
     error,
     retry,
   }

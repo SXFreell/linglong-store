@@ -9,7 +9,7 @@ import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { Popover, message } from 'antd'
 import { getCurrentWindow } from '@tauri-apps/api/window'
 import { useConfigStore, useDownloadConfigStore } from '@/stores/appConfig'
-import { useGlobalStore, useSearchStore } from '@/stores/global'
+import { useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import cleanIcon from '@/assets/icons/clean.svg'
 import download from '@/assets/icons/download.svg'
@@ -21,9 +21,8 @@ import { useNavigate, useLocation } from 'react-router-dom'
  * 标题栏组件
  * 处理窗口控制、搜索功能和下载管理
  */
-const Titlebar = () => {
+const Titlebar = ({ showSearch, showDownload }: { showSearch: boolean, showDownload: boolean }) => {
   /** 应用初始化状态 */
-  const isInited = useGlobalStore((state) => state.isInited)
   const closeOrHide = useConfigStore((state) => state.closeOrHide)
   const downloadList = useDownloadConfigStore((state) => state.downloadList)
   /** 全局搜索关键词 */
@@ -180,7 +179,7 @@ const Titlebar = () => {
       </div>
       {/* 中间：搜索框（仅在初始化完成后显示） */}
       {
-        isInited ? <div className={styles.titlebarCenter}>
+        showSearch ? <div className={styles.titlebarCenter}>
           <div className={styles.inputBox}>
             <input
               type="text"
@@ -202,7 +201,7 @@ const Titlebar = () => {
       {/* 右侧：下载管理和窗口控制按钮 */}
       <div className={styles.titlebarRight}>
         {/* 下载管理按钮（仅在初始化完成后显示） */}
-        {isInited ? <Popover
+        {showDownload ? <Popover
           trigger='click'
           title='下载管理'
           content={<DownloadProgress/>}>
