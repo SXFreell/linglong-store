@@ -60,7 +60,7 @@ const Process = () => {
       await killLinglongApp(record.name)
       // eslint-disable-next-line no-console
       console.log('[processClick] Successfully killed app:', record.name)
-      message.success(`成功停止 ${record.name}`)
+      // message.success(`成功停止 ${record.name}`)
       // 刷新列表
       await fetchRunningApps()
     } catch (error) {
