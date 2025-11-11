@@ -134,12 +134,8 @@ const AppDetail = () => {
     // eslint-disable-next-line no-console
     console.log('[handleRun] Starting app:', currentApp.appId, 'version:', version)
 
-    try {
-      await runApp(currentApp.appId, version)
-      // eslint-disable-next-line no-console
-      console.log('[handleRun] Command executed successfully:', currentApp.appId)
-      message.success('启动命令已执行')
-    } catch { /* empty */ }
+    // 启动应用
+    runApp(currentApp.appId, version)
   }
 
   const columns: TableColumnProps[] = [
