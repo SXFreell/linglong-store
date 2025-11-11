@@ -56,7 +56,7 @@ const AppLayout = () => {
   useEffect(() => {
     const currentArch = arch()
     changeArch(currentArch)
-    setIsInit(false)
+    setIsInit(true) // 修复: 初始化完成后应该设置为 true
     onInited()
     getUpdateAppNum(needUpdateApps.length || 0)
   }, [])
@@ -72,7 +72,7 @@ const AppLayout = () => {
       <Titlebar/>
       {
         // 根据初始化状态决定显示启动页还是主布局
-        !isInit ? <LaunchPage /> : <div className={styles.layoutContent}>
+        isInit ? <div className={styles.layoutContent}>
           {/* 侧边栏导航 */}
           <Sidebar className={styles.sider} />
           {/* 主内容区域，使用 Suspense 处理异步加载 */}
@@ -81,7 +81,7 @@ const AppLayout = () => {
               <Outlet />
             </Suspense>
           </div>
-        </div>
+        </div> : <LaunchPage />
       }
     </div>
   )

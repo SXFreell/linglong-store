@@ -33,7 +33,7 @@ const Sidebar = ({ className }: { className: string }) => {
                 <span className={styles.menuItemIcon}>
                   {isActive ? item.activeIcon : item.icon}
                 </span>
-                {/* <span className={styles.menuItemText}>{item.menuName}<i className={updateAppSum > 0 && item.menuName === '软件更新' ? styles.additional : styles.notAdditional}>{updateAppSum}</i> </span> */}
+                <span className={styles.menuItemText}>{item.menuName}</span>
               </div>
             )
           })
