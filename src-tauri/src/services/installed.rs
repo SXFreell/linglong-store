@@ -761,48 +761,102 @@ pub async fn cancel_install_app(app_id: String) -> Result<String, String> {
     // 如果无法通过 PTY Child 终止，尝试使用系统命令杀掉整个进程组
     if kill_result.is_err() {
         if let Some(pid) = process_id {
-            println!("[cancel_install_app] Attempting to kill process group {} using system command", pid);
+            println!("[cancel_install_app] Attempting to send SIGINT (Ctrl+C) to process group {}", pid);
             
-            // 使用负数 PID 来杀掉整个进程组
-            // -pid 表示杀掉进程组 ID 为 pid 的所有进程
+            // 先尝试发送 SIGINT (signal 2)，这是 Ctrl+C 的信号
+            // ll-cli 会捕获这个信号并优雅地取消任务
             let output = Command::new("kill")
-                .arg("-9")
-                .arg(format!("-{}", pid))  // 注意这里是 -pid，表示进程组
+                .arg("-2")  // SIGINT
+                .arg(format!("-{}", pid))  // 负数表示进程组
                 .output();
             
             match output {
                 Ok(out) if out.status.success() => {
-                    println!("[cancel_install_app] Successfully killed process group {} with kill -9", pid);
-                    kill_result = Ok(());
+                    println!("[cancel_install_app] Successfully sent SIGINT to process group {}", pid);
+                    
+                    // 等待进程退出，最多等待 2 秒
+                    println!("[cancel_install_app] Waiting for process to exit...");
+                    for i in 1..=20 {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        
+                        // 检查进程是否还存在
+                        let check = Command::new("kill")
+                            .arg("-0")  // signal 0 只检查进程是否存在，不发送信号
+                            .arg(pid.to_string())
+                            .output();
+                        
+                        match check {
+                            Ok(out) if !out.status.success() => {
+                                println!("[cancel_install_app] Process {} has exited after {}ms", pid, i * 100);
+                                kill_result = Ok(());
+                                break;
+                            }
+                            _ => {
+                                if i == 20 {
+                                    println!("[cancel_install_app] Process {} still running after 2s, sending SIGKILL", pid);
+                                    // 强制终止
+                                    let _ = Command::new("kill")
+                                        .arg("-9")
+                                        .arg(format!("-{}", pid))
+                                        .output();
+                                    kill_result = Ok(());
+                                }
+                            }
+                        }
+                    }
                 }
                 Ok(out) => {
                     let err = String::from_utf8_lossy(&out.stderr);
-                    println!("[cancel_install_app] Failed to kill process group {}: {}", pid, err);
+                    println!("[cancel_install_app] Failed to send SIGINT to process group {}: {}", pid, err);
                     
-                    // 如果杀进程组失败，尝试使用 pkill 通过命令名称杀掉
-                    println!("[cancel_install_app] Trying pkill as fallback...");
-                    let pkill_output = Command::new("pkill")
+                    // 如果 SIGINT 失败，直接尝试 SIGKILL
+                    println!("[cancel_install_app] Trying SIGKILL (-9) as fallback...");
+                    let kill_output = Command::new("kill")
                         .arg("-9")
-                        .arg("-f")
-                        .arg("ll-cli install")
+                        .arg(format!("-{}", pid))
                         .output();
                     
-                    match pkill_output {
+                    match kill_output {
                         Ok(out) if out.status.success() => {
-                            println!("[cancel_install_app] Successfully killed ll-cli processes with pkill");
+                            println!("[cancel_install_app] Successfully killed process group {} with SIGKILL", pid);
                             kill_result = Ok(());
                         }
                         Ok(out) => {
-                            let pkill_err = String::from_utf8_lossy(&out.stderr);
-                            println!("[cancel_install_app] pkill also failed: {}", pkill_err);
+                            let kill_err = String::from_utf8_lossy(&out.stderr);
+                            println!("[cancel_install_app] SIGKILL also failed: {}", kill_err);
                         }
                         Err(e) => {
-                            println!("[cancel_install_app] Failed to execute pkill: {}", e);
+                            println!("[cancel_install_app] Failed to execute kill -9: {}", e);
                         }
                     }
                 }
                 Err(e) => {
                     println!("[cancel_install_app] Failed to execute kill command: {}", e);
+                }
+            }
+            
+            // 如果以上都失败，最后尝试 pkill
+            if kill_result.is_err() {
+                println!("[cancel_install_app] Trying pkill as last resort...");
+                let pkill_output = Command::new("pkill")
+                    .arg("-2")  // 也是发送 SIGINT
+                    .arg("-f")
+                    .arg("ll-cli install")
+                    .output();
+                
+                match pkill_output {
+                    Ok(out) if out.status.success() => {
+                        println!("[cancel_install_app] Successfully sent SIGINT to ll-cli processes with pkill");
+                        std::thread::sleep(std::time::Duration::from_millis(500));
+                        kill_result = Ok(());
+                    }
+                    Ok(out) => {
+                        let pkill_err = String::from_utf8_lossy(&out.stderr);
+                        println!("[cancel_install_app] pkill failed: {}", pkill_err);
+                    }
+                    Err(e) => {
+                        println!("[cancel_install_app] Failed to execute pkill: {}", e);
+                    }
                 }
             }
         } else {
