@@ -8,6 +8,7 @@ use services::installed::{
     uninstall_linglong_app,
     search_app_versions,
     run_linglong_app,
+    install_linglong_app,
     InstalledApp,
 };
 pub mod modules;
@@ -58,6 +59,19 @@ async fn run_app(app_id: String, version: String) -> Result<String, String> {
     run_linglong_app(app_id, version).await
 }
 
+#[tauri::command]
+async fn install_app(
+    app_handle: tauri::AppHandle,
+    app_id: String,
+    version: Option<String>,
+    force: bool
+) -> Result<String, String> {
+    println!("[install_app] Command invoked: app_id={}, version={:?}, force={}", app_id, version, force);
+    let result = install_linglong_app(app_handle, app_id.clone(), version, force).await;
+    println!("[install_app] Command result for {}: {:?}", app_id, result);
+    result
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -77,7 +91,8 @@ pub fn run() {
             get_all_installed_linglong_apps,
             uninstall_app,
             search_versions,
-            run_app
+            run_app,
+            install_app
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

@@ -3,7 +3,8 @@
  * 负责与 Rust 后端进行交互，通过 ll-cli 执行系统操作
  */
 import { invoke } from '@tauri-apps/api/core'
-import type { InstalledApp } from './types'
+import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import type { InstalledApp, InstallProgress } from './types'
 
 /**
  * 获取正在运行的玲珑应用列表
@@ -75,4 +76,44 @@ export const runApp = async(
   version: string,
 ): Promise<string> => {
   return await invoke('run_app', { appId, version })
+}
+
+/**
+ * 安装指定的玲珑应用
+ * @param appId - 要安装的应用ID（例如：org.deepin.calculator）
+ * @param version - 可选的版本号，如果不指定则安装最新版本
+ * @param force - 是否强制安装（默认为 false）
+ * @returns Promise<string> 安装操作的结果
+ */
+export const installApp = async(
+  appId: string,
+  version?: string,
+  force = false,
+): Promise<string> => {
+  return await invoke('install_app', { appId, version: version || null, force })
+}
+
+/**
+ * 监听安装进度事件
+ * @param callback - 进度更新回调函数
+ * @returns Promise<UnlistenFn> 取消监听的函数
+ *
+ * @example
+ * ```typescript
+ * // 开始监听
+ * const unlisten = await onInstallProgress((progress) => {
+ *   console.log(`${progress.appId}: ${progress.percentage}% - ${progress.status}`)
+ * })
+ *
+ * // 取消监听
+ * unlisten()
+ * ```
+ */
+export const onInstallProgress = async(
+  callback: (progress: InstallProgress) => void,
+): Promise<UnlistenFn> => {
+  return await listen<InstallProgress>('install-progress', (event) => {
+    console.log('[onInstallProgress] Received event:', event.payload)
+    callback(event.payload)
+  })
 }

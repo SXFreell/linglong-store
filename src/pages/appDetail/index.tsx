@@ -1,12 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button, Typography, Table, message, Modal, Spin, Space } from 'antd'
+import { Button, Typography, Table, message, Modal, Spin, Space, Progress } from 'antd'
 import type { TableColumnProps } from 'antd'
 import styles from './index.module.scss'
 import goBack from '@/assets/icons/go_back.svg'
 import DefaultIcon from '@/assets/linyaps.svg'
-import type { InstalledApp } from '@/apis/invoke/types'
-import { searchVersions, uninstallApp, runApp } from '@/apis/invoke'
+import type { InstalledApp, InstallProgress } from '@/apis/invoke/types'
+import { searchVersions, uninstallApp, runApp, installApp, onInstallProgress } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useDownloadConfigStore } from '@/stores/appConfig'
 interface VersionInfo {
@@ -23,6 +23,8 @@ const AppDetail = () => {
   const [versions, setVersions] = useState<VersionInfo[]>([])
   const [loading, setLoading] = useState(false)
   const [uninstallingVersion, setUninstallingVersion] = useState<string | null>(null)
+  const [isInstalling, setIsInstalling] = useState(false)
+  const [installProgress, setInstallProgress] = useState<InstallProgress | null>(null)
   const removeApp = useInstalledAppsStore((state) => state.removeApp)
   const installedApps = useInstalledAppsStore((state) => state.installedApps)
   const { addAppToDownloadList } = useDownloadConfigStore()
@@ -45,6 +47,39 @@ const AppDetail = () => {
 
     return app
   }, [app, installedApps])
+
+  // 设置安装进度监听器
+  useEffect(() => {
+    let unlisten: (() => void) | null = null
+
+    const setupListener = async() => {
+      console.log('[useEffect] Setting up install progress listener for appId:', currentApp?.appId)
+      unlisten = await onInstallProgress((progress) => {
+        console.log('[useEffect] Install progress received:', progress)
+        if (progress.appId === currentApp?.appId) {
+          console.log('[useEffect] AppId matched! Updating state with:', progress)
+          setInstallProgress(prev => {
+            console.log('[useEffect] Previous state:', prev)
+            console.log('[useEffect] New state:', progress)
+            return progress
+          })
+        } else {
+          console.log('[useEffect] AppId not matched. Expected:', currentApp?.appId, 'Got:', progress.appId)
+        }
+      })
+      console.log('[useEffect] Listener setup complete')
+    }
+
+    setupListener()
+
+    // 组件卸载时清理监听器
+    return () => {
+      console.log('[useEffect] Cleaning up listener')
+      if (unlisten) {
+        unlisten()
+      }
+    }
+  }, [currentApp?.appId])
 
   const loadVersions = async() => {
     if (!currentApp?.appId) {
@@ -194,13 +229,48 @@ const AppDetail = () => {
       </div>
     )
   }
-  const handleInstallBtnClick = () => {
-    if (!currentApp) {
+  const handleInstallBtnClick = async() => {
+    if (!currentApp?.appId) {
+      message.error('应用信息不完整')
       return
     }
-    message.info('安装功能开发中...')
-    addAppToDownloadList(currentApp)
 
+    try {
+      console.log('[handleInstallBtnClick] Starting installation for:', currentApp.appId)
+      setIsInstalling(true)
+      const initialProgress = {
+        appId: currentApp.appId,
+        progress: '0%',
+        percentage: 0,
+        status: '准备安装...',
+      }
+      console.log('[handleInstallBtnClick] Setting initial progress:', initialProgress)
+      setInstallProgress(initialProgress)
+
+      console.log('[handleInstallBtnClick] Calling installApp...')
+      // 开始安装（进度通过 useEffect 中的监听器更新）
+      await installApp(currentApp.appId)
+
+      console.log('[handleInstallBtnClick] installApp completed')
+      // 安装完成
+      message.success({ content: '安装成功！', key: 'install' })
+      setIsInstalling(false)
+      setInstallProgress(null)
+
+      // 刷新版本列表
+      loadVersions()
+
+      // 将应用添加到下载列表用于显示
+      addAppToDownloadList(currentApp)
+    } catch (error) {
+      console.error('[handleInstallBtnClick] 安装失败:', error)
+      message.error({
+        content: `安装失败: ${error instanceof Error ? error.message : String(error)}`,
+        key: 'install',
+      })
+      setIsInstalling(false)
+      setInstallProgress(null)
+    }
   }
 
   return (
@@ -227,9 +297,30 @@ const AppDetail = () => {
                   shape='round'
                   className={styles.installButton}
                   onClick={handleInstallBtnClick}
+                  loading={isInstalling}
+                  disabled={isInstalling}
                 >
-                  安装新版本
+                  {isInstalling ? '安装中...' : '安装新版本'}
                 </Button>
+                {(() => {
+                  console.log('[Render] isInstalling:', isInstalling, 'installProgress:', installProgress)
+                  return null
+                })()}
+                {isInstalling && installProgress && (
+                  <div style={{ marginTop: '12px', width: '100%' }}>
+                    <Progress
+                      percent={installProgress.percentage}
+                      status={installProgress.percentage >= 100 ? 'success' : 'active'}
+                      strokeColor={{
+                        '0%': '#108ee9',
+                        '100%': '#87d068',
+                      }}
+                    />
+                    <div style={{ marginTop: '8px', color: '#666', fontSize: '12px' }}>
+                      {installProgress.status} ({installProgress.percentage}%)
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
             <div className={styles.appDesc}>

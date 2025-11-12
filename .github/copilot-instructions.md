@@ -376,6 +376,48 @@ src-tauri/
 - 与发行版/桌面环境集成（桌面启动器、图标缓存）在安全评估后逐步引入。
 - 引入多源元数据（截图、评分）时严控隐私与网络可用性。
 
----
+### 玲珑 CLI（`ll-cli`）
+所有系统操作通过命令与玲珑交互：
+- `ll-cli list --json [--type=all]` → 获取已安装应用
+- `ll-cli ps` → 运行中的进程  
+- `ll-cli kill <app>` → 停止应用
+- `ll-cli run <appid> --version=<ver>` → 启动应用
+- `linglong-docs` 这个目录可以找到所有的操作文档
 
-维护者：请在修改关键约定（IPC、依赖白名单、安全设置）时同步更新本文件。
+
+**在 Rust 中解析输出**并返回结构化数据到前端。
+
+### 多环境 API
+后端 API 根据环境（dev/test）不同：
+- 获取应用详情（图标 URL、本地化名称）
+- 通过 `request.ts` 中的 `paginate()` 辅助函数支持分页
+- 模板/分类数据用于 UI
+
+## 已知模式
+
+### 启动序列
+1. `main.tsx`：初始化 `tauriAppConfigHandler.start()`（加载持久化配置）
+2. `Layout`：显示 `LaunchPage` 3秒，同时：
+   - 通过 `@tauri-apps/plugin-os` 的 `arch()` 获取系统架构
+   - 模拟更新检查（`getUpdateAppNum()`）
+3. 渲染主 UI 及侧边栏导航
+
+### 迁移说明（MIGRATION_INSTALLED_APPS.md）
+v2.0.0 从 Electron 迁移到 Tauri。主要变更：
+- 用 Tauri invoke 命令替换 IPC
+- 将 `ll-cli` 执行从 Node.js 迁移到 Rust
+- Zustand stores 替换 Redux
+
+## 关键参考文件
+- **类型系统**：`src/types/common.d.ts`、`src/types/api/common.d.ts`
+- **API 模式**：`src/apis/request.ts`、`src/apis/apps/index.ts`
+- **Tauri 命令**：`src-tauri/src/lib.rs`、`src-tauri/src/services/`
+- **状态示例**：`src/stores/appConfig.ts`（持久化）、`src/stores/global.ts`（临时）
+- **组件模板**：`src/components/ApplicationCard/`
+- **eslint规则** `eslint.config.js`必须严格遵守的eslint规则
+
+## 测试与调试
+- 目前未配置测试套件
+- 手动运行 `ll-cli` 命令验证行为
+- 使用 `pnpm dev` 进行前端热重载开发
+- Rust 更改需要重启（`pnpm dev` 虽然会监听，但 Tauri 需要完全重启）
