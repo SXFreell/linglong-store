@@ -1,15 +1,26 @@
 import styles from './index.module.scss'
 import Logo from '@/assets/linyaps.svg'
 
+import { useLaunch } from '@/hooks/launch'
+import { Progress } from 'antd'
+
 // 首屏页面
 const LaunchPage = ()=>{
+  const {
+    progress,
+    currentStep,
+  } = useLaunch()
+
   return <div className={styles.launchPage} >
     <div className={styles.main}>
       <div className={
         styles.logo
       }> <img src={Logo} alt="logo" />   </div>
-      <div className={styles.name} >如意玲珑应用商店</div>
-      <div className={styles.progress} >检测当前系统架构..</div>
+      <div className={styles.name}>如意玲珑应用商店</div>
+      <div className={styles.step}>{currentStep}</div>
+      <div className={styles.progress}>
+        <Progress percent={progress} showInfo={false} />
+      </div>
     </div>
     <div className={styles.footer}>
       <p className={styles.notice}>注意:
