@@ -1,8 +1,16 @@
 use serde::{Deserialize, Serialize};
 use std::process::Command;
 use std::io::Read;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 use tauri::{AppHandle, Emitter};
-use portable_pty::{native_pty_system, CommandBuilder, PtySize};
+use portable_pty::{native_pty_system, CommandBuilder, PtySize, Child};
+use once_cell::sync::Lazy;
+
+// 全局进程管理器，存储正在进行的安装进程
+// 使用 Arc<Mutex<Box<dyn Child + Send + Sync>>> 来共享进程所有权
+static INSTALL_PROCESSES: Lazy<Arc<Mutex<HashMap<String, Arc<Mutex<Box<dyn Child + Send + Sync>>>>>>> = 
+    Lazy::new(|| Arc::new(Mutex::new(HashMap::new())));
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
@@ -386,13 +394,35 @@ pub async fn install_linglong_app(
     println!("[install_linglong_app] Executing command: {}", command_str);
     
     // 在 PTY 中启动命令
-    let mut child = pty_pair.slave.spawn_command(cmd).map_err(|e| {
+    let child = pty_pair.slave.spawn_command(cmd).map_err(|e| {
         let err_msg = format!("Failed to spawn command in PTY: {}", e);
         println!("[install_linglong_app] ERROR: {}", err_msg);
         err_msg
     })?;
     
     println!("[install_linglong_app] Process spawned in PTY successfully");
+    
+    // 将进程包装在 Arc<Mutex<>> 中，以便可以在多个地方访问
+    let child_arc = Arc::new(Mutex::new(child));
+    
+    // 将进程存储到全局管理器中，以便可以取消
+    {
+        let mut processes = INSTALL_PROCESSES.lock().map_err(|e| {
+            format!("Failed to lock process manager: {}", e)
+        })?;
+        
+        println!("[install_linglong_app] About to store process with app_id: '{}'", app_id);
+        println!("[install_linglong_app] Current processes before insert: {}", processes.len());
+        
+        processes.insert(app_id.clone(), child_arc.clone());
+        
+        println!("[install_linglong_app] Process stored successfully");
+        println!("[install_linglong_app] Current processes after insert: {}", processes.len());
+        println!("[install_linglong_app] All stored app_ids:");
+        for key in processes.keys() {
+            println!("[install_linglong_app]   - '{}'", key);
+        }
+    }
     
     // 从 PTY master 读取输出
     let mut reader = pty_pair
@@ -479,12 +509,47 @@ pub async fn install_linglong_app(
     
     println!("[install_linglong_app] Waiting for process to complete...");
     
-    // 等待进程结束
-    let exit_status = child.wait().map_err(|e| {
-        let err_msg = format!("Failed to wait for 'll-cli install': {}", e);
-        println!("[install_linglong_app] ERROR: {}", err_msg);
-        err_msg
-    })?;
+    // 使用轮询方式等待进程结束，避免长时间持有锁导致 cancel 无法工作
+    let exit_status = loop {
+        let status = {
+            let mut child = child_arc.lock().map_err(|e| {
+                format!("Failed to lock child process: {}", e)
+            })?;
+            
+            // 使用 try_wait() 非阻塞检查进程状态
+            match child.try_wait() {
+                Ok(Some(status)) => {
+                    println!("[install_linglong_app] Process exited");
+                    Some(status)
+                }
+                Ok(None) => {
+                    // 进程还在运行
+                    None
+                }
+                Err(e) => {
+                    let err_msg = format!("Failed to check process status: {}", e);
+                    println!("[install_linglong_app] ERROR: {}", err_msg);
+                    return Err(err_msg);
+                }
+            }
+        }; // 锁在这里释放
+        
+        if let Some(status) = status {
+            break status;
+        }
+        
+        // 短暂休眠后再次检查，给 cancel 操作留出执行机会
+        std::thread::sleep(std::time::Duration::from_millis(100));
+    };
+    
+    // 从全局管理器中移除进程（无论成功还是失败）
+    {
+        let mut processes = INSTALL_PROCESSES.lock().map_err(|e| {
+            format!("Failed to lock process manager: {}", e)
+        })?;
+        processes.remove(&app_id);
+        println!("[install_linglong_app] Process removed from manager for app: {}", app_id);
+    }
     
     // 等待读取线程完成
     let _ = reader_handle.join();
@@ -624,4 +689,149 @@ fn parse_install_progress(line: &str, app_id: &str) -> InstallProgress {
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
     
     result
+}
+
+/// 取消正在进行的应用安装
+/// “代码质量不知道怎么样，反正能跑通 :（ ”
+pub async fn cancel_install_app(app_id: String) -> Result<String, String> {
+    println!("========== [cancel_install_app] START ==========");
+    println!("[cancel_install_app] app_id: {}", app_id);
+    
+    // 先获取进程的引用（不移除）
+    let child_arc = {
+        let processes = INSTALL_PROCESSES.lock().map_err(|e| {
+            let err_msg = format!("Failed to lock process manager: {}", e);
+            println!("[cancel_install_app] ERROR: {}", err_msg);
+            err_msg
+        })?;
+        
+        // 调试：打印当前所有存储的进程
+        println!("[cancel_install_app] Current processes in manager:");
+        for key in processes.keys() {
+            println!("[cancel_install_app]   - {}", key);
+        }
+        println!("[cancel_install_app] Total processes: {}", processes.len());
+        
+        processes.get(&app_id).cloned().ok_or_else(|| {
+            let err_msg = format!("No installation process found for app: {}", app_id);
+            println!("[cancel_install_app] WARN: {}", err_msg);
+            err_msg
+        })?
+    };
+    
+    println!("[cancel_install_app] Found process for app: {}", app_id);
+    
+    // 使用 try_lock 避免死锁，如果无法获取锁，说明进程正在被 wait()，我们需要用另一种方式终止
+    println!("[cancel_install_app] Attempting to lock child process with try_lock...");
+    
+    // 尝试多次获取锁（最多 5 次，每次间隔 100ms）
+    let mut kill_result: Result<(), String> = Err("Failed to acquire lock".to_string());
+    let mut process_id: Option<u32> = None;
+    
+    for attempt in 1..=5 {
+        println!("[cancel_install_app] Try lock attempt {}/5", attempt);
+        
+        match child_arc.try_lock() {
+            Ok(mut child) => {
+                println!("[cancel_install_app] Lock acquired successfully");
+                
+                // 获取进程 ID
+                process_id = child.process_id();
+                if let Some(pid) = process_id {
+                    println!("[cancel_install_app] Process ID: {}", pid);
+                }
+                
+                println!("[cancel_install_app] Calling child.kill()...");
+                kill_result = child.kill().map_err(|e| format!("kill() failed: {}", e));
+                
+                if kill_result.is_ok() {
+                    println!("[cancel_install_app] child.kill() returned Ok");
+                } else {
+                    println!("[cancel_install_app] child.kill() returned Err: {:?}", kill_result);
+                }
+                break;
+            }
+            Err(_) => {
+                println!("[cancel_install_app] Lock is busy, waiting 100ms...");
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+        }
+    }
+    
+    // 如果无法通过 PTY Child 终止，尝试使用系统命令杀掉整个进程组
+    if kill_result.is_err() {
+        if let Some(pid) = process_id {
+            println!("[cancel_install_app] Attempting to kill process group {} using system command", pid);
+            
+            // 使用负数 PID 来杀掉整个进程组
+            // -pid 表示杀掉进程组 ID 为 pid 的所有进程
+            let output = Command::new("kill")
+                .arg("-9")
+                .arg(format!("-{}", pid))  // 注意这里是 -pid，表示进程组
+                .output();
+            
+            match output {
+                Ok(out) if out.status.success() => {
+                    println!("[cancel_install_app] Successfully killed process group {} with kill -9", pid);
+                    kill_result = Ok(());
+                }
+                Ok(out) => {
+                    let err = String::from_utf8_lossy(&out.stderr);
+                    println!("[cancel_install_app] Failed to kill process group {}: {}", pid, err);
+                    
+                    // 如果杀进程组失败，尝试使用 pkill 通过命令名称杀掉
+                    println!("[cancel_install_app] Trying pkill as fallback...");
+                    let pkill_output = Command::new("pkill")
+                        .arg("-9")
+                        .arg("-f")
+                        .arg("ll-cli install")
+                        .output();
+                    
+                    match pkill_output {
+                        Ok(out) if out.status.success() => {
+                            println!("[cancel_install_app] Successfully killed ll-cli processes with pkill");
+                            kill_result = Ok(());
+                        }
+                        Ok(out) => {
+                            let pkill_err = String::from_utf8_lossy(&out.stderr);
+                            println!("[cancel_install_app] pkill also failed: {}", pkill_err);
+                        }
+                        Err(e) => {
+                            println!("[cancel_install_app] Failed to execute pkill: {}", e);
+                        }
+                    }
+                }
+                Err(e) => {
+                    println!("[cancel_install_app] Failed to execute kill command: {}", e);
+                }
+            }
+        } else {
+            println!("[cancel_install_app] Cannot kill: no process ID available");
+        }
+    }
+    
+    // 处理结果
+    match kill_result {
+        Ok(_) => {
+            println!("[cancel_install_app] Successfully killed process for: {}", app_id);
+            
+            // 成功 kill 后才从管理器中移除
+            {
+                let mut processes = INSTALL_PROCESSES.lock().map_err(|e| {
+                    format!("Failed to lock process manager for cleanup: {}", e)
+                })?;
+                processes.remove(&app_id);
+                println!("[cancel_install_app] Process removed from manager");
+            }
+            
+            println!("========== [cancel_install_app] END ==========");
+            Ok(format!("Successfully canceled installation for {}", app_id))
+        }
+        Err(e) => {
+            let err_msg = format!("Failed to kill process: {}", e);
+            println!("[cancel_install_app] ERROR: {}", err_msg);
+            println!("========== [cancel_install_app] END ==========");
+            Err(err_msg)
+        }
+    }
 }

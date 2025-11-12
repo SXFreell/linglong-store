@@ -1,48 +1,66 @@
 import styles from './index.module.scss'
-import { useState, useEffect, useMemo } from 'react'
-import DefaultIcon from '@/assets/linyaps.svg'
+import { useMemo } from 'react'
+import DefaultIcon from '@/assets/linyaps.svg?url'
 import { Progress, Empty, message } from 'antd'
 import { useDownloadConfigStore } from '@/stores/appConfig'
-const DownloadIcon = ({ appId = '123' })=>{
-  const [percent, setPercent] = useState(0)
+import { cancelInstallApp } from '@/apis/invoke'
+
+const DownloadIcon = ({ appId, percentage = 0, isDownloading = false }: {
+  appId: string
+  percentage?: number
+  isDownloading?: boolean
+}) => {
   const {
     removeDownloadingApp,
   } = useDownloadConfigStore()
-  // 假进度：从 0 逐步增加到 99，模拟下载进度
-  useEffect(() => {
-    setPercent(0)
-    const timer = setInterval(() => {
-      setPercent((p) => {
-        if (p >= 97) {
-          clearInterval(timer)
-          return 97
-        }
-        // 每次增加 1-6 的随机步进，使动画更自然
-        const step = Math.floor(Math.random() * 5)
-        return Math.min(97, p + step)
-      })
-    }, 800)
 
-    return () => clearInterval(timer)
-  }, [appId])
-  const handleDelete = ()=>{
-    removeDownloadingApp(appId)
-    console.info(appId, '删除下载任务')
+  const handleCancel = async() => {
+    console.log('[handleCancel] Clicked! appId:', appId, 'isDownloading:', isDownloading)
+
+    if (isDownloading) {
+      try {
+        console.log('[handleCancel] Calling cancelInstallApp for:', appId)
+        const result = await cancelInstallApp(appId)
+        console.log('[handleCancel] Cancel result:', result)
+        message.success('已取消安装')
+        removeDownloadingApp(appId)
+        console.info('[handleCancel] Successfully cancelled:', appId)
+      } catch (error) {
+        console.error('[handleCancel] Cancel failed:', error)
+        message.error(`取消安装失败: ${error}`)
+      }
+    } else {
+      // 已完成的任务直接删除
+      removeDownloadingApp(appId)
+      console.info('[handleCancel] Removed completed task:', appId)
+    }
   }
-  return <>
+
+  // 调试日志
+  console.log(`[DownloadIcon] appId: ${appId}, percentage: ${percentage}, type: ${typeof percentage}`)
+
+  return (
     <div className={styles.downloadIcon}>
-      <span className={styles.cancelDownload} onClick={handleDelete}>
+      <span className={styles.cancelDownload} onClick={handleCancel}>
         ×
       </span>
-      <Progress className={styles.downloadProgress} percent={percent} size={30} type='circle' status="active"/>
+      <Progress
+        percent={Number(percentage)}
+        width={32}
+        type='circle'
+        status={percentage >= 100 ? 'success' : 'active'}
+        strokeWidth={6}
+        format={(percent) => `${Math.round(percent || 0)}%`}
+      />
     </div>
-  </>
+  )
 }
 const DownloadProgress = () => {
   const [messageApi, contextHolder] = message.useMessage()
   const {
     downloadList,
     clearDownloadList,
+    removeDownloadingApp,
   } = useDownloadConfigStore()
   // 获取图标 URL
   const iconUrl = useMemo(() => {
@@ -68,13 +86,32 @@ const DownloadProgress = () => {
                   {item.zhName || item.name || '应用名称' }
                 </p>
                 <p className={styles.contentSize}>
-                  {item.size || '未知大小'}
+                  {item.flag === 'downloading'
+                    ? `${item.installStatus || '准备中'} ${item.percentage || 0}%`
+                    : item.size || '未知大小'
+                  }
                 </p>
               </div>
             </div>
             <div className={styles.itemRight}>
               {
-                item.flag === 'downloading' ? <DownloadIcon appId={item.appId}/> : <button className={styles.downloadBtn}>打开</button>
+                item.flag === 'downloading'
+                  ? <DownloadIcon
+                    appId={item.appId || ''}
+                    percentage={item.percentage || 0}
+                    isDownloading={true}
+                  />
+                  : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className={styles.downloadBtn}>打开</button>
+                      <button
+                        className={styles.closeBtn}
+                        onClick={() => removeDownloadingApp(item.appId || '')}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )
               }
             </div>
           </div>

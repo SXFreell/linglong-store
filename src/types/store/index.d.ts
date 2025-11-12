@@ -116,6 +116,8 @@ declare namespace Store {
     addAppToDownloadList: (app: DownloadApp) => void
     /** 改变APP下载状态(已下载和下载中) */
     changeAppDownloadStatus: (appId: string, status: string) => void
+    /** 更新APP安装进度 */
+    updateAppProgress: (appId: string, percentage: number, status: string) => void
     /** 清空下载列表 */
     clearDownloadList: () => void
     /** 移除下载中的应用 */
@@ -127,5 +129,9 @@ declare namespace Store {
    */
   interface DownloadApp extends API.APP.AppMainDto {
     flag?: string
+    /** 安装进度百分比 (0-100) */
+    percentage?: number
+    /** 安装状态文本 */
+    installStatus?: string
   }
 }

@@ -43,10 +43,22 @@ export const useDownloadConfigStore = create<Store.DownloadConfig>((set) => ({
   // 下载应用保存列表
   downloadList: [],
   // 追加app到下载列表
-  addAppToDownloadList: (app: API.APP.AppMainDto | Store.DownloadApp) => set((state) => ({
-    // 确保 push 的对象包含 flag 字段（默认空字符串）
-    downloadList: [...state.downloadList, { ...(app as API.APP.AppMainDto), flag: 'downloading' }],
-  })),
+  addAppToDownloadList: (app: API.APP.AppMainDto | Store.DownloadApp) => set((state) => {
+    // 检查是否已存在该应用
+    const existingIndex = state.downloadList.findIndex(item => item.appId === app.appId)
+
+    if (existingIndex !== -1) {
+      // 如果已存在，更新该应用的信息
+      const newList = [...state.downloadList]
+      newList[existingIndex] = { ...(app as API.APP.AppMainDto), flag: 'downloading' }
+      return { downloadList: newList }
+    }
+
+    // 如果不存在，追加到列表
+    return {
+      downloadList: [...state.downloadList, { ...(app as API.APP.AppMainDto), flag: 'downloading' }],
+    }
+  }),
   // 改变APP下载状态(已下载和下载中)
   changeAppDownloadStatus: (appId: string, status = 'downloaded') => set((state) => ({
     downloadList: state.downloadList.map((app: Store.DownloadApp) => {
@@ -58,6 +70,26 @@ export const useDownloadConfigStore = create<Store.DownloadConfig>((set) => ({
     }),
 
   })),
+  // 更新APP安装进度
+  updateAppProgress: (appId: string, percentage: number, status: string) => set((state) => {
+    console.log(`[updateAppProgress] appId: ${appId}, percentage: ${percentage}, status: ${status}`)
+
+    return {
+      downloadList: state.downloadList.map((app: Store.DownloadApp) => {
+        if (app.appId === appId) {
+          console.log(`[updateAppProgress] Updating app ${appId}: percentage=${percentage}`)
+          return {
+            ...app,
+            percentage,
+            installStatus: status,
+            // 如果达到100%，将状态改为已下载
+            flag: percentage >= 100 ? 'downloaded' : 'downloading',
+          }
+        }
+        return app
+      }),
+    }
+  }),
   // 清空下载列表
   clearDownloadList: () => set((state) => ({
     downloadList: state.downloadList.filter((app: Store.DownloadApp) => app.flag === 'downloading'),

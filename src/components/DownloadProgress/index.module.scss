@@ -104,6 +104,21 @@
                     border: none;
                     color: var(--ant-color-text-light-solid);
                     background: var(--ant-color-primary);
+                    cursor: pointer;
+                }
+
+                .closeBtn {
+                    font-size: 0.75rem;
+                    padding: 0;
+                    border: none;
+                    color: var(--ant-color-text-tertiary);
+                    background: transparent;
+                    cursor: pointer;
+                    line-height: 1;
+                }
+
+                .closeBtn:hover {
+                    color: var(--ant-color-error);
                 }
             }
         }

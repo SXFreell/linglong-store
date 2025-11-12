@@ -94,6 +94,23 @@ export const installApp = async(
 }
 
 /**
+ * 取消正在进行的应用安装
+ * @param appId - 要取消安装的应用ID
+ * @returns Promise<string> 取消操作的结果
+ */
+export const cancelInstallApp = async(appId: string): Promise<string> => {
+  console.log('[cancelInstallApp] API called with appId:', appId)
+  try {
+    const result = await invoke('cancel_install', { appId })
+    console.log('[cancelInstallApp] API result:', result)
+    return result as string
+  } catch (error) {
+    console.error('[cancelInstallApp] API error:', error)
+    throw error
+  }
+}
+
+/**
  * 监听安装进度事件
  * @param callback - 进度更新回调函数
  * @returns Promise<UnlistenFn> 取消监听的函数

@@ -237,6 +237,15 @@ const AppDetail = () => {
 
     try {
       console.log('[handleInstallBtnClick] Starting installation for:', currentApp.appId)
+
+      // 先将应用添加到下载列表，初始进度为 0%
+      addAppToDownloadList({
+        ...currentApp,
+        flag: 'downloading',
+        percentage: 0,
+        installStatus: '准备安装...',
+      })
+
       setIsInstalling(true)
       const initialProgress = {
         appId: currentApp.appId,
@@ -248,7 +257,7 @@ const AppDetail = () => {
       setInstallProgress(initialProgress)
 
       console.log('[handleInstallBtnClick] Calling installApp...')
-      // 开始安装（进度通过 useEffect 中的监听器更新）
+      // 开始安装（进度通过全局监听器更新到下载列表）
       await installApp(currentApp.appId)
 
       console.log('[handleInstallBtnClick] installApp completed')
@@ -259,9 +268,6 @@ const AppDetail = () => {
 
       // 刷新版本列表
       loadVersions()
-
-      // 将应用添加到下载列表用于显示
-      addAppToDownloadList(currentApp)
     } catch (error) {
       console.error('[handleInstallBtnClick] 安装失败:', error)
       message.error({
