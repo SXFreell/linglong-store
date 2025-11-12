@@ -692,7 +692,6 @@ fn parse_install_progress(line: &str, app_id: &str) -> InstallProgress {
 }
 
 /// 取消正在进行的应用安装
-/// “代码质量不知道怎么样，反正能跑通 :（ ”
 pub async fn cancel_install_app(app_id: String) -> Result<String, String> {
     println!("========== [cancel_install_app] START ==========");
     println!("[cancel_install_app] app_id: {}", app_id);
