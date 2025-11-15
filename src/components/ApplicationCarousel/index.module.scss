@@ -1,63 +1,53 @@
-.carouselItem {
-    width: 100%;
-    padding: 2rem;
-    background: var(--ant-color-primary-bg-hover);
-    display: flex !important;
-    align-items: center;
-    justify-content: center;
+.carouselBox {
+    background-color: var(--ant-color-fill-tertiary);
     border-radius: 0.5rem;
 
+    :global(.slick-arrow) {
+        color: var(--ant-color-text-tertiary);
+    }
+}
+
+.carouselItemWrapper {
+    display: flex !important;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    padding: 2rem;
+}
+
+.carouselItem {
+    width: 64%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+
     .carouselItemIcon {
+        flex: 0 0 8rem;
         height: 8rem;
         width: 8rem;
     }
 
     .carouselItemContent {
+        flex: 1;
+        min-width: 12rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+
         .carouselItemName {
             font-size: 1.5rem;
+            margin-bottom: 0.5rem;
         }
 
         .carouselItemSmall {
             font-size: 1rem;
+            margin-bottom: 0;
         }
-
-        // flex: 1;
-        min-width: 12rem;
-        margin-left: 2rem;
 
         .installButton {
-            margin-top: 1rem;
+            margin-top: 0.5rem;
+            width: fit-content;
         }
     }
-}
-
-@media screen and (max-width: 768px) {
-    .carouselItem {
-
-        .carouselItemIcon {
-            height: 4rem;
-            width: 4rem;
-        }
-
-        .carouselItemContent {
-            // flex: 1;
-            min-width: 5rem;
-            margin-left: 0.5rem;
-
-            .carouselItemName {
-                font-size: 1rem;
-            }
-
-            .carouselItemSmall {
-                font-size: 0.5rem;
-            }
-
-            .installButton {
-                margin-top: 0.5rem;
-                font-size: 0.625rem;
-            }
-        }
-    }
-
-
 }
