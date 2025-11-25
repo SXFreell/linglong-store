@@ -1,9 +1,13 @@
 /**
  * 应用配置状态管理模块
- * 使用 Zustand 管理全局配置，并通过 @tauri-store/zustand 实现配置持久化
+ * 使用 Zustand 管理全局配置，并通过 tauri-plugin-store 实现配置持久化
  */
 import { create } from 'zustand'
-import { createTauriStore } from '@tauri-store/zustand'
+import { Store } from 'tauri-plugin-store-api'
+
+// 创建持久化存储实例
+const configStore = new Store('.config.dat')
+const downloadConfigStore = new Store('.download-config.dat')
 
 /**
  * 创建应用配置状态管理store
@@ -98,33 +102,54 @@ export const useDownloadConfigStore = create<Store.DownloadConfig>((set) => ({
 }))
 
 /**
- * 全局应用配置的持久化存储实例
- * 使用 @tauri-store/zustand 将配置保存到本地磁盘
- * @param saveOnChange - 配置变更时自动保存
- * @param autoStart - 应用启动时自动初始化
+ * 全局应用配置的持久化存储
+ * 使用 tauri-plugin-store 将配置保存到本地磁盘
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const tauriAppConfigHandler = createTauriStore('ConfigStore', useConfigStore as any, {
-  saveOnChange: true, // 配置变更时自动保存到磁盘
-  autoStart: true, // 应用启动时自动从磁盘加载配置
+
+// 加载配置
+export const tauriAppConfigHandler = {
+  start: async() => {
+    const checkVersion = await configStore.get('checkVersion')
+    const showBaseService = await configStore.get('showBaseService')
+    const closeOrHide = await configStore.get('closeOrHide')
+    
+    useConfigStore.setState({
+      checkVersion: checkVersion !== null ? checkVersion as boolean : false,
+      showBaseService: showBaseService !== null ? showBaseService as boolean : false,
+      closeOrHide: closeOrHide !== null ? closeOrHide as string : 'hide',
+    })
+  },
+  save: async() => {
+    const state = useConfigStore.getState()
+    await configStore.set('checkVersion', state.checkVersion)
+    await configStore.set('showBaseService', state.showBaseService)
+    await configStore.set('closeOrHide', state.closeOrHide)
+    await configStore.save()
+  },
+}
+
+// 加载下载配置
+export const tauriDownloadConfigHandler = {
+  start: async() => {
+    const downloadList = await downloadConfigStore.get('downloadList')
+    if (downloadList) {
+      // 过滤掉正在下载中的残留数据
+      const filteredList = (downloadList as Store.DownloadApp[]).filter((app: Store.DownloadApp) => app.flag !== 'downloading')
+      useDownloadConfigStore.setState({ downloadList: filteredList })
+    }
+  },
+  save: async() => {
+    const state = useDownloadConfigStore.getState()
+    await downloadConfigStore.set('downloadList', state.downloadList)
+    await downloadConfigStore.save()
+  },
+}
+
+// 自动保存配置（监听变化）
+useConfigStore.subscribe(() => {
+  tauriAppConfigHandler.save().catch(console.error)
 })
 
-// 保存下载列表
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const tauriDownloadConfigHandler = createTauriStore('downloadConfigStore', useDownloadConfigStore as any, {
-  saveOnChange: true, // 配置变更时自动保存到磁盘
-  autoStart: false, // 禁用自动启动，我们手动加载并过滤
-})
-
-// 手动启动并过滤掉 downloading 状态的残留数据
-tauriDownloadConfigHandler.start().then(() => {
-  const state = useDownloadConfigStore.getState()
-  const originalCount = state.downloadList.length
-
-  // 过滤掉正在下载中的残留数据
-  const filteredList = state.downloadList.filter((app: Store.DownloadApp) => app.flag !== 'downloading')
-
-  if (filteredList.length < originalCount) {
-    useDownloadConfigStore.setState({ downloadList: filteredList })
-  }
+useDownloadConfigStore.subscribe(() => {
+  tauriDownloadConfigHandler.save().catch(console.error)
 })

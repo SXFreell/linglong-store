@@ -1,6 +1,6 @@
 import styles from './index.module.scss'
 import { useState, useEffect } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { invoke } from '@tauri-apps/api/tauri'
 
 import { Download, Upload } from '@icon-park/react'
 

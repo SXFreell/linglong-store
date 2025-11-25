@@ -7,7 +7,7 @@ import styles from './index.module.scss'
 import { SetStateAction, useEffect, useState } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { Popover, message } from 'antd'
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import { appWindow } from '@tauri-apps/api/window'
 import { useConfigStore, useDownloadConfigStore } from '@/stores/appConfig'
 import { useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
@@ -31,8 +31,6 @@ const Titlebar = ({ showSearch, showDownload }: { showSearch: boolean, showDownl
   const changeKeyword = useSearchStore((state) => state.changeKeyword)
   /** 重置搜索关键词的方法 */
   const resetKeyword = useSearchStore((state) => state.resetKeyword)
-  /** 当前窗口实例 */
-  const appWindow = getCurrentWindow()
   /** 窗口最大化状态 */
   const [isMaximized, setIsMaximized] = useState(false)
   /** 下载管理面板显示状态 */

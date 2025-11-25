@@ -8,12 +8,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
-import { arch } from '@tauri-apps/plugin-os'
+import { arch } from '@tauri-apps/api/os'
 import { useGlobalStore } from '@/stores/global'
 import { useConfigStore } from '@/stores/appConfig'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useUpdateStore } from './useUploadStore'
-import { app } from '@tauri-apps/api'
+import { getVersion } from '@tauri-apps/api/app'
 
 /**
  * 应用启动初始化 Hook
@@ -47,7 +47,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
 
   const getAppVersion = useCallback(async() => {
     try {
-      const version = await app.getVersion()
+      const version = await getVersion()
       setAppVersion(version)
       return version
     } catch (err) {
@@ -60,7 +60,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
    */
   const initSystemInfo = useCallback(async() => {
     try {
-      const currentArch = arch()
+      const currentArch = await arch()
       setArch(currentArch)
     } catch (err) {
       throw new Error(`获取系统架构失败: ${err}`)

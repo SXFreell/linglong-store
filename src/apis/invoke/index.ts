@@ -2,7 +2,7 @@
  * Tauri 命令调用模块
  * 负责与 Rust 后端进行交互，通过 ll-cli 执行系统操作
  */
-import { invoke } from '@tauri-apps/api/core'
+import { invoke } from '@tauri-apps/api/tauri'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 
 /**

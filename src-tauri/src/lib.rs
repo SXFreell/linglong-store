@@ -86,16 +86,13 @@ async fn cancel_install(app_handle: tauri::AppHandle, app_id: String) -> Result<
     result
 }
 
-#[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    let system_tray = modules::tray::create_system_tray();
+    
     tauri::Builder::default()
-        .plugin(tauri_plugin_os::init())
-        .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_zustand::init())
-        .setup(|app| {
-            modules::tray::setup_tray(app.handle())?;
-            Ok(())
-        })
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .system_tray(system_tray)
+        .on_system_tray_event(modules::tray::handle_tray_event)
         .invoke_handler(tauri::generate_handler![
             greet,
             get_network_speed,
@@ -107,8 +104,8 @@ pub fn run() {
             run_app,
             install_app,
             cancel_install,
-            search_remote_app_cmd
-            , get_ll_cli_version_cmd
+            search_remote_app_cmd,
+            get_ll_cli_version_cmd
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
