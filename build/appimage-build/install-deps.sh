@@ -6,10 +6,10 @@
 set -e
 
 echo "==> 更新 APT 包索引..."
-sudo apt-get update
+apt-get update
 
 echo "==> 安装基础构建工具..."
-sudo apt-get install -y \
+apt-get install -y \
     bash \
     curl \
     wget \
@@ -27,7 +27,7 @@ sudo apt-get install -y \
     file
 
 echo "==> 安装 Tauri 系统依赖（包含运行时库和开发库）..."
-sudo apt-get install -y \
+apt-get install -y \
     libwebkit2gtk-4.1-0 \
     libwebkit2gtk-4.1-dev \
     libgtk-3-0 \
@@ -128,8 +128,8 @@ export PATH="$HOME/.cargo/bin:$PATH"
 echo "==> 安装 Node.js..."
 if ! command -v node &> /dev/null; then
     # 安装 Node.js 20.x LTS
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+    curl -fsSL https://deb.nodesource.com/setup_20.x | -E bash -
+    apt-get install -y nodejs
     echo "Node.js 安装完成: $(node --version)"
 else
     echo "Node.js 已安装: $(node --version)"

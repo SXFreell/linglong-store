@@ -314,7 +314,7 @@ if ! command -v appimagetool &> /dev/null; then
     echo "安装 appimagetool："
     echo "  wget https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
     echo "  chmod +x appimagetool-x86_64.AppImage"
-    echo "  sudo mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool"
+    echo "  mv appimagetool-x86_64.AppImage /usr/local/bin/appimagetool"
     exit 1
 fi
 
