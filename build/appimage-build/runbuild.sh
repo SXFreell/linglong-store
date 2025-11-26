@@ -13,7 +13,7 @@ fi
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 echo "======================================"
-echo "  玲珑应用商店 自动构建"
+echo "  玲珑应用商店 Ubuntu 自动构建"
 echo "======================================"
 echo ""
 echo "脚本目录: $SCRIPT_DIR"
@@ -23,12 +23,8 @@ echo ""
 # 切换到脚本目录
 cd "$SCRIPT_DIR"
 
-echo "==> 运行安装 bash 脚本..."
-sh "$SCRIPT_DIR/install-bash.sh"
-
-echo ""
 echo "==> 运行安装依赖脚本..."
-bash "$SCRIPT_DIR/install-deps-alpine.sh"
+bash "$SCRIPT_DIR/install-deps-ubuntu.sh"
 
 echo ""
 echo "==> 切换到项目目录..."

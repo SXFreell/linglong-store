@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # build.sh
-# 构建 Tauri 应用并打包为 AppImage（包含 WebKit 等依赖）
+# 在 Ubuntu 上构建 Tauri 应用并打包为 AppImage（包含 WebKit 等动态库）
 
 set -e
 
@@ -56,12 +56,11 @@ pnpm build:pro
 echo ""
 echo "==> 查找构建产物..."
 
-# 查找二进制文件（支持多种可能的路径）
+# 查找二进制文件（Ubuntu 使用 gnu 目标）
 BINARY_PATH=""
 POSSIBLE_PATHS=(
-    "$PROJECT_ROOT/src-tauri/target/x86_64-unknown-linux-musl/release/linglong-store"
-    "$PROJECT_ROOT/src-tauri/target/release/linglong-store"
     "$PROJECT_ROOT/src-tauri/target/x86_64-unknown-linux-gnu/release/linglong-store"
+    "$PROJECT_ROOT/src-tauri/target/release/linglong-store"
 )
 
 for path in "${POSSIBLE_PATHS[@]}"; do
@@ -140,9 +139,9 @@ collect_deps() {
             continue
         fi
         
-        # 跳过系统基础库
+        # 跳过系统基础库（glibc）
         case "$lib_name" in
-            libc.so*|libm.so*|libdl.so*|libpthread.so*|librt.so*|ld-linux*.so*|linux-vdso.so*|libc.musl-*.so*|ld-musl-*.so*)
+            libc.so*|libm.so*|libdl.so*|libpthread.so*|librt.so*|libresolv.so*|ld-linux*.so*|linux-vdso.so*)
                 echo "${indent}[跳过] $lib_name (系统库)"
                 PROCESSED_LIBS[$lib_name]=1
                 ;;
@@ -378,10 +377,9 @@ if [ -f "$OUTPUT_FILE" ]; then
         echo ""
     fi
     echo "特性:"
-    echo "  ✓ 部分静态链接 (zlib, harfbuzz, cairo, glib, openssl)"
     echo "  ✓ 内置动态库 (webkit2gtk, gtk+3.0, pango 等 $COPIED_LIBS 个)"
-    echo "  ✓ glibc 2.35 兼容"
-    echo "  ✓ 跨发行版运行"
+    echo "  ✓ glibc 动态链接"
+    echo "  ✓ 跨 Ubuntu/Debian 发行版运行"
     echo "  ✓ 单文件分发"
     echo ""
 else
