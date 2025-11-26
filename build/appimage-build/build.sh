@@ -240,41 +240,26 @@ done
 
 if [ $COPIED_DATA -eq 0 ]; then
     echo "  ⚠ 警告: 未找到 WebKit 进程文件"
-fi
-
-# 二进制补丁 WebKit 库，将硬编码路径替换为相对路径
-echo ""
-echo "==> 修补 WebKit 库中的硬编码路径..."
-# 查找所有 WebKit 相关的 .so 文件
-WEBKIT_LIBS=$(find "$APPDIR/usr/lib" -name "*webkit*" -o -name "*javascriptcore*" -o -name "*WebKit*" 2>/dev/null)
-
-for lib in $WEBKIT_LIBS; do
-    if [ -f "$lib" ]; then
-        lib_name=$(basename "$lib")
-        # 将 /usr 替换为 ././ (保持字符串长度相同)
-        # 这样相对路径会从 AppImage 根目录计算
-        if grep -q "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1" "$lib" 2>/dev/null; then
-            echo "  修补: $lib_name"
-            sed -i 's|/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1|././lib/x86_64-linux-gnu/webkit2gtk-4.1|g' "$lib"
-        fi
-        if grep -q "/usr/lib/webkit2gtk-4.1" "$lib" 2>/dev/null; then
-            echo "  修补: $lib_name"
-            sed -i 's|/usr/lib/webkit2gtk-4.1|././lib/webkit2gtk-4.1|g' "$lib"
-        fi
-        if grep -q "/usr/libexec/webkit2gtk-4.1" "$lib" 2>/dev/null; then
-            echo "  修补: $lib_name"
-            sed -i 's|/usr/libexec/webkit2gtk-4.1|././libexec/webkit2gtk-4.1|g' "$lib"
-        fi
+else
+    # 使用 patchelf 设置 WebKit 进程的解释器和 rpath
+    echo "  → 修改 WebKit 进程的动态链接器设置..."
+    if command -v patchelf &> /dev/null; then
+        for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
+            if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ] && file "$webkit_proc" | grep -q ELF; then
+                proc_name=$(basename "$webkit_proc")
+                # 设置相对 rpath，让进程找到库文件
+                patchelf --set-rpath '$ORIGIN/../../lib:$ORIGIN/../../../lib/x86_64-linux-gnu' "$webkit_proc" 2>/dev/null || true
+                # 设置解释器为 AppImage 内的 ld-linux
+                if [ -f "$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ]; then
+                    patchelf --set-interpreter '../../lib/x86_64-linux-gnu/ld-linux-x86-64.so.2' "$webkit_proc" 2>/dev/null || true
+                fi
+                echo "    ✓ 已修改 $proc_name"
+            fi
+        done
+    else
+        echo "    ⚠ 未找到 patchelf，跳过修改（可能无法在所有系统运行）"
     fi
-done
-
-# 同时创建相对路径目录结构
-echo "  创建相对路径映射..."
-mkdir -p "$APPDIR/lib/x86_64-linux-gnu"
-mkdir -p "$APPDIR/lib"
-ln -sf "../usr/lib/webkit2gtk-4.1" "$APPDIR/lib/webkit2gtk-4.1" 2>/dev/null || true
-ln -sf "../../usr/lib/webkit2gtk-4.1" "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1" 2>/dev/null || true
-echo "✓ WebKit 路径修补完成"
+fi
 echo ""
 
 # GDK Pixbuf 加载器（尝试多个路径）
@@ -328,15 +313,20 @@ cat > "$APPDIR/AppRun" << 'APPRUN_EOF'
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 
+# 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动）
+cd "$HERE"
+
 # 设置库路径（优先使用 AppImage 内的库，包含 glibc）
-# 关键：添加 x86_64-linux-gnu 路径，让 WebKit 进程能找到依赖
-export LD_LIBRARY_PATH="$HERE/usr/lib/x86_64-linux-gnu:$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
 # 设置 GTK/WebKit 相关环境变量
 export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
 export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
 export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
+
+# 关键：设置 WebKit 进程路径（使用绝对路径）
+export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
 
 # 禁用 GTK 的某些不需要的功能
 export GTK_PATH=""
