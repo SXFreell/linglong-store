@@ -168,67 +168,46 @@ collect_deps() {
     done
 }
 
-# 二进制路径补丁函数
-# 用于替换 WebKit 相关二进制文件中的硬编码系统路径
-patch_hardcoded_paths() {
-    local binary="$1"
-    local binary_name=$(basename "$binary")
+# 创建兼容的目录结构以解决硬编码路径问题
+# 使用符号链接而不是修改二进制文件（更安全）
+setup_webkit_path_compatibility() {
+    local appdir="$1"
     
-    echo "    [补丁] 扫描 $binary_name 中的硬编码路径..."
+    echo "    [路径兼容] 创建 WebKit 路径映射..."
     
-    # 检查是否为 ELF 二进制文件
-    if ! file "$binary" | grep -q ELF; then
-        echo "      [跳过] 非 ELF 文件"
-        return 0
+    # WebKit 可能查找的硬编码路径
+    # 在 AppDir 中创建这些路径的符号链接，指向实际位置
+    
+    # 创建 /usr 结构的镜像（在 AppDir 内部）
+    mkdir -p "$appdir/usr/lib/x86_64-linux-gnu"
+    mkdir -p "$appdir/usr/libexec"
+    
+    # 如果 webkit2gtk-4.1 在我们的 usr/lib 下
+    if [ -d "$appdir/usr/lib/webkit2gtk-4.1" ]; then
+        # 创建符号链接到可能被硬编码的路径
+        if [ ! -e "$appdir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1" ]; then
+            ln -sf "../webkit2gtk-4.1" "$appdir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+            echo "      ✓ 链接: usr/lib/x86_64-linux-gnu/webkit2gtk-4.1 -> ../webkit2gtk-4.1"
+        fi
+        
+        if [ ! -e "$appdir/usr/libexec/webkit2gtk-4.1" ]; then
+            ln -sf "../lib/webkit2gtk-4.1" "$appdir/usr/libexec/webkit2gtk-4.1"
+            echo "      ✓ 链接: usr/libexec/webkit2gtk-4.1 -> ../lib/webkit2gtk-4.1"
+        fi
     fi
     
-    # 备份原文件
-    cp "$binary" "${binary}.backup" 2>/dev/null || true
-    
-    # 查找常见的硬编码路径
-    local found_paths=0
-    
-    # 检测 /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1 (长度: 43)
-    if strings "$binary" | grep -q "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"; then
-        echo "      [发现] /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
-        # 替换为相对路径（保持相同长度）
-        # 使用 \$ORIGIN 相对路径（43字符，需要填充）
-        sed -i 's|/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1|\$ORIGIN/../lib/webkit2gtk-4.1\x00\x00\x00\x00\x00\x00|g' "$binary" 2>/dev/null || true
-        found_paths=$((found_paths + 1))
-    fi
-    
-    # 检测 /usr/lib/webkit2gtk-4.1 (长度: 24)
-    if strings "$binary" | grep -q "/usr/lib/webkit2gtk-4.1"; then
-        echo "      [发现] /usr/lib/webkit2gtk-4.1"
-        # 替换为 \$ORIGIN 相对路径
-        sed -i 's|/usr/lib/webkit2gtk-4.1|\$ORIGIN/../lib/wk-4.1|g' "$binary" 2>/dev/null || true
-        found_paths=$((found_paths + 1))
-    fi
-    
-    # 检测 /usr/libexec/webkit2gtk-4.1 (长度: 28)
-    if strings "$binary" | grep -q "/usr/libexec/webkit2gtk-4.1"; then
-        echo "      [发现] /usr/libexec/webkit2gtk-4.1"
-        sed -i 's|/usr/libexec/webkit2gtk-4.1|\$ORIGIN/../lib/webkit2gtk-4|g' "$binary" 2>/dev/null || true
-        found_paths=$((found_paths + 1))
-    fi
-    
-    # 检测通用 /usr/lib 路径（需要谨慎处理）
-    if strings "$binary" | grep -E "^/usr/lib($|/)" | grep -v webkit | head -n 5 | grep -q .; then
-        echo "      [发现] 其他 /usr/lib 路径"
-        # 仅替换独立的 /usr/lib 为 \$ORIGIN/../lib
-        sed -i 's|/usr/lib/x86_64-linux-gnu\x00|\$ORIGIN/../lib\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|g' "$binary" 2>/dev/null || true
-        found_paths=$((found_paths + 1))
-    fi
-    
-    if [ $found_paths -gt 0 ]; then
-        echo "      ✓ 已替换 $found_paths 处硬编码路径"
-        # 删除备份
-        rm -f "${binary}.backup"
-    else
-        echo "      [未发现] 无硬编码路径，恢复备份"
-        # 恢复原文件
-        if [ -f "${binary}.backup" ]; then
-            mv "${binary}.backup" "$binary"
+    # 扫描并报告二进制文件中的硬编码路径（仅诊断，不修改）
+    echo "    [诊断] 扫描硬编码路径..."
+    local webkit_lib="$appdir/usr/lib/libwebkit2gtk-4.1.so"
+    if [ -f "$webkit_lib" ]; then
+        local paths=$(strings "$webkit_lib" 2>/dev/null | grep -E "^/usr/(lib|libexec)/.*webkit" | head -n 5)
+        if [ -n "$paths" ]; then
+            echo "      发现的硬编码路径:"
+            echo "$paths" | while IFS= read -r path; do
+                echo "        - $path"
+            done
+        else
+            echo "      ✓ 未发现明显的硬编码路径"
         fi
     fi
 }
@@ -325,27 +304,10 @@ else
         echo "    ⚠ 未找到 patchelf，跳过修改（可能无法在所有系统运行）"
     fi
     
-    # 应用二进制路径补丁（解决硬编码路径问题）
-    echo "  → 应用二进制路径补丁..."
-    PATCHED_COUNT=0
-    for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
-        if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ]; then
-            patch_hardcoded_paths "$webkit_proc"
-            PATCHED_COUNT=$((PATCHED_COUNT + 1))
-        fi
-    done
-    
-    # 同时补丁主要的 WebKit 库文件
-    if [ -d "$APPDIR/usr/lib" ]; then
-        for webkit_lib in "$APPDIR/usr/lib"/libwebkit2gtk*.so*; do
-            if [ -f "$webkit_lib" ] && ! [ -L "$webkit_lib" ]; then
-                patch_hardcoded_paths "$webkit_lib"
-                PATCHED_COUNT=$((PATCHED_COUNT + 1))
-            fi
-        done
-    fi
-    
-    echo "  ✓ 已补丁 $PATCHED_COUNT 个文件"
+    # 设置 WebKit 路径兼容性（使用符号链接，不修改二进制）
+    echo "  → 设置 WebKit 路径兼容性..."
+    setup_webkit_path_compatibility "$APPDIR"
+    echo "  ✓ 路径兼容性设置完成"
 fi
 echo ""
 
@@ -401,14 +363,14 @@ cat > "$APPDIR/AppRun" << 'APPRUN_EOF'
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 
-# 关键：设置 APPDIR 环境变量（供二进制文件中的 $ORIGIN 引用）
+# 关键：设置 APPDIR 环境变量
 export APPDIR="$HERE"
 
 # 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动）
 cd "$HERE"
 
 # 设置库路径（优先使用 AppImage 内的库，包含 glibc）
-export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/usr/lib/x86_64-linux-gnu:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
 # 设置 GTK/WebKit 相关环境变量
 export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
@@ -416,8 +378,17 @@ export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
 export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
 export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
 
-# 关键：设置 WebKit 进程路径（使用绝对路径）
+# 关键：设置 WebKit 进程路径（提供多个可能的路径）
 export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
+export WEBKIT_PROCESS_PATH="$HERE/usr/lib/webkit2gtk-4.1"
+export WEBKIT_EXTENSION_PATH="$HERE/usr/lib/webkit2gtk-4.1"
+
+# WebKit 可能需要的额外路径
+export WEBKIT2_EXTENSION_DIRECTORY="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
+
+# GST (GStreamer) 插件路径（WebKit 媒体支持）
+export GST_PLUGIN_SYSTEM_PATH="$HERE/usr/lib/gstreamer-1.0"
+export GST_PLUGIN_SCANNER="$HERE/usr/libexec/gstreamer-1.0/gst-plugin-scanner"
 
 # 禁用 GTK 的某些不需要的功能
 export GTK_PATH=""
