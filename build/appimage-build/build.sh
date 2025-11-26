@@ -313,6 +313,31 @@ for gconv_path in "${GCONV_PATHS[@]}"; do
     fi
 done
 
+# 补充缺失的依赖库 (libproxy, libgnutls 等)
+echo "==> 补充缺失的依赖库..."
+MISSING_LIBS=(
+    "libproxy.so.1"
+    "libgnutls.so.30"
+    "libhogweed.so.6"
+    "libnettle.so.8"
+    "libgmp.so.10"
+)
+
+for lib in "${MISSING_LIBS[@]}"; do
+    # 查找系统中的库
+    found_lib=$(find /usr/lib -name "$lib" | head -n 1)
+    if [ -n "$found_lib" ]; then
+        if [ ! -f "$APPDIR/usr/lib/$lib" ]; then
+            cp -L "$found_lib" "$APPDIR/usr/lib/"
+            echo "  ✓ 补充依赖: $lib"
+            # 递归收集依赖
+            collect_deps "$found_lib" "$APPDIR/usr/lib" "    "
+        fi
+    else
+        echo "  ⚠ 警告: 未找到 $lib"
+    fi
+done
+
 # 重新统计动态库数量（包括 WebKit 进程的依赖）
 FINAL_LIB_COUNT=$(find "$APPDIR/usr/lib" -name "*.so*" | wc -l)
 FINAL_LIBS_SIZE=$(du -sh "$APPDIR/usr/lib" | cut -f1)
@@ -373,6 +398,24 @@ find "$APPDIR/lib" -type f | while read -r file; do
         patch_binary_path "$file"
     fi
 done
+
+# 4. 修复 WebKit 进程路径问题 (././lib//x86_64-linux-gnu/...)
+# 补丁将 /usr/lib 替换为 ././lib/，如果原路径是 /usr/lib/x86_64-linux-gnu/...
+# 替换后变成 ././lib//x86_64-linux-gnu/... (双斜杠通常没问题，但 WebKit 可能敏感)
+# 关键问题是：WebKitNetworkProcess 可能不在那个位置，或者相对路径解析有问题
+# 我们需要确保 lib/x86_64-linux-gnu 存在且包含 WebKit 进程，或者建立链接
+
+echo "  → 修复 WebKit 进程路径结构..."
+# 检查 WebKit 进程实际位置
+if [ -d "$APPDIR/lib/webkit2gtk-4.1" ]; then
+    # 如果 WebKit 在 lib/webkit2gtk-4.1，但补丁后代码去 lib/x86_64-linux-gnu/webkit2gtk-4.1 找
+    # 我们需要建立符号链接来满足这个路径
+    mkdir -p "$APPDIR/lib/x86_64-linux-gnu"
+    if [ ! -e "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1" ]; then
+        ln -s ../webkit2gtk-4.1 "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+        echo "    ✓ 创建链接: lib/x86_64-linux-gnu/webkit2gtk-4.1 -> ../webkit2gtk-4.1"
+    fi
+fi
 
 echo "✓ 二进制补丁完成"
 echo ""
