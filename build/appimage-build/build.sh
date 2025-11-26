@@ -441,7 +441,6 @@ cd "$HERE"
 # ------------------------------------------------------------------------------
 HAS_VALID_MACHINE_ID=0
 if [ -s /etc/machine-id ]; then
-    # 简单检查内容是否看起来像 ID (32 hex chars)
     if grep -qE "^[0-9a-fA-F]{32}" /etc/machine-id; then
         HAS_VALID_MACHINE_ID=1
     fi
@@ -453,7 +452,6 @@ fi
 
 if [ $HAS_VALID_MACHINE_ID -eq 0 ]; then
     echo "AppRun: System machine-id missing or invalid. Setting up private machine-id..."
-    # 使用 /tmp 下的用户特定目录，避免权限问题
     MACHINE_ID_DIR="/tmp/.linglong-store-runtime-$(id -u)"
     mkdir -p "$MACHINE_ID_DIR"
     chmod 700 "$MACHINE_ID_DIR"
@@ -463,20 +461,32 @@ if [ $HAS_VALID_MACHINE_ID -eq 0 ]; then
         if command -v dbus-uuidgen >/dev/null 2>&1; then
             dbus-uuidgen > "$DBUS_MACHINE_ID_FILE"
         else
-            # Fallback: 生成伪随机 ID
             echo "1b4e29b0$(date +%s | md5sum | head -c 24)" > "$DBUS_MACHINE_ID_FILE"
         fi
         echo "AppRun: Generated machine-id at $DBUS_MACHINE_ID_FILE"
     fi
 fi
 
+# 尝试启动私有 D-Bus 会话 (如果系统没有提供)
+if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
+    echo "AppRun: DBUS_SESSION_BUS_ADDRESS is unset. Attempting to start private session bus..."
+    if command -v dbus-launch >/dev/null 2>&1; then
+        # 注意: dbus-launch 可能需要 machine-id，我们已经通过 DBUS_MACHINE_ID_FILE 提供了
+        eval $(dbus-launch --sh-syntax --exit-with-session)
+        echo "AppRun: Started private D-Bus session: $DBUS_SESSION_BUS_ADDRESS"
+    else
+        echo "AppRun: Warning: dbus-launch not found. D-Bus features may fail."
+    fi
+fi
+
 # ------------------------------------------------------------------------------
 # 修复: WebKitGTK 沙箱崩溃 (readPIDFromPeer: Unexpected short read)
 # ------------------------------------------------------------------------------
-# 在容器或 AppImage 环境中，WebKit 的沙箱机制(bwrap)常会失败。
-# 必须显式禁用沙箱。
+# 必须显式禁用沙箱，特别是在 root 或容器环境下
 export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
-export WEBKIT_FORCE_SANDBOX=0
+
+# 禁用 AT-SPI (Accessibility) 以减少 D-Bus 依赖和潜在崩溃
+export NO_AT_BRIDGE=1
 
 # 打印调试信息
 echo "AppRun: WebKit sandbox disabled."
