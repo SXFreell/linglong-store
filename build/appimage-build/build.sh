@@ -205,11 +205,18 @@ WEBKIT_PATHS=(
 
 for webkit_path in "${WEBKIT_PATHS[@]}"; do
     if [ -d "$webkit_path" ]; then
+        # 同时复制到 usr/lib 和原始路径（让硬编码路径也能工作）
         mkdir -p "$APPDIR/usr/lib/webkit2gtk-4.1"
+        mkdir -p "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+        
         if cp -r "$webkit_path"/* "$APPDIR/usr/lib/webkit2gtk-4.1/" 2>/dev/null; then
             echo "  ✓ WebKit 进程文件 (来自 $webkit_path)"
+            # 同时复制到系统路径位置
+            cp -r "$webkit_path"/* "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/" 2>/dev/null
+            
             # 确保进程文件可执行
             chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1"/* 2>/dev/null || true
+            chmod +x "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"/* 2>/dev/null || true
             COPIED_DATA=$((COPIED_DATA + 1))
             
             # 收集 WebKit 进程的依赖
@@ -282,15 +289,13 @@ SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 
 # 设置库路径（优先使用 AppImage 内的库，包含 glibc）
-export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+# 关键：添加 x86_64-linux-gnu 路径，让 WebKit 进程能找到依赖
+export LD_LIBRARY_PATH="$HERE/usr/lib/x86_64-linux-gnu:$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
 # 设置 GTK/WebKit 相关环境变量
 export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
 export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
-
-# 关键：设置 WebKit 进程路径为 AppImage 内的路径
-export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
 export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
 
 # 禁用 GTK 的某些不需要的功能
