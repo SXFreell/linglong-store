@@ -4,22 +4,33 @@
 
 set -e
 
-# 进入脚本所在目录
+# 获取脚本所在目录的绝对路径
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
+
+echo "======================================"
+echo "  玲珑应用商店 自动构建"
+echo "======================================"
+echo ""
+echo "脚本目录: $SCRIPT_DIR"
+echo "项目目录: $PROJECT_ROOT"
+echo ""
+
+# 切换到脚本目录
 cd "$SCRIPT_DIR"
 
 echo "==> 运行安装 bash 脚本..."
-sh ./install-bash.sh
+sh "$SCRIPT_DIR/install-bash.sh"
 
+echo ""
 echo "==> 运行安装依赖脚本..."
-bash ./install-deps-alpine.sh
+bash "$SCRIPT_DIR/install-deps-alpine.sh"
 
-echo "==> 设置 Rust 环境变量..."
-export PATH="$HOME/.cargo/bin:$PATH"
-source "$HOME/.cargo/env"
+echo ""
+echo "==> 切换到项目目录..."
+cd "$PROJECT_ROOT"
+echo "当前目录: $(pwd)"
 
-echo "==> 安装前端依赖..."
-pnpm install
-
+echo ""
 echo "==> 运行构建脚本..."
-bash ./build.sh
+bash "$SCRIPT_DIR/build.sh"
