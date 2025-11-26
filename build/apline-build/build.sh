@@ -256,14 +256,35 @@ echo ""
 
 # 复制图标
 echo "==> 复制应用图标..."
-ICON_SOURCE="$PROJECT_ROOT/icons/icon.png"
-if [ -f "$ICON_SOURCE" ]; then
-    cp "$ICON_SOURCE" "$APPDIR/linglong-store.png"
-    cp "$ICON_SOURCE" "$APPDIR/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
+# 尝试多个可能的图标路径
+ICON_PATHS=(
+    "$PROJECT_ROOT/public/logo.png"
+    "$PROJECT_ROOT/src-tauri/icons/icon.png"
+    "$PROJECT_ROOT/icons/icon.png"
+    "$PROJECT_ROOT/src-tauri/icons/128x128.png"
+)
+
+ICON_COPIED=0
+for ICON_SOURCE in "${ICON_PATHS[@]}"; do
+    if [ -f "$ICON_SOURCE" ]; then
+        cp "$ICON_SOURCE" "$APPDIR/linglong-store.png"
+        cp "$ICON_SOURCE" "$APPDIR/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
+        ln -sf ../../linglong-store.png "$APPDIR/.DirIcon"
+        echo "✓ 图标复制完成: $ICON_SOURCE"
+        ICON_COPIED=1
+        break
+    fi
+done
+
+if [ $ICON_COPIED -eq 0 ]; then
+    echo "⚠ 警告: 未找到图标文件，尝试的路径:"
+    for path in "${ICON_PATHS[@]}"; do
+        echo "  - $path"
+    done
+    # 创建一个默认图标占位
+    touch "$APPDIR/linglong-store.png"
+    cp "$APPDIR/linglong-store.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/linglong-store.png"
     ln -sf ../../linglong-store.png "$APPDIR/.DirIcon"
-    echo "✓ 图标复制完成"
-else
-    echo "⚠ 警告: 找不到图标文件: $ICON_SOURCE"
 fi
 echo ""
 
@@ -298,11 +319,28 @@ if ! command -v appimagetool &> /dev/null; then
     exit 1
 fi
 
+# 检查并加载 FUSE 模块
+echo "==> 检查 FUSE 支持..."
+if ! modprobe fuse 2>/dev/null; then
+    echo "⚠ 警告: 无法加载 FUSE 内核模块"
+    echo "提示: 在 Docker 容器中，需要宿主机支持 FUSE 或使用 --device /dev/fuse"
+fi
+
+if [ ! -e /dev/fuse ]; then
+    echo "⚠ 警告: /dev/fuse 设备不存在"
+    echo "将使用 --no-appstream 参数尝试打包"
+    APPIMAGE_OPTS="--no-appstream"
+else
+    echo "✓ FUSE 设备可用"
+    APPIMAGE_OPTS=""
+fi
+
 # 设置 ARCH 环境变量
 export ARCH=x86_64
 
+echo ""
 echo "正在打包..."
-if appimagetool "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING"; then
+if appimagetool $APPIMAGE_OPTS "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING"; then
     if [ -f "$OUTPUT_FILE" ]; then
         chmod +x "$OUTPUT_FILE"
         

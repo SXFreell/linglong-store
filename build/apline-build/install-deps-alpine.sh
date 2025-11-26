@@ -20,7 +20,9 @@ apk add --no-cache \
     make \
     cmake \
     pkgconfig \
-    ca-certificates
+    ca-certificates \
+    fuse \
+    fuse-dev
 
 echo "==> 安装 glibc（用于兼容性）..."
 if ! [ -f "/usr/glibc-compat/lib/libc.so.6" ]; then
