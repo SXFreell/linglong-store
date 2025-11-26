@@ -4,6 +4,10 @@
 
 set -e
 
+# 进入脚本所在目录
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$SCRIPT_DIR"
+
 echo "==> 运行安装 bash 脚本..."
 sh ./install-bash.sh
 
