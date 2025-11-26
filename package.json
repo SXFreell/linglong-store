@@ -12,7 +12,7 @@
     "dev:pro": "cross-env NODE_ENV=pro tauri dev",
     "build": "cross-env NODE_ENV=dev tauri build",
     "build:test": "cross-env NODE_ENV=test tauri build",
-    "build:pro": "cross-env NODE_ENV=pro tauri build -- --release",
+    "build:pro": "cross-env NODE_ENV=pro tauri build",
     "preview": "vite preview",
     "tauri": "tauri",
     "tauri:dev": "vite --mode ${NODE_ENV}",
