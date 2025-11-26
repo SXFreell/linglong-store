@@ -319,60 +319,93 @@ if ! command -v appimagetool &> /dev/null; then
     exit 1
 fi
 
-# 检查并加载 FUSE 模块
-echo "==> 检查 FUSE 支持..."
-if ! modprobe fuse 2>/dev/null; then
-    echo "⚠ 警告: 无法加载 FUSE 内核模块"
-    echo "提示: 在 Docker 容器中，需要宿主机支持 FUSE 或使用 --device /dev/fuse"
-fi
-
-if [ ! -e /dev/fuse ]; then
-    echo "⚠ 警告: /dev/fuse 设备不存在"
-    echo "将使用 --no-appstream 参数尝试打包"
-    APPIMAGE_OPTS="--no-appstream"
-else
+# 检查 FUSE 支持
+echo "==> 检查打包环境..."
+FUSE_AVAILABLE=0
+if [ -e /dev/fuse ]; then
     echo "✓ FUSE 设备可用"
-    APPIMAGE_OPTS=""
+    FUSE_AVAILABLE=1
+else
+    echo "⚠ FUSE 不可用（Docker 容器环境）"
+    echo "  将使用静态提取方式打包"
 fi
 
-# 设置 ARCH 环境变量
+# 设置环境变量
 export ARCH=x86_64
+export NO_CLEANUP=1
 
 echo ""
-echo "正在打包..."
-if appimagetool $APPIMAGE_OPTS "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING"; then
-    if [ -f "$OUTPUT_FILE" ]; then
-        chmod +x "$OUTPUT_FILE"
+echo "正在打包 AppImage..."
+
+# 尝试使用 appimagetool 的静态提取模式
+if [ $FUSE_AVAILABLE -eq 0 ]; then
+    echo "使用 --appimage-extract 模式..."
+    
+    # 先提取 appimagetool
+    cd /tmp
+    if [ -f /usr/local/bin/appimagetool ]; then
+        cp /usr/local/bin/appimagetool ./appimagetool.AppImage
+        chmod +x ./appimagetool.AppImage
         
-        FINAL_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
+        # 提取 appimagetool 内容
+        ./appimagetool.AppImage --appimage-extract >/dev/null 2>&1
         
-        echo ""
-        echo "======================================"
-        echo "  ✅ 构建成功！"
-        echo "======================================"
-        echo ""
-        echo "输出文件: $OUTPUT_FILE"
-        echo "文件大小: $FINAL_SIZE"
-        echo ""
-        echo "运行方式:"
-        echo "  ./$OUTPUT_FILE"
-        echo ""
-        echo "或者:"
-        echo "  chmod +x $OUTPUT_FILE"
-        echo "  ./$OUTPUT_FILE"
-        echo ""
-        echo "特性:"
-        echo "  ✓ 部分静态链接 (zlib, harfbuzz, cairo, glib, openssl)"
-        echo "  ✓ 内置动态库 (webkit2gtk, gtk+3.0, pango 等 $COPIED_LIBS 个)"
-        echo "  ✓ glibc 2.35 兼容"
-        echo "  ✓ 跨发行版运行"
-        echo "  ✓ 单文件分发"
-        echo ""
-    else
-        echo "❌ 错误: AppImage 文件未生成"
-        exit 1
+        if [ -d "squashfs-root" ]; then
+            echo "✓ appimagetool 提取成功"
+            
+            # 使用提取后的工具打包
+            cd "$PROJECT_ROOT"
+            /tmp/squashfs-root/AppRun --no-appimage "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
+            
+            # 清理临时文件
+            rm -rf /tmp/squashfs-root /tmp/appimagetool.AppImage
+        else
+            echo "❌ 无法提取 appimagetool"
+            exit 1
+        fi
     fi
 else
-    echo "❌ 错误: AppImage 打包失败"
+    # FUSE 可用，直接使用 appimagetool
+    appimagetool --no-appstream "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
+fi
+
+# 检查是否成功生成
+if [ -f "$OUTPUT_FILE" ]; then
+    chmod +x "$OUTPUT_FILE"
+    
+    FINAL_SIZE=$(du -h "$OUTPUT_FILE" | cut -f1)
+    
+    echo ""
+    echo "======================================"
+    echo "  ✅ 构建成功！"
+    echo "======================================"
+    echo ""
+    echo "输出文件: $OUTPUT_FILE"
+    echo "文件大小: $FINAL_SIZE"
+    echo ""
+    echo "运行方式:"
+    echo "  $OUTPUT_FILE"
+    echo ""
+    if [ $FUSE_AVAILABLE -eq 0 ]; then
+        echo "提示: 在无 FUSE 环境中运行需要:"
+        echo "  $OUTPUT_FILE --appimage-extract-and-run"
+        echo ""
+    fi
+    echo "特性:"
+    echo "  ✓ 部分静态链接 (zlib, harfbuzz, cairo, glib, openssl)"
+    echo "  ✓ 内置动态库 (webkit2gtk, gtk+3.0, pango 等 $COPIED_LIBS 个)"
+    echo "  ✓ glibc 2.35 兼容"
+    echo "  ✓ 跨发行版运行"
+    echo "  ✓ 单文件分发"
+    echo ""
+else
+    echo ""
+    echo "❌ 错误: AppImage 文件未生成"
+    echo ""
+    echo "故障排除:"
+    echo "  1. 检查 AppDir 是否完整: ls -lh $APPDIR"
+    echo "  2. 手动测试: $APPDIR/AppRun"
+    echo "  3. 查看日志获取详细错误信息"
+    echo ""
     exit 1
 fi
