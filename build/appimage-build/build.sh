@@ -241,19 +241,51 @@ done
 if [ $COPIED_DATA -eq 0 ]; then
     echo "  ⚠ 警告: 未找到 WebKit 进程文件"
 else
-    # 使用 patchelf 设置 WebKit 进程的解释器和 rpath
+    # 使用 patchelf 设置 WebKit 进程的 rpath
     echo "  → 修改 WebKit 进程的动态链接器设置..."
     if command -v patchelf &> /dev/null; then
         for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
             if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ] && file "$webkit_proc" | grep -q ELF; then
                 proc_name=$(basename "$webkit_proc")
-                # 设置相对 rpath，让进程找到库文件
+                
+                # 1. 设置 RPATH (使用 $ORIGIN 相对路径)
                 patchelf --set-rpath '$ORIGIN/../../lib:$ORIGIN/../../../lib/x86_64-linux-gnu' "$webkit_proc" 2>/dev/null || true
-                # 设置解释器为 AppImage 内的 ld-linux
-                if [ -f "$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2" ]; then
-                    patchelf --set-interpreter '../../lib/x86_64-linux-gnu/ld-linux-x86-64.so.2' "$webkit_proc" 2>/dev/null || true
+                echo "    ✓ 已设置 RPATH: $proc_name"
+
+                # 2. 处理解释器 (Loader)
+                # 由于 Linux 内核对相对路径解释器的支持依赖于 CWD，直接 patch 解释器风险很大。
+                # 我们采用 Wrapper 脚本方案：将原程序重命名为 .real，新建脚本通过 bundled loader 启动它。
+                
+                LD_LINUX_PATH="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+                if [ -f "$LD_LINUX_PATH" ]; then
+                    mv "$webkit_proc" "${webkit_proc}.real"
+                    
+                    cat > "$webkit_proc" << 'WRAPPER_EOF'
+#!/bin/sh
+# WebKit Process Wrapper
+# 确保使用 AppImage 内置的动态链接器启动
+
+# 获取 APPDIR (如果未设置，尝试推断)
+if [ -z "$APPDIR" ]; then
+    SELF=$(readlink -f "$0")
+    # 假设路径结构: .../lib/webkit2gtk-4.1/Process
+    APPDIR=$(dirname $(dirname $(dirname "$SELF")))
+fi
+
+# 修正库路径 (确保包含 AppImage 库目录)
+export LD_LIBRARY_PATH="$APPDIR/lib:$APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+
+# 定位 Loader 和 Real Binary
+LOADER="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+REAL_BIN="$0.real"
+
+# 执行
+exec "$LOADER" "$REAL_BIN" "$@"
+WRAPPER_EOF
+                    
+                    chmod +x "$webkit_proc"
+                    echo "    ✓ 已创建 Wrapper 脚本: $proc_name"
                 fi
-                echo "    ✓ 已修改 $proc_name"
             fi
         done
     else
