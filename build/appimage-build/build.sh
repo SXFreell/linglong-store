@@ -168,50 +168,6 @@ collect_deps() {
     done
 }
 
-# 创建兼容的目录结构以解决硬编码路径问题
-# 使用符号链接而不是修改二进制文件（更安全）
-setup_webkit_path_compatibility() {
-    local appdir="$1"
-    
-    echo "    [路径兼容] 创建 WebKit 路径映射..."
-    
-    # WebKit 可能查找的硬编码路径
-    # 在 AppDir 中创建这些路径的符号链接，指向实际位置
-    
-    # 创建 /usr 结构的镜像（在 AppDir 内部）
-    mkdir -p "$appdir/usr/lib/x86_64-linux-gnu"
-    mkdir -p "$appdir/usr/libexec"
-    
-    # 如果 webkit2gtk-4.1 在我们的 usr/lib 下
-    if [ -d "$appdir/usr/lib/webkit2gtk-4.1" ]; then
-        # 创建符号链接到可能被硬编码的路径
-        if [ ! -e "$appdir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1" ]; then
-            ln -sf "../webkit2gtk-4.1" "$appdir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
-            echo "      ✓ 链接: usr/lib/x86_64-linux-gnu/webkit2gtk-4.1 -> ../webkit2gtk-4.1"
-        fi
-        
-        if [ ! -e "$appdir/usr/libexec/webkit2gtk-4.1" ]; then
-            ln -sf "../lib/webkit2gtk-4.1" "$appdir/usr/libexec/webkit2gtk-4.1"
-            echo "      ✓ 链接: usr/libexec/webkit2gtk-4.1 -> ../lib/webkit2gtk-4.1"
-        fi
-    fi
-    
-    # 扫描并报告二进制文件中的硬编码路径（仅诊断，不修改）
-    echo "    [诊断] 扫描硬编码路径..."
-    local webkit_lib="$appdir/usr/lib/libwebkit2gtk-4.1.so"
-    if [ -f "$webkit_lib" ]; then
-        local paths=$(strings "$webkit_lib" 2>/dev/null | grep -E "^/usr/(lib|libexec)/.*webkit" | head -n 5)
-        if [ -n "$paths" ]; then
-            echo "      发现的硬编码路径:"
-            echo "$paths" | while IFS= read -r path; do
-                echo "        - $path"
-            done
-        else
-            echo "      ✓ 未发现明显的硬编码路径"
-        fi
-    fi
-}
-
 # 开始收集
 collect_deps "$APPDIR/usr/bin/linglong-store" "$APPDIR/usr/lib"
 
@@ -303,11 +259,6 @@ else
     else
         echo "    ⚠ 未找到 patchelf，跳过修改（可能无法在所有系统运行）"
     fi
-    
-    # 设置 WebKit 路径兼容性（使用符号链接，不修改二进制）
-    echo "  → 设置 WebKit 路径兼容性..."
-    setup_webkit_path_compatibility "$APPDIR"
-    echo "  ✓ 路径兼容性设置完成"
 fi
 echo ""
 
@@ -353,63 +304,96 @@ echo "✓ 已复制 $COPIED_DATA 项数据文件"
 echo "✓ 动态库总数: $FINAL_LIB_COUNT 个，总大小: $FINAL_LIBS_SIZE"
 echo ""
 
+# ==============================================================================
+# 核心解决方案：二进制补丁硬编码路径
+# ==============================================================================
+echo "==> 执行二进制路径补丁..."
+
+# 1. 调整目录结构：将 usr/lib 合并到 lib，并建立软链接
+# 这样做的目的是为了支持将 /usr/lib 替换为 ././lib/ (长度一致)
+echo "  → 调整目录结构以支持路径替换..."
+mkdir -p "$APPDIR/lib"
+if [ -d "$APPDIR/usr/lib" ]; then
+    # 将 usr/lib 下的内容移动到 lib
+    cp -r "$APPDIR/usr/lib/." "$APPDIR/lib/"
+    rm -rf "$APPDIR/usr/lib"
+    # 创建 usr/lib -> ../lib 的软链接
+    ln -s ../lib "$APPDIR/usr/lib"
+    echo "    ✓ 已将 usr/lib 合并至 lib 并创建软链接"
+fi
+
+# 2. 定义补丁函数
+patch_binary_path() {
+    local file="$1"
+    local search="/usr/lib"
+    local replace="././lib/" # 长度必须与 /usr/lib (8字符) 一致
+    
+    # 检查文件是否存在
+    if [ ! -f "$file" ]; then
+        return
+    fi
+    
+    # 检查是否包含目标字符串
+    if grep -q "$search" "$file"; then
+        echo "    补丁: $file"
+        # 使用 sed 进行二进制替换 (LC_ALL=C 确保按字节处理)
+        LC_ALL=C sed -i "s|$search|$replace|g" "$file"
+    fi
+}
+
+# 3. 扫描并修补所有库文件和可执行文件
+echo "  → 扫描并修补硬编码路径 (/usr/lib -> ././lib/)..."
+# 查找 lib 目录下的所有文件
+find "$APPDIR/lib" -type f | while read -r file; do
+    # 仅处理 ELF 文件或包含目标字符串的文件
+    if file "$file" | grep -q "ELF"; then
+        patch_binary_path "$file"
+    fi
+done
+
+echo "✓ 二进制补丁完成"
+echo ""
+
 # 创建 AppRun 启动脚本
 echo "==> 创建 AppRun 启动脚本..."
 cat > "$APPDIR/AppRun" << 'APPRUN_EOF'
 #!/bin/bash
 # AppRun - AppImage 启动脚本
-# 支持二进制路径补丁方案
 
+# 获取 AppImage 挂载点的绝对路径
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
-
-# 关键：设置 APPDIR 环境变量
 export APPDIR="$HERE"
 
-# 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动）
+# 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动，且相对路径补丁 ././lib/ 依赖此工作目录）
 cd "$HERE"
 
-# 设置库路径（优先使用 AppImage 内的库，包含 glibc）
-export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/usr/lib/x86_64-linux-gnu:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
+# 设置库路径
+# 注意：由于我们调整了目录结构，实际库在 $APPDIR/lib
+# 但为了兼容性，保留 usr/lib (它是指向 lib 的软链接)
+export LD_LIBRARY_PATH="$APPDIR/lib:$APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
 # 设置 GTK/WebKit 相关环境变量
-export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
-export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
+export GDK_PIXBUF_MODULE_FILE="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+export GDK_PIXBUF_MODULEDIR="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders"
+export GIO_MODULE_DIR="$APPDIR/lib/gio/modules"
+export WEBKIT_INJECTED_BUNDLE_PATH="$APPDIR/lib/webkit2gtk-4.1/injected-bundle"
 
-# 关键：设置 WebKit 进程路径（提供多个可能的路径）
-export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
-export WEBKIT_PROCESS_PATH="$HERE/usr/lib/webkit2gtk-4.1"
-export WEBKIT_EXTENSION_PATH="$HERE/usr/lib/webkit2gtk-4.1"
-
-# WebKit 可能需要的额外路径
-export WEBKIT2_EXTENSION_DIRECTORY="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
-
-# GST (GStreamer) 插件路径（WebKit 媒体支持）
-export GST_PLUGIN_SYSTEM_PATH="$HERE/usr/lib/gstreamer-1.0"
-export GST_PLUGIN_SCANNER="$HERE/usr/libexec/gstreamer-1.0/gst-plugin-scanner"
+# 关键：设置 WebKit 进程路径
+export WEBKIT_EXEC_PATH="$APPDIR/lib/webkit2gtk-4.1"
 
 # 禁用 GTK 的某些不需要的功能
 export GTK_PATH=""
 export GTK_MODULES=""
 
-# 调试模式：显示路径信息（可选，生产环境可注释）
-if [ "$DEBUG_APPIMAGE" = "1" ]; then
-    echo "[AppImage Debug]" >&2
-    echo "  APPDIR: $APPDIR" >&2
-    echo "  LD_LIBRARY_PATH: $LD_LIBRARY_PATH" >&2
-    echo "  WEBKIT_EXEC_PATH: $WEBKIT_EXEC_PATH" >&2
-fi
-
 # 使用打包的动态链接器（如果存在）
-LD_LINUX="$HERE/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+LD_LINUX="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
 if [ -f "$LD_LINUX" ]; then
     # 使用打包的 ld-linux 启动程序
-    exec "$LD_LINUX" --library-path "$LD_LIBRARY_PATH" "$HERE/usr/bin/linglong-store" "$@"
+    exec "$LD_LINUX" --library-path "$LD_LIBRARY_PATH" "$APPDIR/usr/bin/linglong-store" "$@"
 else
     # 回退到系统动态链接器
-    exec "$HERE/usr/bin/linglong-store" "$@"
+    exec "$APPDIR/usr/bin/linglong-store" "$@"
 fi
 APPRUN_EOF
 chmod +x "$APPDIR/AppRun"

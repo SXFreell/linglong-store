@@ -1,9 +1,23 @@
-# Cargo 配置 - Ubuntu glibc 动态链接
+# Cargo 配置 - Tauri AppImage 完整打包
 
 [target.x86_64-unknown-linux-gnu]
 # 使用 glibc 动态链接（Ubuntu/Debian 标准方式）
 linker = "gcc"
+# 添加 RPATH 以支持 AppImage 内部库查找
+rustflags = [
+    "-C", "link-arg=-Wl,-rpath,$ORIGIN/../lib",
+    "-C", "link-arg=-Wl,-rpath,$ORIGIN/../lib/x86_64-linux-gnu",
+    "-C", "link-arg=-Wl,--enable-new-dtags",
+]
 
 [build]
 # 默认目标：使用 gnu（glibc）而非 musl
 target = "x86_64-unknown-linux-gnu"
+
+[profile.release]
+# 发布模式优化
+opt-level = "z"      # 优化体积
+lto = true           # 链接时优化
+codegen-units = 1    # 更好的优化
+strip = true         # 移除调试符号
+panic = "abort"      # 减小体积
