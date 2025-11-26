@@ -436,6 +436,19 @@ export APPDIR="$HERE"
 # 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动，且相对路径补丁 ././lib/ 依赖此工作目录）
 cd "$HERE"
 
+# 解决 "Cannot spawn a message bus without a machine-id" 问题
+if [ ! -f /etc/machine-id ] && [ ! -f /var/lib/dbus/machine-id ]; then
+    MACHINE_ID_DIR="${XDG_RUNTIME_DIR:-/tmp}/.linglong-store-runtime"
+    mkdir -p "$MACHINE_ID_DIR"
+    export DBUS_MACHINE_ID_FILE="$MACHINE_ID_DIR/machine-id"
+    if [ ! -f "$DBUS_MACHINE_ID_FILE" ]; then
+        echo "59829f99999999999999999999999999" > "$DBUS_MACHINE_ID_FILE"
+    fi
+fi
+
+# 解决 WebKitGTK 在 AppImage 环境下的沙箱问题 (readPIDFromPeer crash)
+export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+
 # 设置库路径
 # 注意：由于我们调整了目录结构，实际库在 $APPDIR/lib
 # 但为了兼容性，保留 usr/lib (它是指向 lib 的软链接)
