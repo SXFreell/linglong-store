@@ -24,7 +24,8 @@ apt-get install -y \
     fuse \
     libfuse2 \
     libfuse-dev \
-    file
+    file \
+    patchelf
 
 echo "==> 安装 Tauri 系统依赖（包含运行时库和开发库）..."
 apt-get install -y \

@@ -337,8 +337,17 @@ echo ""
 # ------------------------------------------------------------------------------
 echo "==> 修复 RPATH..."
 if ! command -v patchelf &> /dev/null; then
-    echo "❌ 错误: patchelf 未安装，无法修复 RPATH"
-    exit 1
+    echo "⚠ 警告: patchelf 未安装，尝试下载静态版本..."
+    PATCHELF_URL="https://github.com/NixOS/patchelf/releases/download/0.18.0/patchelf-0.18.0-x86_64.tar.gz"
+    wget -q "$PATCHELF_URL" -O patchelf.tar.gz
+    tar -xzf patchelf.tar.gz bin/patchelf
+    mv bin/patchelf ./patchelf-bin
+    rm -rf bin patchelf.tar.gz share
+    chmod +x ./patchelf-bin
+    PATCHELF_CMD="./patchelf-bin"
+    echo "✓ 已下载 patchelf"
+else
+    PATCHELF_CMD="patchelf"
 fi
 
 find "$APPDIR" -type f | while read -r file; do
@@ -359,11 +368,7 @@ find "$APPDIR" -type f | while read -r file; do
     
     NEW_RPATH='$ORIGIN/../lib:$ORIGIN/../lib/x86_64-linux-gnu:$ORIGIN'
     
-    # 如果文件在 lib/ 下，可能需要调整 (虽然 $ORIGIN/../lib 通常也有效)
-    # 但为了简单稳健，我们统一使用这个宽泛的 RPATH
-    
-    patchelf --set-rpath "$NEW_RPATH" "$file" 2>/dev/null || true
-    # echo "  ✓ RPATH: $(basename "$file")"
+    "$PATCHELF_CMD" --set-rpath "$NEW_RPATH" "$file" 2>/dev/null || true
 done
 echo "✓ 所有 ELF 文件的 RPATH 已修复"
 echo ""
@@ -406,10 +411,9 @@ if [ -f "$WEBKIT_LIB_PATH" ]; then
         fi
         
         # 执行二进制替换
-        # 使用 sed -i -b (binary mode) 避免换行符问题，但标准 sed 可能不支持 -b
-        # 使用 LC_ALL=C sed 确保字节级处理
+        # 使用 perl 进行安全的二进制替换，避免 sed 导致的 segfault
         if grep -q "$SEARCH_STR" "$WEBKIT_LIB_PATH"; then
-            LC_ALL=C sed -i "s|$SEARCH_STR|$REPLACE_STR|g" "$WEBKIT_LIB_PATH"
+            perl -pi -e 's|\Q'"$SEARCH_STR"'\E|'"$REPLACE_STR"'|g' "$WEBKIT_LIB_PATH"
             echo "  ✓ 已替换硬编码路径"
             
             # 保存替换路径供 AppRun 使用
