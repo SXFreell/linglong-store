@@ -296,6 +296,23 @@ for gio_path in "${GIO_PATHS[@]}"; do
     fi
 done
 
+# 复制 gconv 模块 (解决 glibc 字符集转换问题)
+echo "==> 复制 gconv 模块..."
+GCONV_PATHS=(
+    "/usr/lib/x86_64-linux-gnu/gconv"
+    "/usr/lib/gconv"
+)
+
+for gconv_path in "${GCONV_PATHS[@]}"; do
+    if [ -d "$gconv_path" ]; then
+        mkdir -p "$APPDIR/usr/lib/gconv"
+        cp -r "$gconv_path"/* "$APPDIR/usr/lib/gconv/"
+        echo "  ✓ gconv 模块 (来自 $gconv_path)"
+        COPIED_DATA=$((COPIED_DATA + 1))
+        break
+    fi
+done
+
 # 重新统计动态库数量（包括 WebKit 进程的依赖）
 FINAL_LIB_COUNT=$(find "$APPDIR/usr/lib" -name "*.so*" | wc -l)
 FINAL_LIBS_SIZE=$(du -sh "$APPDIR/usr/lib" | cut -f1)
@@ -384,6 +401,7 @@ export GDK_PIXBUF_MODULE_FILE="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 export GDK_PIXBUF_MODULEDIR="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders"
 export GIO_MODULE_DIR="$APPDIR/lib/gio/modules"
 export WEBKIT_INJECTED_BUNDLE_PATH="$APPDIR/lib/webkit2gtk-4.1/injected-bundle"
+export GCONV_PATH="$APPDIR/lib/gconv"
 
 # 关键：设置 WebKit 进程路径
 export WEBKIT_EXEC_PATH="$APPDIR/lib/webkit2gtk-4.1"
