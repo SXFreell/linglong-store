@@ -337,36 +337,22 @@ export NO_CLEANUP=1
 echo ""
 echo "正在打包 AppImage..."
 
-# 尝试使用 appimagetool 的静态提取模式
+# 下载 appimagetool（如果不存在）
+APPIMAGETOOL="$PROJECT_ROOT/appimagetool"
+if [ ! -f "$APPIMAGETOOL" ]; then
+    echo "下载 appimagetool..."
+    wget -q --show-progress https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage -O "$APPIMAGETOOL"
+    chmod +x "$APPIMAGETOOL"
+    echo "✓ appimagetool 下载完成"
+fi
+
+# 使用 appimagetool 打包
 if [ $FUSE_AVAILABLE -eq 0 ]; then
-    echo "使用 --appimage-extract 模式..."
-    
-    # 先提取 appimagetool
-    cd /tmp
-    if [ -f /usr/local/bin/appimagetool ]; then
-        cp /usr/local/bin/appimagetool ./appimagetool.AppImage
-        chmod +x ./appimagetool.AppImage
-        
-        # 提取 appimagetool 内容
-        ./appimagetool.AppImage --appimage-extract >/dev/null 2>&1
-        
-        if [ -d "squashfs-root" ]; then
-            echo "✓ appimagetool 提取成功"
-            
-            # 使用提取后的工具打包
-            cd "$PROJECT_ROOT"
-            /tmp/squashfs-root/AppRun --no-appimage "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
-            
-            # 清理临时文件
-            rm -rf /tmp/squashfs-root /tmp/appimagetool.AppImage
-        else
-            echo "❌ 无法提取 appimagetool"
-            exit 1
-        fi
-    fi
+    echo "使用 --appimage-extract-and-run 模式（无 FUSE）..."
+    "$APPIMAGETOOL" --appimage-extract-and-run "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
 else
-    # FUSE 可用，直接使用 appimagetool
-    appimagetool --no-appstream "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
+    echo "使用标准模式（FUSE 可用）..."
+    "$APPIMAGETOOL" --no-appstream "$APPDIR" "$OUTPUT_FILE" 2>&1 | grep -v "WARNING" || true
 fi
 
 # 检查是否成功生成
