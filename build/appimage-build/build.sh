@@ -19,9 +19,15 @@ cd "$PROJECT_ROOT"
 
 # 确保 Rust 环境可用
 if ! command -v rustc &> /dev/null; then
-    echo "❌ 错误: Rust 未安装或未在 PATH 中"
-    echo "请运行: source \$HOME/.cargo/env"
-    exit 1
+    echo "⚠ Rust 未在 PATH 中，尝试加载环境..."
+    if [ -f "$HOME/.cargo/env" ]; then
+        source "$HOME/.cargo/env"
+        echo "✓ Rust 环境已加载"
+    else
+        echo "❌ 错误: Rust 未安装"
+        echo "请先运行: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+        exit 1
+    fi
 fi
 
 echo "✓ Rust: $(rustc --version)"
