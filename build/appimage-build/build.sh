@@ -196,32 +196,63 @@ echo "==> 复制 WebKit/GTK 数据文件..."
 
 COPIED_DATA=0
 
-# WebKit 进程和资源
-if [ -d "/usr/lib/webkit2gtk-4.1" ]; then
-    mkdir -p "$APPDIR/usr/lib/webkit2gtk-4.1"
-    if cp -r /usr/lib/webkit2gtk-4.1/* "$APPDIR/usr/lib/webkit2gtk-4.1/" 2>/dev/null; then
-        echo "  ✓ WebKit 进程文件"
-        COPIED_DATA=$((COPIED_DATA + 1))
+# WebKit 进程和资源（尝试多个可能的路径）
+WEBKIT_PATHS=(
+    "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+    "/usr/lib/webkit2gtk-4.1"
+    "/usr/libexec/webkit2gtk-4.1"
+)
+
+for webkit_path in "${WEBKIT_PATHS[@]}"; do
+    if [ -d "$webkit_path" ]; then
+        mkdir -p "$APPDIR/usr/lib/webkit2gtk-4.1"
+        if cp -r "$webkit_path"/* "$APPDIR/usr/lib/webkit2gtk-4.1/" 2>/dev/null; then
+            echo "  ✓ WebKit 进程文件 (来自 $webkit_path)"
+            # 确保进程文件可执行
+            chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1"/* 2>/dev/null || true
+            COPIED_DATA=$((COPIED_DATA + 1))
+            break
+        fi
     fi
+done
+
+if [ $COPIED_DATA -eq 0 ]; then
+    echo "  ⚠ 警告: 未找到 WebKit 进程文件"
 fi
 
-# GDK Pixbuf 加载器
-if [ -d "/usr/lib/gdk-pixbuf-2.0" ]; then
-    mkdir -p "$APPDIR/usr/lib/gdk-pixbuf-2.0"
-    if cp -r /usr/lib/gdk-pixbuf-2.0/* "$APPDIR/usr/lib/gdk-pixbuf-2.0/" 2>/dev/null; then
-        echo "  ✓ GDK Pixbuf 加载器"
-        COPIED_DATA=$((COPIED_DATA + 1))
-    fi
-fi
+# GDK Pixbuf 加载器（尝试多个路径）
+GDK_PIXBUF_PATHS=(
+    "/usr/lib/x86_64-linux-gnu/gdk-pixbuf-2.0"
+    "/usr/lib/gdk-pixbuf-2.0"
+)
 
-# GIO 模块
-if [ -d "/usr/lib/gio/modules" ]; then
-    mkdir -p "$APPDIR/usr/lib/gio/modules"
-    if cp -r /usr/lib/gio/modules/* "$APPDIR/usr/lib/gio/modules/" 2>/dev/null; then
-        echo "  ✓ GIO 模块"
-        COPIED_DATA=$((COPIED_DATA + 1))
+for gdk_path in "${GDK_PIXBUF_PATHS[@]}"; do
+    if [ -d "$gdk_path" ]; then
+        mkdir -p "$APPDIR/usr/lib/gdk-pixbuf-2.0"
+        if cp -r "$gdk_path"/* "$APPDIR/usr/lib/gdk-pixbuf-2.0/" 2>/dev/null; then
+            echo "  ✓ GDK Pixbuf 加载器 (来自 $gdk_path)"
+            COPIED_DATA=$((COPIED_DATA + 1))
+            break
+        fi
     fi
-fi
+done
+
+# GIO 模块（尝试多个路径）
+GIO_PATHS=(
+    "/usr/lib/x86_64-linux-gnu/gio/modules"
+    "/usr/lib/gio/modules"
+)
+
+for gio_path in "${GIO_PATHS[@]}"; do
+    if [ -d "$gio_path" ]; then
+        mkdir -p "$APPDIR/usr/lib/gio/modules"
+        if cp -r "$gio_path"/* "$APPDIR/usr/lib/gio/modules/" 2>/dev/null; then
+            echo "  ✓ GIO 模块 (来自 $gio_path)"
+            COPIED_DATA=$((COPIED_DATA + 1))
+            break
+        fi
+    fi
+done
 
 echo "✓ 已复制 $COPIED_DATA 项数据文件"
 echo ""
@@ -238,6 +269,19 @@ HERE=${SELF%/*}
 # 设置库路径（优先使用 AppImage 内的库，包含 glibc）
 export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
+# 设置 GTK/WebKit 相关环境变量
+export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
+export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
+
+# 关键：设置 WebKit 进程路径为 AppImage 内的路径
+export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
+export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
+
+# 禁用 GTK 的某些不需要的功能
+export GTK_PATH=""
+export GTK_MODULES=""
+
 # 使用打包的动态链接器（如果存在）
 LD_LINUX="$HERE/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
 if [ -f "$LD_LINUX" ]; then
@@ -245,17 +289,6 @@ if [ -f "$LD_LINUX" ]; then
     exec "$LD_LINUX" --library-path "$LD_LIBRARY_PATH" "$HERE/usr/bin/linglong-store" "$@"
 else
     # 回退到系统动态链接器
-    # 设置 GTK/WebKit 相关环境变量
-    export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-    export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-    export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
-    export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
-    
-    # 禁用 GTK 的某些不需要的功能
-    export GTK_PATH=""
-    export GTK_MODULES=""
-    
-    # 运行应用
     exec "$HERE/usr/bin/linglong-store" "$@"
 fi
 APPRUN_EOF
