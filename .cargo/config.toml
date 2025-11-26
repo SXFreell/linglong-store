@@ -1,10 +1,9 @@
-# Cargo 配置 - 混合静态/动态链接策略
+# Cargo 配置 - Ubuntu glibc 动态链接
 
-[target.x86_64-unknown-linux-musl]
-# 部分静态链接：能静态的就静态，不能的就动态
-# -C target-feature=-crt-static 禁用完全静态链接
-rustflags = ["-C", "target-feature=-crt-static"]
+[target.x86_64-unknown-linux-gnu]
+# 使用 glibc 动态链接（Ubuntu/Debian 标准方式）
+linker = "gcc"
 
 [build]
-# 默认目标
-target = "x86_64-unknown-linux-musl"
+# 默认目标：使用 gnu（glibc）而非 musl
+target = "x86_64-unknown-linux-gnu"
