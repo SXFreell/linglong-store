@@ -22,6 +22,24 @@ apk add --no-cache \
     pkgconfig \
     ca-certificates
 
+echo "==> 安装 glibc（用于兼容性）..."
+if ! [ -f "/usr/glibc-compat/lib/libc.so.6" ]; then
+    echo "下载 glibc 包..."
+    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub
+    wget -q -O /tmp/glibc-2.35-r0.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk
+    wget -q -O /tmp/glibc-bin-2.35-r0.apk https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-bin-2.35-r0.apk
+    
+    echo "安装 glibc..."
+    apk add --force-overwrite --allow-untrusted /tmp/glibc-2.35-r0.apk /tmp/glibc-bin-2.35-r0.apk
+    
+    # 清理临时文件
+    rm -f /tmp/glibc-*.apk
+    
+    echo "glibc 安装完成: $(/usr/glibc-compat/bin/ldd --version | head -n1)"
+else
+    echo "glibc 已安装: $(/usr/glibc-compat/bin/ldd --version | head -n1)"
+fi
+
 echo "==> 安装 Tauri 系统依赖（包含运行时库和开发库）..."
 apk add --no-cache \
     webkit2gtk-4.1 \
@@ -111,7 +129,8 @@ apk add --no-cache \
     tiff \
     tiff-dev \
     libxml2 \
-    libxml2-dev
+    libxml2-dev \
+    xdg-utils
 
 echo "==> 安装 Rust..."
 if ! command -v rustc &> /dev/null; then
@@ -161,14 +180,16 @@ fi
 
 echo "==> ✅ 所有依赖安装完成！"
 echo ""
-echo "提示："
-echo "  - 如需在新 shell 中使用 Rust，请先运行: source \$HOME/.cargo/env"
-echo "  - 项目依赖: pnpm install"
-echo "  - 构建应用: ./build/apline-build/build-with-appimage.sh"
+echo "使用方法："
+echo "  1. 启用 Rust 环境: source \$HOME/.cargo/env"
+echo "  2. 安装前端依赖: pnpm install"
+echo "  3. 构建 AppImage: ./build/apline-build/build-with-appimage.sh"
 echo ""
 echo "构建策略："
 echo "  ✓ 静态链接: zlib, harfbuzz, cairo, glib, openssl"
 echo "  ✓ AppImage打包: webkit2gtk, gtk+3.0, pango, gdk-pixbuf 等"
-echo "  → 最终产物: linglong-store-x86_64.AppImage (可跨发行版运行)"
+echo "  ✓ glibc 2.35 兼容层"
+echo ""
+echo "最终产物: linglong-store-x86_64.AppImage (可跨发行版运行)"
 
 

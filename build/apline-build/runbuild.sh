@@ -10,5 +10,12 @@ sh ./install-bash.sh
 echo "==> 运行安装依赖脚本..."
 bash ./install-deps-alpine.sh
 
+echo "==> 设置 Rust 环境变量..."
+export PATH="$HOME/.cargo/bin:$PATH"
+source "$HOME/.cargo/env"
+
+echo "==> 安装前端依赖..."
+pnpm install
+
 echo "==> 运行构建脚本..."
 bash ./build.sh
