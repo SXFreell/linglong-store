@@ -191,6 +191,14 @@ echo ""
 echo "✓ 已复制 $COPIED_LIBS 个动态库（包含 glibc），总大小: $LIBS_SIZE"
 echo ""
 
+# 使用 patchelf 修改主程序的 rpath（如果可用）
+if command -v patchelf &> /dev/null; then
+    echo "==> 使用 patchelf 设置 RPATH..."
+    patchelf --set-rpath '$ORIGIN/../lib' "$APPDIR/usr/bin/linglong-store" 2>/dev/null || true
+    echo "✓ RPATH 已设置"
+    echo ""
+fi
+
 # 复制 WebKit 和 GTK 的关键数据文件
 echo "==> 复制 WebKit/GTK 数据文件..."
 
@@ -203,20 +211,17 @@ WEBKIT_PATHS=(
     "/usr/libexec/webkit2gtk-4.1"
 )
 
+WEBKIT_SOURCE_PATH=""
 for webkit_path in "${WEBKIT_PATHS[@]}"; do
     if [ -d "$webkit_path" ]; then
-        # 同时复制到 usr/lib 和原始路径（让硬编码路径也能工作）
+        WEBKIT_SOURCE_PATH="$webkit_path"
         mkdir -p "$APPDIR/usr/lib/webkit2gtk-4.1"
-        mkdir -p "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
         
         if cp -r "$webkit_path"/* "$APPDIR/usr/lib/webkit2gtk-4.1/" 2>/dev/null; then
             echo "  ✓ WebKit 进程文件 (来自 $webkit_path)"
-            # 同时复制到系统路径位置
-            cp -r "$webkit_path"/* "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/" 2>/dev/null
             
             # 确保进程文件可执行
             chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1"/* 2>/dev/null || true
-            chmod +x "$APPDIR/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"/* 2>/dev/null || true
             COPIED_DATA=$((COPIED_DATA + 1))
             
             # 收集 WebKit 进程的依赖
@@ -226,6 +231,11 @@ for webkit_path in "${WEBKIT_PATHS[@]}"; do
                     proc_name=$(basename "$webkit_proc")
                     echo "    分析: $proc_name"
                     collect_deps "$webkit_proc" "$APPDIR/usr/lib" "      "
+                    
+                    # 使用 patchelf 修改 WebKit 进程的 rpath
+                    if command -v patchelf &> /dev/null; then
+                        patchelf --set-rpath '$ORIGIN/../../lib' "$webkit_proc" 2>/dev/null || true
+                    fi
                 fi
             done
             break
@@ -235,6 +245,23 @@ done
 
 if [ $COPIED_DATA -eq 0 ]; then
     echo "  ⚠ 警告: 未找到 WebKit 进程文件"
+else
+    # 创建包装脚本来启动 WebKit 进程
+    echo "  → 创建 WebKit 进程包装脚本..."
+    for proc in WebKitNetworkProcess WebKitWebProcess WebKitGPUProcess; do
+        if [ -f "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" ]; then
+            mv "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" "$APPDIR/usr/lib/webkit2gtk-4.1/${proc}.real"
+            cat > "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" << EOF
+#!/bin/bash
+SELF=\$(readlink -f "\$0")
+HERE=\${SELF%/*}
+export LD_LIBRARY_PATH="\$HERE/../../lib:\$LD_LIBRARY_PATH"
+exec "\$HERE/${proc}.real" "\$@"
+EOF
+            chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1/$proc"
+            echo "    ✓ $proc 包装脚本已创建"
+        fi
+    done
 fi
 
 # GDK Pixbuf 加载器（尝试多个路径）
