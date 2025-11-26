@@ -211,6 +211,16 @@ for webkit_path in "${WEBKIT_PATHS[@]}"; do
             # 确保进程文件可执行
             chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1"/* 2>/dev/null || true
             COPIED_DATA=$((COPIED_DATA + 1))
+            
+            # 收集 WebKit 进程的依赖
+            echo "  → 收集 WebKit 进程依赖..."
+            for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
+                if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ]; then
+                    proc_name=$(basename "$webkit_proc")
+                    echo "    分析: $proc_name"
+                    collect_deps "$webkit_proc" "$APPDIR/usr/lib" "      "
+                fi
+            done
             break
         fi
     fi
@@ -254,7 +264,12 @@ for gio_path in "${GIO_PATHS[@]}"; do
     fi
 done
 
+# 重新统计动态库数量（包括 WebKit 进程的依赖）
+FINAL_LIB_COUNT=$(find "$APPDIR/usr/lib" -name "*.so*" | wc -l)
+FINAL_LIBS_SIZE=$(du -sh "$APPDIR/usr/lib" | cut -f1)
+echo ""
 echo "✓ 已复制 $COPIED_DATA 项数据文件"
+echo "✓ 动态库总数: $FINAL_LIB_COUNT 个，总大小: $FINAL_LIBS_SIZE"
 echo ""
 
 # 创建 AppRun 启动脚本
