@@ -24,7 +24,7 @@ echo ""
 cd "$SCRIPT_DIR"
 
 echo "==> 运行安装依赖脚本..."
-bash "$SCRIPT_DIR/install-deps-ubuntu.sh"
+bash "$SCRIPT_DIR/install-deps.sh"
 
 echo ""
 echo "==> 切换到项目目录..."
