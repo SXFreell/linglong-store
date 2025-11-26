@@ -321,6 +321,8 @@ MISSING_LIBS=(
     "libhogweed.so.6"
     "libnettle.so.8"
     "libgmp.so.10"
+    "libayatana-appindicator3.so.1"
+    "libappindicator3.so.1"
 )
 
 for lib in "${MISSING_LIBS[@]}"; do
