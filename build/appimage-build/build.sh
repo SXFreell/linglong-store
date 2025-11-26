@@ -145,10 +145,10 @@ collect_deps() {
             continue
         fi
         
-        # 跳过系统基础库（glibc）
+        # 跳过 linux-vdso（虚拟库）
         case "$lib_name" in
-            libc.so*|libm.so*|libdl.so*|libpthread.so*|librt.so*|libresolv.so*|ld-linux*.so*|linux-vdso.so*)
-                echo "${indent}[跳过] $lib_name (系统库)"
+            linux-vdso.so*)
+                echo "${indent}[跳过] $lib_name (虚拟库)"
                 PROCESSED_LIBS[$lib_name]=1
                 ;;
             *)
@@ -171,10 +171,24 @@ collect_deps() {
 # 开始收集
 collect_deps "$APPDIR/usr/bin/linglong-store" "$APPDIR/usr/lib"
 
+# 复制动态链接器（ld-linux）
+echo ""
+echo "==> 复制动态链接器..."
+LD_LINUX=$(ldd "$APPDIR/usr/bin/linglong-store" 2>/dev/null | grep -oP '/lib.*/ld-linux.*\.so\.[0-9]+' | head -n1)
+if [ -n "$LD_LINUX" ] && [ -f "$LD_LINUX" ]; then
+    LD_NAME=$(basename "$LD_LINUX")
+    mkdir -p "$APPDIR/lib/x86_64-linux-gnu"
+    cp -L "$LD_LINUX" "$APPDIR/lib/x86_64-linux-gnu/$LD_NAME"
+    echo "  ✓ 复制动态链接器: $LD_NAME"
+    
+    # 创建符号链接
+    ln -sf "../lib/x86_64-linux-gnu/$LD_NAME" "$APPDIR/usr/lib/$LD_NAME"
+fi
+
 COPIED_LIBS=$(find "$APPDIR/usr/lib" -name "*.so*" | wc -l)
 LIBS_SIZE=$(du -sh "$APPDIR/usr/lib" | cut -f1)
 echo ""
-echo "✓ 已复制 $COPIED_LIBS 个动态库，总大小: $LIBS_SIZE"
+echo "✓ 已复制 $COPIED_LIBS 个动态库（包含 glibc），总大小: $LIBS_SIZE"
 echo ""
 
 # 复制 WebKit 和 GTK 的关键数据文件
@@ -221,21 +235,29 @@ cat > "$APPDIR/AppRun" << 'APPRUN_EOF'
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 
-# 设置库路径（优先使用 AppImage 内的库）
-export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
+# 设置库路径（优先使用 AppImage 内的库，包含 glibc）
+export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
-# 设置 GTK/WebKit 相关环境变量
-export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
-export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
-
-# 禁用 GTK 的某些不需要的功能
-export GTK_PATH=""
-export GTK_MODULES=""
-
-# 运行应用
-exec "$HERE/usr/bin/linglong-store" "$@"
+# 使用打包的动态链接器（如果存在）
+LD_LINUX="$HERE/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+if [ -f "$LD_LINUX" ]; then
+    # 使用打包的 ld-linux 启动程序
+    exec "$LD_LINUX" --library-path "$LD_LIBRARY_PATH" "$HERE/usr/bin/linglong-store" "$@"
+else
+    # 回退到系统动态链接器
+    # 设置 GTK/WebKit 相关环境变量
+    export GDK_PIXBUF_MODULE_FILE="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+    export GDK_PIXBUF_MODULEDIR="$HERE/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders"
+    export WEBKIT_INJECTED_BUNDLE_PATH="$HERE/usr/lib/webkit2gtk-4.1/injected-bundle"
+    export GIO_MODULE_DIR="$HERE/usr/lib/gio/modules"
+    
+    # 禁用 GTK 的某些不需要的功能
+    export GTK_PATH=""
+    export GTK_MODULES=""
+    
+    # 运行应用
+    exec "$HERE/usr/bin/linglong-store" "$@"
+fi
 APPRUN_EOF
 chmod +x "$APPDIR/AppRun"
 echo "✓ AppRun 脚本创建完成"
@@ -384,8 +406,8 @@ if [ -f "$OUTPUT_FILE" ]; then
     fi
     echo "特性:"
     echo "  ✓ 内置动态库 (webkit2gtk, gtk+3.0, pango 等 $COPIED_LIBS 个)"
-    echo "  ✓ glibc 动态链接"
-    echo "  ✓ 跨 Ubuntu/Debian 发行版运行"
+    echo "  ✓ 包含 glibc 和动态链接器"
+    echo "  ✓ 真正的跨发行版运行（不依赖系统 glibc 版本）"
     echo "  ✓ 单文件分发"
     echo ""
 else
