@@ -168,6 +168,71 @@ collect_deps() {
     done
 }
 
+# 二进制路径补丁函数
+# 用于替换 WebKit 相关二进制文件中的硬编码系统路径
+patch_hardcoded_paths() {
+    local binary="$1"
+    local binary_name=$(basename "$binary")
+    
+    echo "    [补丁] 扫描 $binary_name 中的硬编码路径..."
+    
+    # 检查是否为 ELF 二进制文件
+    if ! file "$binary" | grep -q ELF; then
+        echo "      [跳过] 非 ELF 文件"
+        return 0
+    fi
+    
+    # 备份原文件
+    cp "$binary" "${binary}.backup" 2>/dev/null || true
+    
+    # 查找常见的硬编码路径
+    local found_paths=0
+    
+    # 检测 /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1 (长度: 43)
+    if strings "$binary" | grep -q "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"; then
+        echo "      [发现] /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+        # 替换为相对路径（保持相同长度）
+        # 使用 \$ORIGIN 相对路径（43字符，需要填充）
+        sed -i 's|/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1|\$ORIGIN/../lib/webkit2gtk-4.1\x00\x00\x00\x00\x00\x00|g' "$binary" 2>/dev/null || true
+        found_paths=$((found_paths + 1))
+    fi
+    
+    # 检测 /usr/lib/webkit2gtk-4.1 (长度: 24)
+    if strings "$binary" | grep -q "/usr/lib/webkit2gtk-4.1"; then
+        echo "      [发现] /usr/lib/webkit2gtk-4.1"
+        # 替换为 \$ORIGIN 相对路径
+        sed -i 's|/usr/lib/webkit2gtk-4.1|\$ORIGIN/../lib/wk-4.1|g' "$binary" 2>/dev/null || true
+        found_paths=$((found_paths + 1))
+    fi
+    
+    # 检测 /usr/libexec/webkit2gtk-4.1 (长度: 28)
+    if strings "$binary" | grep -q "/usr/libexec/webkit2gtk-4.1"; then
+        echo "      [发现] /usr/libexec/webkit2gtk-4.1"
+        sed -i 's|/usr/libexec/webkit2gtk-4.1|\$ORIGIN/../lib/webkit2gtk-4|g' "$binary" 2>/dev/null || true
+        found_paths=$((found_paths + 1))
+    fi
+    
+    # 检测通用 /usr/lib 路径（需要谨慎处理）
+    if strings "$binary" | grep -E "^/usr/lib($|/)" | grep -v webkit | head -n 5 | grep -q .; then
+        echo "      [发现] 其他 /usr/lib 路径"
+        # 仅替换独立的 /usr/lib 为 \$ORIGIN/../lib
+        sed -i 's|/usr/lib/x86_64-linux-gnu\x00|\$ORIGIN/../lib\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00|g' "$binary" 2>/dev/null || true
+        found_paths=$((found_paths + 1))
+    fi
+    
+    if [ $found_paths -gt 0 ]; then
+        echo "      ✓ 已替换 $found_paths 处硬编码路径"
+        # 删除备份
+        rm -f "${binary}.backup"
+    else
+        echo "      [未发现] 无硬编码路径，恢复备份"
+        # 恢复原文件
+        if [ -f "${binary}.backup" ]; then
+            mv "${binary}.backup" "$binary"
+        fi
+    fi
+}
+
 # 开始收集
 collect_deps "$APPDIR/usr/bin/linglong-store" "$APPDIR/usr/lib"
 
@@ -259,6 +324,28 @@ else
     else
         echo "    ⚠ 未找到 patchelf，跳过修改（可能无法在所有系统运行）"
     fi
+    
+    # 应用二进制路径补丁（解决硬编码路径问题）
+    echo "  → 应用二进制路径补丁..."
+    PATCHED_COUNT=0
+    for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
+        if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ]; then
+            patch_hardcoded_paths "$webkit_proc"
+            PATCHED_COUNT=$((PATCHED_COUNT + 1))
+        fi
+    done
+    
+    # 同时补丁主要的 WebKit 库文件
+    if [ -d "$APPDIR/usr/lib" ]; then
+        for webkit_lib in "$APPDIR/usr/lib"/libwebkit2gtk*.so*; do
+            if [ -f "$webkit_lib" ] && ! [ -L "$webkit_lib" ]; then
+                patch_hardcoded_paths "$webkit_lib"
+                PATCHED_COUNT=$((PATCHED_COUNT + 1))
+            fi
+        done
+    fi
+    
+    echo "  ✓ 已补丁 $PATCHED_COUNT 个文件"
 fi
 echo ""
 
@@ -309,9 +396,13 @@ echo "==> 创建 AppRun 启动脚本..."
 cat > "$APPDIR/AppRun" << 'APPRUN_EOF'
 #!/bin/bash
 # AppRun - AppImage 启动脚本
+# 支持二进制路径补丁方案
 
 SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
+
+# 关键：设置 APPDIR 环境变量（供二进制文件中的 $ORIGIN 引用）
+export APPDIR="$HERE"
 
 # 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动）
 cd "$HERE"
@@ -331,6 +422,14 @@ export WEBKIT_EXEC_PATH="$HERE/usr/lib/webkit2gtk-4.1"
 # 禁用 GTK 的某些不需要的功能
 export GTK_PATH=""
 export GTK_MODULES=""
+
+# 调试模式：显示路径信息（可选，生产环境可注释）
+if [ "$DEBUG_APPIMAGE" = "1" ]; then
+    echo "[AppImage Debug]" >&2
+    echo "  APPDIR: $APPDIR" >&2
+    echo "  LD_LIBRARY_PATH: $LD_LIBRARY_PATH" >&2
+    echo "  WEBKIT_EXEC_PATH: $WEBKIT_EXEC_PATH" >&2
+fi
 
 # 使用打包的动态链接器（如果存在）
 LD_LINUX="$HERE/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
