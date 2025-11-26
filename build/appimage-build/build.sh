@@ -345,6 +345,12 @@ patch_binary_path() {
 echo "  → 扫描并修补硬编码路径 (/usr/lib -> ././lib/)..."
 # 查找 lib 目录下的所有文件
 find "$APPDIR/lib" -type f | while read -r file; do
+    # 跳过动态链接器本身，否则会导致 ld.so 断言错误 (Assertion pelem->dirname[0] == '/' failed)
+    if [[ "$(basename "$file")" == ld-linux* ]]; then
+        echo "    [跳过补丁] 动态链接器: $file"
+        continue
+    fi
+
     # 仅处理 ELF 文件或包含目标字符串的文件
     if file "$file" | grep -q "ELF"; then
         patch_binary_path "$file"
