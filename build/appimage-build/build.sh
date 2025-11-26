@@ -231,11 +231,6 @@ for webkit_path in "${WEBKIT_PATHS[@]}"; do
                     proc_name=$(basename "$webkit_proc")
                     echo "    分析: $proc_name"
                     collect_deps "$webkit_proc" "$APPDIR/usr/lib" "      "
-                    
-                    # 使用 patchelf 修改 WebKit 进程的 rpath
-                    if command -v patchelf &> /dev/null; then
-                        patchelf --set-rpath '$ORIGIN/../../lib' "$webkit_proc" 2>/dev/null || true
-                    fi
                 fi
             done
             break
@@ -245,24 +240,42 @@ done
 
 if [ $COPIED_DATA -eq 0 ]; then
     echo "  ⚠ 警告: 未找到 WebKit 进程文件"
-else
-    # 创建包装脚本来启动 WebKit 进程
-    echo "  → 创建 WebKit 进程包装脚本..."
-    for proc in WebKitNetworkProcess WebKitWebProcess WebKitGPUProcess; do
-        if [ -f "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" ]; then
-            mv "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" "$APPDIR/usr/lib/webkit2gtk-4.1/${proc}.real"
-            cat > "$APPDIR/usr/lib/webkit2gtk-4.1/$proc" << EOF
-#!/bin/bash
-SELF=\$(readlink -f "\$0")
-HERE=\${SELF%/*}
-export LD_LIBRARY_PATH="\$HERE/../../lib:\$LD_LIBRARY_PATH"
-exec "\$HERE/${proc}.real" "\$@"
-EOF
-            chmod +x "$APPDIR/usr/lib/webkit2gtk-4.1/$proc"
-            echo "    ✓ $proc 包装脚本已创建"
-        fi
-    done
 fi
+
+# 二进制补丁 WebKit 库，将硬编码路径替换为相对路径
+echo ""
+echo "==> 修补 WebKit 库中的硬编码路径..."
+# 查找所有 WebKit 相关的 .so 文件
+WEBKIT_LIBS=$(find "$APPDIR/usr/lib" -name "*webkit*" -o -name "*javascriptcore*" -o -name "*WebKit*" 2>/dev/null)
+
+for lib in $WEBKIT_LIBS; do
+    if [ -f "$lib" ]; then
+        lib_name=$(basename "$lib")
+        # 将 /usr 替换为 ././ (保持字符串长度相同)
+        # 这样相对路径会从 AppImage 根目录计算
+        if grep -q "/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1" "$lib" 2>/dev/null; then
+            echo "  修补: $lib_name"
+            sed -i 's|/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1|././lib/x86_64-linux-gnu/webkit2gtk-4.1|g' "$lib"
+        fi
+        if grep -q "/usr/lib/webkit2gtk-4.1" "$lib" 2>/dev/null; then
+            echo "  修补: $lib_name"
+            sed -i 's|/usr/lib/webkit2gtk-4.1|././lib/webkit2gtk-4.1|g' "$lib"
+        fi
+        if grep -q "/usr/libexec/webkit2gtk-4.1" "$lib" 2>/dev/null; then
+            echo "  修补: $lib_name"
+            sed -i 's|/usr/libexec/webkit2gtk-4.1|././libexec/webkit2gtk-4.1|g' "$lib"
+        fi
+    fi
+done
+
+# 同时创建相对路径目录结构
+echo "  创建相对路径映射..."
+mkdir -p "$APPDIR/lib/x86_64-linux-gnu"
+mkdir -p "$APPDIR/lib"
+ln -sf "../usr/lib/webkit2gtk-4.1" "$APPDIR/lib/webkit2gtk-4.1" 2>/dev/null || true
+ln -sf "../../usr/lib/webkit2gtk-4.1" "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1" 2>/dev/null || true
+echo "✓ WebKit 路径修补完成"
+echo ""
 
 # GDK Pixbuf 加载器（尝试多个路径）
 GDK_PIXBUF_PATHS=(
