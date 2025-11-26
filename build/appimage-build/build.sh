@@ -361,6 +361,14 @@ find "$APPDIR" -type f | while read -r file; do
         continue
     fi
 
+    # 跳过核心 glibc 库，避免破坏它们
+    case "$(basename "$file")" in
+        libc.so*|libpthread.so*|libdl.so*|libm.so*|librt.so*|libresolv.so*|libutil.so*)
+            # echo "    [跳过 RPATH] $(basename "$file") (核心库)"
+            continue
+            ;;
+    esac
+
     # 计算相对 RPATH
     # 对于 bin/ 下的可执行文件，库在 ../lib
     # 对于 lib/ 下的库，库在 ./ (同级) 或 ../lib
