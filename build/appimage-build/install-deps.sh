@@ -48,7 +48,6 @@ apt-get install -y \
     libsoup-3.0-dev \
     librsvg2-2 \
     librsvg2-dev \
-    libssl3 \
     libssl-dev \
     libudev1 \
     libudev-dev \
@@ -103,12 +102,12 @@ apt-get install -y \
     libpixman-1-dev \
     libpng16-16 \
     libpng-dev \
-    libjpeg-turbo8 \
-    libjpeg-turbo8-dev \
-    libwebp7 \
+    libjpeg62-turbo \
+    libjpeg62-turbo-dev \
+    libwebp6 \
     libwebp-dev \
-    libtiff6 \
-    libtiff-dev \
+    libtiff5 \
+    libtiff5-dev \
     libxml2 \
     libxml2-dev \
     xdg-utils
