@@ -126,7 +126,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 echo "==> 安装 Node.js..."
 if ! command -v node &> /dev/null; then
     # 安装 Node.js 20.x LTS
-    curl -fsSL https://deb.nodesource.com/setup_20.x | -E bash -
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
     echo "Node.js 安装完成: $(node --version)"
 else
