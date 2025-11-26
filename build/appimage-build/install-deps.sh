@@ -100,17 +100,16 @@ apt-get install -y \
     libfribidi-dev \
     libpixman-1-0 \
     libpixman-1-dev \
-    libpng16-16 \
     libpng-dev \
-    libjpeg62-turbo \
-    libjpeg62-turbo-dev \
-    libwebp6 \
+    libjpeg-dev \
     libwebp-dev \
-    libtiff5 \
-    libtiff5-dev \
+    libtiff-dev \
     libxml2 \
     libxml2-dev \
     xdg-utils
+
+echo "==> 安装图像库运行时（使用开发包会自动安装对应的运行时库）..."
+# 注意：开发包（-dev）会自动拉入对应的运行时库依赖
 
 echo "==> 安装 Rust..."
 if ! command -v rustc &> /dev/null; then
