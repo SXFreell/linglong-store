@@ -240,57 +240,6 @@ done
 
 if [ $COPIED_DATA -eq 0 ]; then
     echo "  ⚠ 警告: 未找到 WebKit 进程文件"
-else
-    # 使用 patchelf 设置 WebKit 进程的 rpath
-    echo "  → 修改 WebKit 进程的动态链接器设置..."
-    if command -v patchelf &> /dev/null; then
-        for webkit_proc in "$APPDIR/usr/lib/webkit2gtk-4.1"/*; do
-            if [ -f "$webkit_proc" ] && [ -x "$webkit_proc" ] && file "$webkit_proc" | grep -q ELF; then
-                proc_name=$(basename "$webkit_proc")
-                
-                # 1. 设置 RPATH (使用 $ORIGIN 相对路径)
-                patchelf --set-rpath '$ORIGIN/../../lib:$ORIGIN/../../../lib/x86_64-linux-gnu' "$webkit_proc" 2>/dev/null || true
-                echo "    ✓ 已设置 RPATH: $proc_name"
-
-                # 2. 处理解释器 (Loader)
-                # 由于 Linux 内核对相对路径解释器的支持依赖于 CWD，直接 patch 解释器风险很大。
-                # 我们采用 Wrapper 脚本方案：将原程序重命名为 .real，新建脚本通过 bundled loader 启动它。
-                
-                LD_LINUX_PATH="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
-                if [ -f "$LD_LINUX_PATH" ]; then
-                    mv "$webkit_proc" "${webkit_proc}.real"
-                    
-                    cat > "$webkit_proc" << 'WRAPPER_EOF'
-#!/bin/sh
-# WebKit Process Wrapper
-# 确保使用 AppImage 内置的动态链接器启动
-
-# 获取 APPDIR (如果未设置，尝试推断)
-if [ -z "$APPDIR" ]; then
-    SELF=$(readlink -f "$0")
-    # 假设路径结构: .../lib/webkit2gtk-4.1/Process
-    APPDIR=$(dirname $(dirname $(dirname "$SELF")))
-fi
-
-# 修正库路径 (确保包含 AppImage 库目录)
-export LD_LIBRARY_PATH="$APPDIR/lib:$APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
-
-# 定位 Loader 和 Real Binary
-LOADER="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
-REAL_BIN="$0.real"
-
-# 执行
-exec "$LOADER" "$REAL_BIN" "$@"
-WRAPPER_EOF
-                    
-                    chmod +x "$webkit_proc"
-                    echo "    ✓ 已创建 Wrapper 脚本: $proc_name"
-                fi
-            fi
-        done
-    else
-        echo "    ⚠ 未找到 patchelf，跳过修改（可能无法在所有系统运行）"
-    fi
 fi
 echo ""
 
@@ -381,77 +330,100 @@ echo "✓ 动态库总数: $FINAL_LIB_COUNT 个，总大小: $FINAL_LIBS_SIZE"
 echo ""
 
 # ==============================================================================
-# 核心解决方案：二进制补丁硬编码路径
+# 核心解决方案：RPATH 修复与 WebKit 路径补丁 (参考 linglong.yaml)
 # ==============================================================================
-echo "==> 执行二进制路径补丁..."
 
-# 1. 调整目录结构：将 usr/lib 合并到 lib，并建立软链接
-# 这样做的目的是为了支持将 /usr/lib 替换为 ././lib/ (长度一致)
-echo "  → 调整目录结构以支持路径替换..."
-mkdir -p "$APPDIR/lib"
-if [ -d "$APPDIR/usr/lib" ]; then
-    # 将 usr/lib 下的内容移动到 lib
-    cp -r "$APPDIR/usr/lib/." "$APPDIR/lib/"
-    rm -rf "$APPDIR/usr/lib"
-    # 创建 usr/lib -> ../lib 的软链接
-    ln -s ../lib "$APPDIR/usr/lib"
-    echo "    ✓ 已将 usr/lib 合并至 lib 并创建软链接"
+# 1. 修复所有 ELF 文件的 RPATH
+# ------------------------------------------------------------------------------
+echo "==> 修复 RPATH..."
+if ! command -v patchelf &> /dev/null; then
+    echo "❌ 错误: patchelf 未安装，无法修复 RPATH"
+    exit 1
 fi
 
-# 2. 定义补丁函数
-patch_binary_path() {
-    local file="$1"
-    local search="/usr/lib"
-    local replace="././lib/" # 长度必须与 /usr/lib (8字符) 一致
-    
-    # 检查文件是否存在
-    if [ ! -f "$file" ]; then
-        return
+find "$APPDIR" -type f | while read -r file; do
+    # 快速检查是否为 ELF 文件
+    if ! head -c 4 "$file" | grep -q "ELF"; then
+        continue
     fi
     
-    # 检查是否包含目标字符串
-    if grep -q "$search" "$file"; then
-        echo "    补丁: $file"
-        # 使用 sed 进行二进制替换 (LC_ALL=C 确保按字节处理)
-        LC_ALL=C sed -i "s|$search|$replace|g" "$file"
-    fi
-}
-
-# 3. 扫描并修补所有库文件和可执行文件
-echo "  → 扫描并修补硬编码路径 (/usr/lib -> ././lib/)..."
-# 查找 lib 目录下的所有文件
-find "$APPDIR/lib" -type f | while read -r file; do
-    # 跳过动态链接器本身，否则会导致 ld.so 断言错误 (Assertion pelem->dirname[0] == '/' failed)
+    # 跳过动态链接器
     if [[ "$(basename "$file")" == ld-linux* ]]; then
-        echo "    [跳过补丁] 动态链接器: $file"
         continue
     fi
 
-    # 仅处理 ELF 文件或包含目标字符串的文件
-    if file "$file" | grep -q "ELF"; then
-        patch_binary_path "$file"
-    fi
+    # 计算相对 RPATH
+    # 对于 bin/ 下的可执行文件，库在 ../lib
+    # 对于 lib/ 下的库，库在 ./ (同级) 或 ../lib
+    # 统一设置为 $ORIGIN/../lib:$ORIGIN/../lib/x86_64-linux-gnu:$ORIGIN
+    
+    NEW_RPATH='$ORIGIN/../lib:$ORIGIN/../lib/x86_64-linux-gnu:$ORIGIN'
+    
+    # 如果文件在 lib/ 下，可能需要调整 (虽然 $ORIGIN/../lib 通常也有效)
+    # 但为了简单稳健，我们统一使用这个宽泛的 RPATH
+    
+    patchelf --set-rpath "$NEW_RPATH" "$file" 2>/dev/null || true
+    # echo "  ✓ RPATH: $(basename "$file")"
 done
+echo "✓ 所有 ELF 文件的 RPATH 已修复"
+echo ""
 
-# 4. 修复 WebKit 进程路径问题 (././lib//x86_64-linux-gnu/...)
-# 补丁将 /usr/lib 替换为 ././lib/，如果原路径是 /usr/lib/x86_64-linux-gnu/...
-# 替换后变成 ././lib//x86_64-linux-gnu/... (双斜杠通常没问题，但 WebKit 可能敏感)
-# 关键问题是：WebKitNetworkProcess 可能不在那个位置，或者相对路径解析有问题
-# 我们需要确保 lib/x86_64-linux-gnu 存在且包含 WebKit 进程，或者建立链接
+# 2. WebKitGTK 路径硬编码修复 (参考 linglong.yaml)
+# ------------------------------------------------------------------------------
+# 问题：libwebkit2gtk-4.1.so.0 硬编码了辅助进程路径 /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
+# 方案：将其替换为 /tmp 下的一个固定长度路径，并在运行时创建软链接指向真实路径
+echo "==> 应用 WebKitGTK 路径补丁..."
 
-echo "  → 修复 WebKit 进程路径结构..."
-# 检查 WebKit 进程实际位置
-if [ -d "$APPDIR/lib/webkit2gtk-4.1" ]; then
-    # 如果 WebKit 在 lib/webkit2gtk-4.1，但补丁后代码去 lib/x86_64-linux-gnu/webkit2gtk-4.1 找
-    # 我们需要建立符号链接来满足这个路径
-    mkdir -p "$APPDIR/lib/x86_64-linux-gnu"
-    if [ ! -e "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1" ]; then
-        ln -s ../webkit2gtk-4.1 "$APPDIR/lib/x86_64-linux-gnu/webkit2gtk-4.1"
-        echo "    ✓ 创建链接: lib/x86_64-linux-gnu/webkit2gtk-4.1 -> ../webkit2gtk-4.1"
+WEBKIT_LIB_NAME="libwebkit2gtk-4.1.so.0"
+WEBKIT_LIB_PATH=$(find "$APPDIR" -name "$WEBKIT_LIB_NAME" | head -n 1)
+
+if [ -f "$WEBKIT_LIB_PATH" ]; then
+    # 原始硬编码路径
+    SEARCH_STR="/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1"
+    SEARCH_LEN=${#SEARCH_STR}
+    
+    # 生成替换路径 (必须等长)
+    # 模板: /tmp/llstore-webkit-<随机字符>
+    # 前缀: /tmp/llstore-webkit- (20 chars)
+    # 剩余: SEARCH_LEN - 20
+    
+    PREFIX_STR="/tmp/llstore-webkit-"
+    PREFIX_LEN=${#PREFIX_STR}
+    SUFFIX_LEN=$((SEARCH_LEN - PREFIX_LEN))
+    
+    if [ $SUFFIX_LEN -gt 0 ]; then
+        # 生成随机后缀
+        SUFFIX=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w "$SUFFIX_LEN" | head -n 1)
+        REPLACE_STR="${PREFIX_STR}${SUFFIX}"
+        
+        echo "  目标库: $WEBKIT_LIB_NAME"
+        echo "  原始路径: $SEARCH_STR ($SEARCH_LEN chars)"
+        echo "  替换路径: $REPLACE_STR (${#REPLACE_STR} chars)"
+        
+        if [ ${#REPLACE_STR} -ne $SEARCH_LEN ]; then
+            echo "❌ 错误: 替换字符串长度不匹配！"
+            exit 1
+        fi
+        
+        # 执行二进制替换
+        # 使用 sed -i -b (binary mode) 避免换行符问题，但标准 sed 可能不支持 -b
+        # 使用 LC_ALL=C sed 确保字节级处理
+        if grep -q "$SEARCH_STR" "$WEBKIT_LIB_PATH"; then
+            LC_ALL=C sed -i "s|$SEARCH_STR|$REPLACE_STR|g" "$WEBKIT_LIB_PATH"
+            echo "  ✓ 已替换硬编码路径"
+            
+            # 保存替换路径供 AppRun 使用
+            echo "$REPLACE_STR" > "$APPDIR/.webkit_tmp_path"
+        else
+            echo "  ⚠ 警告: 在库中未找到硬编码路径，可能版本不同或已修补"
+        fi
+    else
+        echo "❌ 错误: 路径过短，无法生成替换路径"
+        exit 1
     fi
+else
+    echo "⚠ 警告: 未找到 $WEBKIT_LIB_NAME，跳过 WebKit 补丁"
 fi
-
-echo "✓ 二进制补丁完成"
 echo ""
 
 # 创建 AppRun 启动脚本
@@ -465,90 +437,62 @@ SELF=$(readlink -f "$0")
 HERE=${SELF%/*}
 export APPDIR="$HERE"
 
-# 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动，且相对路径补丁 ././lib/ 依赖此工作目录）
+# 切换到 AppImage 根目录
 cd "$HERE"
 
 # ------------------------------------------------------------------------------
-# 修复: machine-id 问题 (导致 "Cannot spawn a message bus" 和 D-Bus 错误)
+# WebKitGTK 运行时链接修复
 # ------------------------------------------------------------------------------
-HAS_VALID_MACHINE_ID=0
-if [ -s /etc/machine-id ]; then
-    if grep -qE "^[0-9a-fA-F]{32}" /etc/machine-id; then
-        HAS_VALID_MACHINE_ID=1
-    fi
-elif [ -s /var/lib/dbus/machine-id ]; then
-    if grep -qE "^[0-9a-fA-F]{32}" /var/lib/dbus/machine-id; then
-        HAS_VALID_MACHINE_ID=1
+if [ -f "$APPDIR/.webkit_tmp_path" ]; then
+    WEBKIT_TMP_PATH=$(cat "$APPDIR/.webkit_tmp_path")
+    WEBKIT_REAL_PATH="$APPDIR/usr/lib/webkit2gtk-4.1"
+    
+    if [ -d "$WEBKIT_REAL_PATH" ]; then
+        # 清理可能存在的旧链接/目录
+        rm -rf "$WEBKIT_TMP_PATH"
+        
+        # 创建指向真实路径的软链接
+        # 注意：ln -s 目标 链接名
+        ln -s "$WEBKIT_REAL_PATH" "$WEBKIT_TMP_PATH"
+        
+        # 退出时清理
+        trap "rm -rf '$WEBKIT_TMP_PATH'" EXIT
+        
+        # echo "AppRun: Linked WebKit path $WEBKIT_TMP_PATH -> $WEBKIT_REAL_PATH"
     fi
 fi
 
-if [ $HAS_VALID_MACHINE_ID -eq 0 ]; then
-    echo "AppRun: System machine-id missing or invalid. Setting up private machine-id..."
+# ------------------------------------------------------------------------------
+# 环境修复
+# ------------------------------------------------------------------------------
+
+# 修复 machine-id
+if [ ! -f /etc/machine-id ] && [ ! -f /var/lib/dbus/machine-id ]; then
     MACHINE_ID_DIR="/tmp/.linglong-store-runtime-$(id -u)"
     mkdir -p "$MACHINE_ID_DIR"
-    chmod 700 "$MACHINE_ID_DIR"
     export DBUS_MACHINE_ID_FILE="$MACHINE_ID_DIR/machine-id"
-    
-    if [ ! -s "$DBUS_MACHINE_ID_FILE" ]; then
-        if command -v dbus-uuidgen >/dev/null 2>&1; then
-            dbus-uuidgen > "$DBUS_MACHINE_ID_FILE"
-        else
-            echo "1b4e29b0$(date +%s | md5sum | head -c 24)" > "$DBUS_MACHINE_ID_FILE"
-        fi
-        echo "AppRun: Generated machine-id at $DBUS_MACHINE_ID_FILE"
+    if [ ! -f "$DBUS_MACHINE_ID_FILE" ]; then
+        dbus-uuidgen > "$DBUS_MACHINE_ID_FILE" 2>/dev/null || echo "1b4e29b0$(date +%s | md5sum | head -c 24)" > "$DBUS_MACHINE_ID_FILE"
     fi
 fi
 
-# 尝试启动私有 D-Bus 会话 (如果系统没有提供)
-if [ -z "$DBUS_SESSION_BUS_ADDRESS" ]; then
-    echo "AppRun: DBUS_SESSION_BUS_ADDRESS is unset. Attempting to start private session bus..."
-    if command -v dbus-launch >/dev/null 2>&1; then
-        # 注意: dbus-launch 可能需要 machine-id，我们已经通过 DBUS_MACHINE_ID_FILE 提供了
-        eval $(dbus-launch --sh-syntax --exit-with-session)
-        echo "AppRun: Started private D-Bus session: $DBUS_SESSION_BUS_ADDRESS"
-    else
-        echo "AppRun: Warning: dbus-launch not found. D-Bus features may fail."
-    fi
-fi
-
-# ------------------------------------------------------------------------------
-# 修复: WebKitGTK 沙箱崩溃 (readPIDFromPeer: Unexpected short read)
-# ------------------------------------------------------------------------------
-# 必须显式禁用沙箱，特别是在 root 或容器环境下
+# 禁用 WebKit 沙箱 (必须)
 export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
 
-# 禁用 AT-SPI (Accessibility) 以减少 D-Bus 依赖和潜在崩溃
-export NO_AT_BRIDGE=1
-
-# 打印调试信息
-echo "AppRun: WebKit sandbox disabled."
-
 # 设置库路径
-# 注意：由于我们调整了目录结构，实际库在 $APPDIR/lib
-# 但为了兼容性，保留 usr/lib (它是指向 lib 的软链接)
 export LD_LIBRARY_PATH="$APPDIR/lib:$APPDIR/usr/lib:$APPDIR/lib/x86_64-linux-gnu:$LD_LIBRARY_PATH"
 
-# 设置 GTK/WebKit 相关环境变量
-export GDK_PIXBUF_MODULE_FILE="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
-export GDK_PIXBUF_MODULEDIR="$APPDIR/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-export GIO_MODULE_DIR="$APPDIR/lib/gio/modules"
-export WEBKIT_INJECTED_BUNDLE_PATH="$APPDIR/lib/webkit2gtk-4.1/injected-bundle"
-export GCONV_PATH="$APPDIR/lib/gconv"
+# 设置资源路径
+export GDK_PIXBUF_MODULE_FILE="$APPDIR/usr/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
+export GIO_MODULE_DIR="$APPDIR/usr/lib/gio/modules"
+export GCONV_PATH="$APPDIR/usr/lib/gconv"
 
-# 关键：设置 WebKit 进程路径
-export WEBKIT_EXEC_PATH="$APPDIR/lib/webkit2gtk-4.1"
-
-# 禁用 GTK 的某些不需要的功能
-export GTK_PATH=""
-export GTK_MODULES=""
-
-# 使用打包的动态链接器（如果存在）
-LD_LINUX="$APPDIR/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2"
+# 启动应用
+# 优先使用内置 ld-linux
+LD_LINUX=$(find "$APPDIR" -name "ld-linux-x86-64.so.2" | head -n 1)
 if [ -f "$LD_LINUX" ]; then
-    # 使用打包的 ld-linux 启动程序
     exec "$LD_LINUX" --library-path "$LD_LIBRARY_PATH" "$APPDIR/usr/bin/linglong-store" "$@"
 else
-    # 回退到系统动态链接器
     exec "$APPDIR/usr/bin/linglong-store" "$@"
 fi
 APPRUN_EOF
