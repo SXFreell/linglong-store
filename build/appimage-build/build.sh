@@ -436,18 +436,50 @@ export APPDIR="$HERE"
 # 切换到 AppImage 根目录（重要：WebKit 进程需要从这里启动，且相对路径补丁 ././lib/ 依赖此工作目录）
 cd "$HERE"
 
-# 解决 "Cannot spawn a message bus without a machine-id" 问题
-if [ ! -f /etc/machine-id ] && [ ! -f /var/lib/dbus/machine-id ]; then
-    MACHINE_ID_DIR="${XDG_RUNTIME_DIR:-/tmp}/.linglong-store-runtime"
-    mkdir -p "$MACHINE_ID_DIR"
-    export DBUS_MACHINE_ID_FILE="$MACHINE_ID_DIR/machine-id"
-    if [ ! -f "$DBUS_MACHINE_ID_FILE" ]; then
-        echo "59829f99999999999999999999999999" > "$DBUS_MACHINE_ID_FILE"
+# ------------------------------------------------------------------------------
+# 修复: machine-id 问题 (导致 "Cannot spawn a message bus" 和 D-Bus 错误)
+# ------------------------------------------------------------------------------
+HAS_VALID_MACHINE_ID=0
+if [ -s /etc/machine-id ]; then
+    # 简单检查内容是否看起来像 ID (32 hex chars)
+    if grep -qE "^[0-9a-fA-F]{32}" /etc/machine-id; then
+        HAS_VALID_MACHINE_ID=1
+    fi
+elif [ -s /var/lib/dbus/machine-id ]; then
+    if grep -qE "^[0-9a-fA-F]{32}" /var/lib/dbus/machine-id; then
+        HAS_VALID_MACHINE_ID=1
     fi
 fi
 
-# 解决 WebKitGTK 在 AppImage 环境下的沙箱问题 (readPIDFromPeer crash)
+if [ $HAS_VALID_MACHINE_ID -eq 0 ]; then
+    echo "AppRun: System machine-id missing or invalid. Setting up private machine-id..."
+    # 使用 /tmp 下的用户特定目录，避免权限问题
+    MACHINE_ID_DIR="/tmp/.linglong-store-runtime-$(id -u)"
+    mkdir -p "$MACHINE_ID_DIR"
+    chmod 700 "$MACHINE_ID_DIR"
+    export DBUS_MACHINE_ID_FILE="$MACHINE_ID_DIR/machine-id"
+    
+    if [ ! -s "$DBUS_MACHINE_ID_FILE" ]; then
+        if command -v dbus-uuidgen >/dev/null 2>&1; then
+            dbus-uuidgen > "$DBUS_MACHINE_ID_FILE"
+        else
+            # Fallback: 生成伪随机 ID
+            echo "1b4e29b0$(date +%s | md5sum | head -c 24)" > "$DBUS_MACHINE_ID_FILE"
+        fi
+        echo "AppRun: Generated machine-id at $DBUS_MACHINE_ID_FILE"
+    fi
+fi
+
+# ------------------------------------------------------------------------------
+# 修复: WebKitGTK 沙箱崩溃 (readPIDFromPeer: Unexpected short read)
+# ------------------------------------------------------------------------------
+# 在容器或 AppImage 环境中，WebKit 的沙箱机制(bwrap)常会失败。
+# 必须显式禁用沙箱。
 export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+export WEBKIT_FORCE_SANDBOX=0
+
+# 打印调试信息
+echo "AppRun: WebKit sandbox disabled."
 
 # 设置库路径
 # 注意：由于我们调整了目录结构，实际库在 $APPDIR/lib
