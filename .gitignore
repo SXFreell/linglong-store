@@ -26,3 +26,7 @@ linglong-docs
 src/pages/about/index.tsx
 target/rust-analyzer/flycheck0/stdout
 target/rust-analyzer/flycheck0/stderr
+
+*.AppImage
+linuxdeploy*
+linglong-store.AppDir
