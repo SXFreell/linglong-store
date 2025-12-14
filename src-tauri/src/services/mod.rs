@@ -4,6 +4,7 @@ use std::process::Command;
 pub mod network;
 pub mod process;
 pub mod installed;
+pub mod install_task;
 pub mod linglong;
 pub mod linglong_env;
 pub mod prune;
