@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { message, Modal } from 'antd'
-import { uninstallApp } from '@/apis/invoke'
+import { getRunningLinglongApps, uninstallApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useUpdatesStore } from '@/stores/updates'
 import { sendUninstallRecord } from '@/services/analyticsService'
@@ -91,6 +91,39 @@ export const useAppUninstall = () => {
 
       if (options?.skipConfirm) {
         return performUninstall(appId, version, appInfo, options)
+      }
+
+      const isRunning = await (async() => {
+        try {
+          const runningApps = await getRunningLinglongApps() as Array<{ name?: string }>
+          return runningApps.some(app => app.name === appId)
+        } catch (err) {
+          console.warn('[useAppUninstall] Failed to check running apps:', err)
+          return false
+        }
+      })()
+
+      if (isRunning) {
+        return new Promise<boolean>((resolve) => {
+          Modal.confirm({
+            title: `${appInfo.zhName || appInfo.name || appId}  正在运行`,
+            content: '是否强制关闭后继续卸载？',
+            okText: '强制关闭并卸载',
+            okButtonProps: { type: 'default' },
+            cancelText: '取消卸载',
+            cancelButtonProps: { type: 'primary' },
+            onOk: async() => {
+              try {
+                const result = await performUninstall(appId, version, appInfo, options)
+                resolve(result)
+              } catch (error) {
+                resolve(false)
+                console.error('Uninstall failed:', error)
+              }
+            },
+            onCancel: () => resolve(false),
+          })
+        })
       }
 
       return new Promise<boolean>((resolve) => {
