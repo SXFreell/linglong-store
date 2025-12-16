@@ -15,21 +15,12 @@ declare namespace Store {
     showBaseService: boolean
     /** 点击关闭时是直接关闭还是最小化到托盘 */
     closeOrHide: string
-    /**
-     * 是否允许发送匿名统计数据
-     * - true: 允许发送
-     * - false: 不允许发送
-     * - undefined: 未设置（首次启动时需要询问用户）
-     */
-    allowAnalytics: boolean | undefined
     /** 切换版本检查状态 */
     changeCheckVersionStatus: (value: boolean) => void
     /** 切换基础服务显示状态 */
     changeBaseServiceStatus: (value: boolean) => void
     /** 切换点击关闭时记录的状态 */
     changeCloseOrHide: (value: string) => void
-    /** 设置匿名统计开关 */
-    setAllowAnalytics: (value: boolean) => void
   }
 
   /**

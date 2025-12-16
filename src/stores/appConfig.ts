@@ -19,12 +19,6 @@ export const useConfigStore = create<Store.Config>((set) => ({
   closeOrHide: 'hide',
 
   /**
-   * 是否允许发送匿名统计数据
-   * undefined 表示用户尚未选择，需要在首次启动时询问
-   */
-  allowAnalytics: undefined,
-
-  /**
    * 更改版本检查功能的状态
    * @param value - 新的版本检查状态
    */
@@ -43,14 +37,6 @@ export const useConfigStore = create<Store.Config>((set) => ({
   /** 更改点击关闭时记录的状态 */
   changeCloseOrHide: (value: string) => set((_state) => ({
     closeOrHide: value,
-  })),
-
-  /**
-   * 设置匿名统计开关
-   * @param value - 是否允许发送匿名统计数据
-   */
-  setAllowAnalytics: (value: boolean) => set((_state) => ({
-    allowAnalytics: value,
   })),
 }))
 

@@ -6,12 +6,11 @@
 
 import styles from './index.module.scss'
 import { Outlet } from 'react-router-dom'
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { Suspense, useEffect } from 'react'
 import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
 import Loading from '../components/Loading'
-import AnalyticsConsentDialog from '@/components/AnalyticsConsentDialog'
 
 import { useGlobalStore } from '@/stores/global'
 import { useUpdatesStore } from '@/stores/updates'
@@ -32,34 +31,13 @@ const AppLayout = () => {
   const { isInited } = useGlobalStore()
   const startAutoRefresh = useUpdatesStore(state => state.startAutoRefresh)
   const stopAutoRefresh = useUpdatesStore(state => state.stopAutoRefresh)
-  const allowAnalytics = useConfigStore(state => state.allowAnalytics)
 
-  // 匿名统计确认弹窗状态
-  const [showAnalyticsConsent, setShowAnalyticsConsent] = useState(false)
-
-  // 当初始化完成且用户尚未选择统计选项时，显示确认弹窗
+  // 初始化完成后发送访问记录
   useEffect(() => {
-    if (isInited && allowAnalytics === undefined) {
-      setShowAnalyticsConsent(true)
-    }
-  }, [isInited, allowAnalytics])
-
-  // 当初始化完成且用户已允许统计时，自动发送访问记录
-  useEffect(() => {
-    if (isInited && allowAnalytics === true) {
+    if (isInited) {
       sendVisitRecord().catch((err) => console.warn('[AppLayout] Auto sendVisitRecord failed', err))
     }
-  }, [isInited, allowAnalytics])
-
-  // 处理匿名统计确认弹窗的用户选择
-  const handleAnalyticsConsentComplete = useCallback((allowed: boolean) => {
-    setShowAnalyticsConsent(false)
-    if (allowed) {
-      // 用户同意，发送访问记录
-      sendVisitRecord().catch((err) => console.warn('[AppLayout] sendVisitRecord failed', err))
-    }
-    console.info('[AppLayout] Analytics consent:', allowed ? 'allowed' : 'denied')
-  }, [])
+  }, [isInited])
 
   useEffect(() => {
     startAutoRefresh()
@@ -122,11 +100,6 @@ const AppLayout = () => {
           </div>
         </div> : <LaunchPage />
       }
-      {/* 匿名统计确认弹窗 - 放在布局层确保初始化完成后也能显示 */}
-      <AnalyticsConsentDialog
-        visible={showAnalyticsConsent}
-        onComplete={handleAnalyticsConsentComplete}
-      />
     </div>
   )
   // 备选的 Antd Layout 布局方案

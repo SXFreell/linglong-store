@@ -10,7 +10,6 @@
 
 import { saveVisitRecord, saveInstalledRecord } from '@/apis/apps'
 import { useGlobalStore } from '@/stores/global'
-import { useConfigStore } from '@/stores/appConfig'
 
 /**
  * 生成简单的设备指纹
@@ -90,23 +89,10 @@ export const initAnalytics = async(): Promise<void> => {
 }
 
 /**
- * 检查是否允许发送统计数据
- */
-export const isAnalyticsAllowed = (): boolean => {
-  const { allowAnalytics } = useConfigStore.getState()
-  return allowAnalytics === true
-}
-
-/**
  * 发送启动访问记录
  * 在应用启动并完成环境检测后调用
  */
 export const sendVisitRecord = async(): Promise<void> => {
-  if (!isAnalyticsAllowed()) {
-    console.info('[analytics] Visit record skipped (analytics disabled)')
-    return
-  }
-
   // 只在生产环境发送（除非显式开启开发模式统计）
   if (!import.meta.env.VITE_ENABLE_ANALYTICS_DEV) {
     console.info('[analytics] Visit record skipped (dev mode, set VITE_ENABLE_ANALYTICS_DEV=true to enable)')
@@ -141,10 +127,6 @@ export const sendVisitRecord = async(): Promise<void> => {
  * @param appInfo 安装的应用信息
  */
 export const sendInstallRecord = async(appInfo: API.APP.InstalledRecordItem): Promise<void> => {
-  if (!isAnalyticsAllowed()) {
-    return
-  }
-
   if (!import.meta.env.VITE_ENABLE_ANALYTICS_DEV) {
     console.info('[analytics] Install record skipped (dev mode, set VITE_ENABLE_ANALYTICS_DEV=true to enable)')
     return
@@ -172,10 +154,6 @@ export const sendInstallRecord = async(appInfo: API.APP.InstalledRecordItem): Pr
  * @param appInfo 卸载的应用信息
  */
 export const sendUninstallRecord = async(appInfo: API.APP.InstalledRecordItem): Promise<void> => {
-  if (!isAnalyticsAllowed()) {
-    return
-  }
-
   if (!import.meta.env.VITE_ENABLE_ANALYTICS_DEV) {
     console.info('[analytics] Uninstall record skipped (dev mode, set VITE_ENABLE_ANALYTICS_DEV=true to enable)')
     return

@@ -201,9 +201,6 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       await initAnalytics()
       setProgress(100)
 
-      // 注意：匿名统计确认弹窗由 AppLayout 组件根据 allowAnalytics 状态显示
-      // 如果用户已经允许统计，AppLayout 会在初始化完成后发送访问记录
-
       onInited()
       setIsInit(true)
     } catch (err) {
