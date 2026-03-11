@@ -75,10 +75,15 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
 
   /**
    * 步骤1: 获取系统架构信息
+   * 注意：龙芯系统 uname -m 返回 loongarch64，但 API 需要的是 loong64
    */
   const initSystemInfo = useCallback(async() => {
     try {
-      const currentArch = arch()
+      let currentArch = arch()
+      // 龙芯架构映射：loongarch64 -> loong64
+      if (currentArch === 'loongarch64') {
+        currentArch = 'loong64'
+      }
       setArch(currentArch)
     } catch (err) {
       throw new Error(`获取系统架构失败: ${err}`)
