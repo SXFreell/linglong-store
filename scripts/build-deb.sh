@@ -10,7 +10,7 @@ PACKAGE_NAME="linglong-store"
 ARCH="loong64"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 TAURI_DIR="$(dirname "$SCRIPT_DIR")"
-BUILD_DIR="$TAURI_DIR/target"
+BUILD_DIR="$TAURI_DIR/src-tauri/target"
 DEB_TMP="$BUILD_DIR/deb-pkg"
 DEB_OUTPUT="${PACKAGE_NAME}_${VERSION}_${ARCH}.deb"
 
@@ -41,7 +41,7 @@ cp "$BINARY" "$DEB_TMP/usr/bin/"
 echo "✓ 复制二进制文件"
 
 # 复制图标
-ICONS_DIR="$TAURI_DIR/icons"
+ICONS_DIR="$TAURI_DIR/src-tauri/icons"
 cp "$ICONS_DIR/32x32.png" "$DEB_TMP/usr/share/icons/hicolor/32x32/apps/${PACKAGE_NAME}.png"
 cp "$ICONS_DIR/128x128.png" "$DEB_TMP/usr/share/icons/hicolor/128x128/apps/${PACKAGE_NAME}.png"
 cp "$ICONS_DIR/512x512.png" "$DEB_TMP/usr/share/icons/hicolor/512x512/apps/${PACKAGE_NAME}.png"
