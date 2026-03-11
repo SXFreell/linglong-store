@@ -14,6 +14,14 @@ export default defineConfig(async() => ({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler',
+        silenceDeprecations: ['legacy-js-api'],
+      },
+    },
+  },
   plugins: [
     react(),
     eslint({
