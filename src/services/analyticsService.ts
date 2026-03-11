@@ -32,7 +32,12 @@ const generateFallbackId = (): string => {
   let visitorId = localStorage.getItem(storageKey)
 
   if (!visitorId) {
-    visitorId = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`
+    // [安全优化] 使用 crypto.getRandomValues 替代 Math.random，生成更安全的随机ID
+    // 避免 Math.random 的可预测性问题
+    const array = new Uint8Array(16)
+    crypto.getRandomValues(array)
+    const randomPart = Array.from(array, b => b.toString(16).padStart(2, '0')).join('')
+    visitorId = `${Date.now()}-${randomPart.substring(0, 13)}`
     localStorage.setItem(storageKey, visitorId)
   }
 
@@ -44,14 +49,13 @@ const generateFallbackId = (): string => {
  * 使用免费的 IP 查询服务
  */
 export const fetchClientIp = async(): Promise<string> => {
-  try {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 3000) // 3秒超时
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 3000) // 3秒超时
 
+  try {
     const response = await fetch('http://ip-api.com/json', {
       signal: controller.signal,
     })
-    clearTimeout(timeoutId)
 
     if (!response.ok) {
       throw new Error('Failed to fetch IP')
@@ -62,6 +66,9 @@ export const fetchClientIp = async(): Promise<string> => {
   } catch (error) {
     console.warn('[analytics] Failed to fetch client IP:', error)
     return ''
+  } finally {
+    // [资源清理] 使用 finally 确保超时定时器始终被清理，避免资源泄漏
+    clearTimeout(timeoutId)
   }
 }
 
@@ -114,8 +121,6 @@ export const sendVisitRecord = async(): Promise<void> => {
   }
 
   try {
-    console.info('type import.meta.env.VITE_ENABLE_ANALYTICS_DEV', typeof import.meta.env.VITE_ENABLE_ANALYTICS_DEV)
-    console.info(999999999999)
     await saveVisitRecord(data)
     console.info('[analytics] Visit record sent successfully')
   } catch (error) {

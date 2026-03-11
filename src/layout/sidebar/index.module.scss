@@ -18,14 +18,30 @@
 
   .menuItem {
     flex: 0 0 2.25rem;
+    position: relative;
     display: flex;
     align-items: center;
     padding: 0 0.75rem;
     cursor: pointer;
-    transition: background-color 0.2s;
+    background-color: transparent;
     border-radius: 0.25rem;
     gap: 0.5rem;
     overflow: hidden;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-color: var(--ant-color-fill-secondary);
+      opacity: 0;
+      transition: opacity 0.2s ease-in-out;
+      pointer-events: none;
+    }
+
+    > * {
+      position: relative;
+      z-index: 1;
+    }
 
     // .additional {
     //   position: absolute;
@@ -47,12 +63,16 @@
     //   display: none;
     // }
 
-    &:hover {
-      background-color: var(--ant-color-fill-secondary);
+    &:hover::before {
+      opacity: 1;
     }
 
     &.active {
       background-color: var(--ant-color-primary-bg-hover);
+
+      &::before {
+        opacity: 0;
+      }
 
       .menuItemText {
         color: var(--ant-color-primary-text);

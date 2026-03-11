@@ -1,16 +1,17 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Button, Typography, Table, message, Spin, Space, Progress, Image } from 'antd'
-import { CopyOutlined } from '@ant-design/icons'
+import { CopyOutlined, LinkOutlined } from '@ant-design/icons'
 import type { TableColumnProps } from 'antd'
 import styles from './index.module.scss'
 import goBack from '@/assets/icons/go_back.svg'
 import DefaultIcon from '@/assets/linyaps.svg'
 
 import { getAppDetail, getSearchAppVersionList } from '@/apis/apps'
-import { runApp } from '@/apis/invoke'
+import { createDesktopShortcut, runApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { useInstallQueueStore } from '@/stores/installQueue'
+import { useShallow } from 'zustand/react/shallow'
 import { useGlobalStore } from '@/stores/global'
 import { InstallOptions, useAppInstall } from '@/hooks/useAppInstall'
 import { useAppUninstall } from '@/hooks/useAppUninstall'
@@ -21,16 +22,21 @@ interface VersionInfo extends API.APP.AppMainDto {
   version?: string
 }
 
+const SCREENSHOT_PLACEHOLDER_COUNT = 3
+
 const AppDetail = () => {
   const navigate = useNavigate()
   const location = useLocation()
-  const app = location.state as API.INVOKE.InstalledApp | undefined
+  const app = location.state as API.INVOKE.EnrichedInstalledApp | undefined
 
   const [versions, setVersions] = useState<VersionInfo[]>([])
 
   const [screenshotList, setScreenshotList] = useState<API.APP.AppScreenshot[]>([])
+  // 单独维护截图加载态，先渲染固定占位高度，避免图片区延迟插入导致页面跳动。
+  const [screenshotLoading, setScreenshotLoading] = useState(() => Boolean(app?.appId))
   const [loading, setLoading] = useState(false)
   const [uninstallingVersion, setUninstallingVersion] = useState<string | null>(null)
+  const [creatingShortcut, setCreatingShortcut] = useState(false)
 
   const installedApps = useInstalledAppsStore((state) => state.installedApps)
   const arch = useGlobalStore((state) => state.arch)
@@ -39,7 +45,9 @@ const AppDetail = () => {
 
   // 使用安装队列
   const { handleInstall, getInstallStatus, getVersionInstallState } = useAppInstall()
-  const { queue, currentTask } = useInstallQueueStore()
+  const { queue, currentTask } = useInstallQueueStore(
+    useShallow((state) => ({ queue: state.queue, currentTask: state.currentTask })),
+  )
 
   // 获取当前应用的安装状态（从队列中）
   const appInstallStatus = useMemo(() => {
@@ -112,6 +120,7 @@ const AppDetail = () => {
   }, [latestVersion, installedVersionSet])
 
   const hasInstalledVersion = useMemo(() => installedVersionSet.size > 0, [installedVersionSet])
+  const shouldShowScreenshotSection = screenshotLoading || screenshotList.length > 0
 
   // 无版本列表或已装最新时，主按钮走启动
   const shouldRunInstalled = useMemo(() => {
@@ -163,6 +172,8 @@ const AppDetail = () => {
       return
     }
     console.info('appAllInfo: getting app detail for', currentApp.appId)
+    setScreenshotLoading(true)
+    setScreenshotList([])
     try {
       const result = await getAppDetail([{ appId: currentApp.appId, arch }])
       const appDetailList = (result.data[currentApp.appId as keyof typeof result.data] as API.APP.AppMainDto[]) || []
@@ -175,6 +186,8 @@ const AppDetail = () => {
       console.error('appAllInfo: error', err)
       const errorMessage = err instanceof Error ? err.message : String(err)
       message.error(`获取应用详情失败: ${errorMessage}`)
+    } finally {
+      setScreenshotLoading(false)
     }
   }
   useEffect(() => {
@@ -196,7 +209,6 @@ const AppDetail = () => {
     try {
       const result = await uninstall(
         { appId: currentApp.appId, version, name: currentApp.name, zhName: currentApp.zhName },
-        { onAllRemoved: () => navigate('/my_apps') },
       )
       if (result) {
         console.info('[handleUninstall] Successfully uninstalled:', currentApp.appId, version)
@@ -240,6 +252,28 @@ const AppDetail = () => {
     } catch (error) {
       console.error('[handleCopyAppId] Failed to copy:', error)
       message.error('复制失败，请手动复制')
+    }
+  }
+
+  const handleCreateDesktopShortcut = async() => {
+    if (!currentApp?.appId) {
+      message.error('应用ID不存在')
+      return
+    }
+
+    setCreatingShortcut(true)
+    try {
+      const resultMessage = await createDesktopShortcut(currentApp.appId)
+      message.success(resultMessage || '桌面快捷方式创建成功')
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      if (errorMessage.includes('已存在') || errorMessage.includes('不会覆盖')) {
+        message.warning(errorMessage)
+      } else {
+        message.error(`创建快捷方式失败: ${errorMessage}`)
+      }
+    } finally {
+      setCreatingShortcut(false)
     }
   }
 
@@ -421,7 +455,6 @@ const AppDetail = () => {
             <div className={styles.appName}>
               <div className={styles.head}>
                 <p className={styles.nameId}>{currentApp.zhName || currentApp.appId}</p>
-                <p className={styles.appClass}>{currentApp.kind}</p>
               </div>
               <div className={styles.install}>
                 <Button
@@ -448,6 +481,18 @@ const AppDetail = () => {
                       {installProgress.status} ({installProgress.percentage}%)
                     </div>
                   </div>
+                )}
+                {hasInstalledVersion && (
+                  <Button
+                    type='link'
+                    icon={<LinkOutlined />}
+                    className={styles.shortcutButton}
+                    loading={creatingShortcut}
+                    disabled={creatingShortcut}
+                    onClick={handleCreateDesktopShortcut}
+                  >
+                    创建桌面快捷方式
+                  </Button>
                 )}
               </div>
             </div>
@@ -505,25 +550,31 @@ const AppDetail = () => {
           {currentApp.description || '暂无描述信息'}
         </div>
       </div>
-      {screenshotList.length > 0 ? <div className={styles.screenshot}>
+      {shouldShowScreenshotSection ? <div className={styles.screenshot}>
         <div className={styles.title}>屏幕截图</div>
         <div className={styles.imgBox}>
           <div className={styles.imgList}>
-            {
-              screenshotList.map((item, index) => {
+            {screenshotLoading
+              ? Array.from({ length: SCREENSHOT_PLACEHOLDER_COUNT }, (_, index) => (
+                <div
+                  key={`screenshot-placeholder-${index}`}
+                  className={styles.imgItemPlaceholder}
+                  aria-hidden='true'
+                />
+              ))
+              : screenshotList.map((item, index) => {
                 const key = item.screenshotKey || `${currentApp.appId}-${index}`
                 return (
-                  <Image
-                    key={key}
-                    width={320}
-                    height={180}
-                    src={item.screenshotKey}
-                    alt='应用截图'
-                    fallback={DefaultIcon}
-                  />
+                  <div key={key} className={styles.imgItem}>
+                    <Image
+                      className={styles.screenshotImage}
+                      src={item.screenshotKey}
+                      alt='应用截图'
+                      fallback={DefaultIcon}
+                    />
+                  </div>
                 )
-              })
-            }
+              })}
           </div>
         </div>
       </div> : null

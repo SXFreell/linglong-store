@@ -2,8 +2,8 @@ import { useCallback } from 'react'
 import { message, Modal } from 'antd'
 import { getRunningLinglongApps, uninstallApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
-import { useUpdatesStore } from '@/stores/updates'
 import { sendUninstallRecord } from '@/services/analyticsService'
+import { syncAfterAppChange } from '@/utils/appChangeSync'
 
 type UninstallOptions = {
   /** 所有版本卸载完后的回调（例如跳转） */
@@ -32,8 +32,7 @@ type BasicAppInfo = {
  * 统一的卸载逻辑
  */
 export const useAppUninstall = () => {
-  const { removeApp } = useInstalledAppsStore()
-  const checkUpdates = useUpdatesStore(state => state.checkUpdates)
+  const removeApp = useInstalledAppsStore(state => state.removeApp)
 
   const performUninstall = useCallback(
     async(appId: string, version: string, appInfo?: BasicAppInfo, options?: UninstallOptions) => {
@@ -48,7 +47,8 @@ export const useAppUninstall = () => {
           options.onAllRemoved()
         }
 
-        await checkUpdates(true)
+        // 卸载后统一同步（强制检查更新，已安装列表已做乐观更新无需全量刷新）
+        await syncAfterAppChange({ forceCheckUpdates: true, refreshInstalledApps: false })
 
         // 发送卸载统计记录（异步，不阻塞主流程）
         sendUninstallRecord({
@@ -71,7 +71,7 @@ export const useAppUninstall = () => {
         throw error
       }
     },
-    [removeApp, checkUpdates],
+    [removeApp],
   )
 
   const uninstall = useCallback(

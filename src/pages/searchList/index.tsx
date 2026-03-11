@@ -1,10 +1,12 @@
 import styles from './index.module.scss'
-import ApplicationCard from '@/components/ApplicationCard'
+import ConnectedApplicationCard from '@/components/ConnectedApplicationCard'
+import ApplicationCardSkeleton from '@/components/ApplicationCardSkeleton'
 import { useGlobalStore, useSearchStore } from '@/stores/global'
 import { getSearchAppList } from '@/apis/apps/index'
-import { useState, useEffect, useRef } from 'react'
-import { generateEmptyCards } from './utils'
+import { useEffect, useRef, useCallback } from 'react'
 import { Empty } from 'antd'
+import { usePaginatedList } from '@/hooks/usePaginatedList'
+import { debounce } from '@/utils/performance'
 const defaultPageSize = 10 // 每页显示数量
 
 type AppInfo = API.APP.AppMainDto
@@ -12,106 +14,62 @@ const SearchList = ()=>{
   const keyword = useSearchStore((state) => state.keyword)
   const arch = useGlobalStore((state) => state.arch)
   const repoName = useGlobalStore((state) => state.repoName)
-  const [pageNo, setPageNo] = useState<number>(1)
-  const [loading, setLoading] = useState<boolean>(false)
-  const [totalPages, setTotalPages] = useState<number>(1)
-  const [searchAppList, setSearchAppList] = useState<AppInfo[]>([])
   const listRef = useRef<HTMLDivElement>(null)
 
-  // 获取应用列表
-  const getSearchKeyAppList = ({ pageNo = 1, init = false }) => {
-    if (!keyword) {
+  const fetcher = useCallback(async(pageNo: number) => {
+    const res = await getSearchAppList({
+      name: keyword,
+      repoName,
+      arch,
+      pageNo,
+      pageSize: defaultPageSize,
+    })
+    return { records: (res.data.records || []) as AppInfo[], pages: res.data.pages || 1 }
+  }, [keyword, repoName, arch])
+
+  const {
+    items: searchAppList,
+    loading,
+    initialLoading,
+    hasMore,
+    loadPage,
+    reset,
+  } = usePaginatedList<AppInfo>({
+    fetcher,
+    containerRef: listRef as React.RefObject<HTMLDivElement>,
+    pageSize: defaultPageSize,
+    extraDeps: [keyword],
+  })
+
+  // 关键词变化时防抖搜索（300ms），防止快速切换关键词导致竞态
+  const debouncedSearchRef = useRef(debounce((kw: string) => {
+    if (!kw) {
+      reset()
       return
     }
-    setLoading(true)
-    if (init) {
-      // 初始化时先显示空卡片占位
-      setSearchAppList(generateEmptyCards(defaultPageSize))
-    }
-    try {
-      getSearchAppList({
-        name: keyword,
-        repoName,
-        arch,
-        pageNo,
-        pageSize: defaultPageSize,
-      }).then(res => {
-        const newRecords = res.data.records || []
-
-        if (init) {
-          // 初始化时直接替换
-          setSearchAppList(newRecords)
-        } else {
-          // 追加新数据时，过滤掉空卡片后再追加
-          setSearchAppList(prev => {
-            const filteredPrev = prev.filter(item => !item.appId?.startsWith('empty-'))
-            return [...filteredPrev, ...newRecords]
-          })
-        }
-
-        setTotalPages(res.data.pages || 1)
-        setLoading(false)
-      })
-    } catch (error) {
-      console.error('获取应用列表失败:', error)
-      // 错误时移除空卡片
-      if (init) {
-        setSearchAppList([])
-      }
-      setLoading(false)
-    }
-  }
-
-  // 初始化获取数据
-  useEffect(() => {
-    getSearchKeyAppList({ init: true })
-  }, [keyword])
+    loadPage(1, true)
+  }, 300))
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (loading) {
-        return
-      }
-      const listElement = listRef.current
-      if (listElement) {
-        const { scrollTop, scrollHeight, clientHeight } = listElement
-        if (scrollTop + clientHeight >= scrollHeight - 100) {
-          if (pageNo < totalPages) {
-            setPageNo(pageNo + 1)
-            getSearchKeyAppList({ pageNo: pageNo + 1 })
-          }
-        }
-      }
-    }
-
-    const listElement = listRef.current
-    if (listElement) {
-      listElement.addEventListener('scroll', handleScroll)
-    }
-
+    debouncedSearchRef.current(keyword)
     return () => {
-      if (listElement) {
-        listElement.removeEventListener('scroll', handleScroll)
-      }
+      debouncedSearchRef.current.cancel()
     }
-  }, [keyword, pageNo, totalPages, loading])
+  }, [keyword, loadPage, reset])
 
   return <div className={styles.searchPage} ref={listRef}>
     <p className={styles.SearchResult}>搜索结果：</p>
-    <div className={searchAppList.length > 0 ? styles.SearchList : styles.SearchListEmpty}>
+    <div className={initialLoading || searchAppList.length > 0 ? styles.SearchList : styles.SearchListEmpty}>
       {
-        searchAppList.length > 0 ? searchAppList.map((item, index) => {
-          return (
-            <ApplicationCard
-              key={`${item.appId}_${index}`}
-              appInfo={item}
-              operateId={1}
-            />
-          )
-        }) : <Empty description="没有搜索到数据哦！"/>
+        initialLoading ? <ApplicationCardSkeleton count={defaultPageSize} /> : searchAppList.length > 0 ? searchAppList.map((item, index) => (
+          <ConnectedApplicationCard
+            key={`${item.appId}_${index}`}
+            appInfo={item}
+          />
+        )) : <Empty description="没有搜索到数据哦！"/>
       }
-      {loading && <div className={styles.loadingTip}>加载中...</div>}
-      {!loading && totalPages <= pageNo && searchAppList.length > 0 && <div className={styles.noMoreTip}>没有更多数据了</div>}
+      {!initialLoading && loading && <div className={styles.loadingTip}>加载中...</div>}
+      {!initialLoading && !loading && !hasMore && searchAppList.length > 0 && <div className={styles.noMoreTip}>没有更多数据了</div>}
     </div>
   </div>
 }

@@ -90,6 +90,18 @@
                             width: 6rem;
                         }
 
+                        .shortcutButton {
+                            margin-top: 0.5rem;
+                            padding: 0;
+                            height: auto;
+                            font-size: 0.8125rem;
+                            color: var(--ant-color-text-secondary);
+                        }
+
+                        .shortcutButton:hover {
+                            color: var(--ant-color-primary);
+                        }
+
                         .history {
                             font-size: 0.75rem;
                             color: var(--ant-color-text-tertiary);
@@ -209,15 +221,64 @@
 
         .imgBox {
             width: 100%;
-            overflow-x: scroll;
+            overflow-x: auto;
 
             .imgList {
+                display: flex;
+                align-items: stretch;
+                gap: 1rem;
 
-                white-space: nowrap;
+                .imgItem,
+                .imgItemPlaceholder {
+                    flex: 0 0 min(20rem, calc(100vw - 5rem));
+                    aspect-ratio: 16 / 9;
+                    border-radius: 0.75rem;
+                    overflow: hidden;
+                    border: 1px solid var(--ant-color-border-secondary);
+                    background: var(--ant-color-fill-quaternary);
+                }
 
-                :global(.ant-image) {
-                    border-radius: 0.5rem;
-                    margin-right: 1rem;
+                .imgItem {
+                    display: flex;
+                    align-items: stretch;
+                    justify-content: stretch;
+
+                    :global(.ant-image),
+                    :global(.ant-image-img),
+                    :global(img) {
+                        display: block;
+                        width: 100%;
+                        height: 100%;
+                    }
+
+                    :global(.ant-image-img),
+                    :global(img) {
+                        object-fit: cover;
+                    }
+                }
+
+                .screenshotImage {
+                    width: 100%;
+                    height: 100%;
+                }
+
+                // 使用骨架闪动占位，提前锁定截图高度并弱化接口与图片解码的视觉抖动。
+                .imgItemPlaceholder {
+                    position: relative;
+
+                    &::after {
+                        content: '';
+                        position: absolute;
+                        inset: 0;
+                        background: linear-gradient(
+                            90deg,
+                            rgba(255, 255, 255, 0) 0%,
+                            rgba(255, 255, 255, 0.38) 50%,
+                            rgba(255, 255, 255, 0) 100%
+                        );
+                        transform: translateX(-100%);
+                        animation: screenshotPlaceholderShimmer 1.4s ease-in-out infinite;
+                    }
                 }
             }
         }
@@ -236,6 +297,12 @@
             margin-bottom: 1.5rem;
             border-bottom: 1px solid rgb(var(--ant-color-border-secondary));
         }
+    }
+}
+
+@keyframes screenshotPlaceholderShimmer {
+    100% {
+        transform: translateX(100%);
     }
 }
 

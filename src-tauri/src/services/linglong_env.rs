@@ -1,13 +1,11 @@
-use log::{info, warn};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
-use std::io::Write;
-use std::os::unix::fs::PermissionsExt;
-use std::path::PathBuf;
-use std::process::Command;
-use std::time::{SystemTime, UNIX_EPOCH};
-use crate::services::ll_cli_command;
+use tokio::process::Command as AsyncCommand;
+use crate::services::executor;
+use crate::services::linglong_env_parser::{
+    parse_repo_output, parse_ll_version, parse_glibc_version, compare_versions,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone, Default)]
 #[serde(rename_all = "camelCase")]
@@ -35,93 +33,11 @@ pub struct LinglongEnvCheckResult {
     pub is_container: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone, Default)]
-#[serde(rename_all = "camelCase")]
-pub struct InstallLinglongResult {
-    pub stdout: String,
-    pub stderr: String,
-}
+pub async fn get_ll_cli_version() -> Result<String, String> {
+    let output = executor::execute(&["--json", "--version"], "version").await?;
 
-fn parse_repo_output(output: &str) -> LinglongEnvCheckResult {
-    let lines: Vec<&str> = output.lines().filter(|l| !l.trim().is_empty()).collect();
-    if lines.is_empty() {
-        return LinglongEnvCheckResult {
-            ok: false,
-            reason: Some("未检测到仓库信息".to_string()),
-            ..Default::default()
-        };
-    }
-
-    let default_repo = lines
-        .get(0)
-        .and_then(|l| l.split(':').nth(1))
-        .map(|s| s.trim().to_string());
-    let repo_lines = if lines.len() > 2 { &lines[2..] } else { &[] };
-    let mut repos = Vec::new();
-    for line in repo_lines {
-        let parts: Vec<&str> = line.trim().split_whitespace().collect();
-        if parts.is_empty() {
-            continue;
-        }
-        let name = parts.get(0).unwrap_or(&"").to_string();
-        let url = parts.get(1).unwrap_or(&"").to_string();
-        let alias = parts.get(2).map(|s| s.to_string());
-        let priority = parts.get(3).map(|s| s.to_string());
-        repos.push(LinglongRepo {
-            name,
-            url,
-            alias,
-            priority,
-        });
-    }
-
-    LinglongEnvCheckResult {
-        ok: repos.len() > 0,
-        reason: None,
-        repo_name: default_repo,
-        repos,
-        ..Default::default()
-    }
-}
-
-fn parse_ll_version(raw: &str) -> Option<String> {
-    if raw.trim().is_empty() {
-        return None;
-    }
-    if let Ok(json) = serde_json::from_str::<HashMap<String, String>>(raw) {
-        if let Some(v) = json.get("version") {
-            return Some(v.trim().to_string());
-        }
-    }
-    let cleaned = raw.trim();
-    let mut version = None;
-    // 提取连续的版本号片段（仅数字和 .）
-    if let Some(seg) = cleaned
-        .split(|c: char| !(c.is_ascii_digit() || c == '.'))
-        .find(|seg| seg.contains('.'))
-    {
-        if !seg.is_empty() {
-            version = Some(seg.to_string());
-        }
-    }
-
-    if version.is_none() {
-        None
-    } else {
-        version
-    }
-}
-
-fn get_ll_cli_version_inner() -> Result<String, String> {
-    let version_output = ll_cli_command()
-        .arg("--json")
-        .arg("--version")
-        .output()
-        .map_err(|e| format!("Failed to execute 'll-cli --json --version': {}", e))?;
-
-    if version_output.status.success() {
-        let clean = String::from_utf8_lossy(&version_output.stdout);
-        if let Some(v) = parse_ll_version(&clean) {
+    if output.success {
+        if let Some(v) = parse_ll_version(&output.stdout) {
             return Ok(v);
         }
     }
@@ -129,59 +45,11 @@ fn get_ll_cli_version_inner() -> Result<String, String> {
     Err("无法解析玲珑版本，请确认 ll-cli 可用".to_string())
 }
 
-pub async fn get_ll_cli_version() -> Result<String, String> {
-    get_ll_cli_version_inner()
-}
-
-fn parse_glibc_version(raw: &str) -> Option<String> {
-    if raw.trim().is_empty() {
-        return None;
-    }
-    // 取首行，避免多余信息干扰
-    let first_line = raw.lines().next().unwrap_or("").trim();
-    if first_line.is_empty() {
-        return None;
-    }
-
-    // 尝试从首行中找到形如 2.35 的片段
-    if let Some(token) = first_line
-        .split_whitespace()
-        .rev()
-        .find(|part| part.chars().all(|c| c.is_ascii_digit() || c == '.'))
-    {
-        if token.contains('.') {
-            return Some(token.to_string());
-        }
-    }
-
-    Some(first_line.to_string())
-}
-
-fn compare_versions(v1: &str, v2: &str) -> std::cmp::Ordering {
-    let to_parts = |v: &str| -> Vec<i32> {
-        v.split(|c| c == '.' || c == '-' || c == '_')
-            .filter_map(|p| p.parse::<i32>().ok())
-            .collect()
-    };
-    let a = to_parts(v1);
-    let b = to_parts(v2);
-    let len = a.len().max(b.len());
-    for i in 0..len {
-        let av = *a.get(i).unwrap_or(&0);
-        let bv = *b.get(i).unwrap_or(&0);
-        match av.cmp(&bv) {
-            std::cmp::Ordering::Equal => continue,
-            ord => return ord,
-        }
-    }
-    std::cmp::Ordering::Equal
-}
-
 pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckResult, String> {
     let mut result = LinglongEnvCheckResult::default();
 
     // 获取架构
-    if let Ok(output) = Command::new("uname").arg("-m").output() {
+    if let Ok(output) = AsyncCommand::new("uname").arg("-m").output().await {
         if output.status.success() {
             result.arch = Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
         }
@@ -199,16 +67,17 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
         });
     if let Some(name) = os_release {
         result.os_version = Some(name);
-    } else if let Ok(output) = Command::new("uname").arg("-a").output() {
+    } else if let Ok(output) = AsyncCommand::new("uname").arg("-a").output().await {
         if output.status.success() {
             result.os_version = Some(String::from_utf8_lossy(&output.stdout).trim().to_string());
         }
     }
 
     // 获取 glibc 版本（ldd --version）
-    let glibc_version = Command::new("ldd")
+    let glibc_version = AsyncCommand::new("ldd")
         .arg("--version")
         .output()
+        .await
         .ok()
         .and_then(|output| {
             if !output.status.success() {
@@ -222,9 +91,10 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
     result.glibc_version = Some(glibc_version.clone());
 
     // 获取内核信息（uname -a）
-    let kernel_info = Command::new("uname")
+    let kernel_info = AsyncCommand::new("uname")
         .arg("-a")
         .output()
+        .await
         .ok()
         .and_then(|output| {
             if output.status.success() {
@@ -240,10 +110,11 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
     }
 
     // dpkg 信息（仅作为日志展示）
-    if let Ok(output) = Command::new("bash")
+    if let Ok(output) = AsyncCommand::new("bash")
         .arg("-c")
         .arg("dpkg -l | grep linglong")
         .output()
+        .await
     {
         if output.status.success() {
             result.detail_msg = Some(String::from_utf8_lossy(&output.stdout).to_string());
@@ -251,30 +122,19 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
     }
 
     // 检查 ll-cli 是否存在
-    let exists = ll_cli_command().arg("--help").output();
-    if exists.is_err() {
-        result.ok = false;
-        result.reason = Some("检测到系统未安装玲珑环境，请先安装".to_string());
-        return Ok(result);
-    }
-    let exists_output = exists.unwrap();
-    if !exists_output.status.success() {
+    let exists = executor::execute(&["--help"], "env_check_help").await;
+    if exists.is_err() || !exists.as_ref().unwrap().success {
         result.ok = false;
         result.reason = Some("检测到系统未安装玲珑环境，请先安装".to_string());
         return Ok(result);
     }
 
     // 仓库信息
-    let repo_output = ll_cli_command()
-        .arg("--json")
-        .arg("repo")
-        .arg("show")
-        .output();
+    let repo_output = executor::execute(&["--json", "repo", "show"], "env_repo").await;
     let mut repo_info = LinglongEnvCheckResult::default();
     if let Ok(output) = repo_output {
-        if output.status.success() {
-            let clean = String::from_utf8_lossy(&output.stdout);
-            if let Ok(json) = serde_json::from_str::<HashMap<String, serde_json::Value>>(&clean) {
+        if output.success {
+            if let Ok(json) = serde_json::from_str::<HashMap<String, serde_json::Value>>(&output.stdout) {
                 let repo_name = json
                     .get("defaultRepo")
                     .and_then(|v| v.as_str())
@@ -298,15 +158,13 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
                 repo_info.repo_name = repo_name;
                 repo_info.repos = repos;
             } else {
-                repo_info = parse_repo_output(&clean);
+                repo_info = parse_repo_output(&output.stdout);
             }
         } else {
             // 尝试旧命令
-            let fallback = ll_cli_command().arg("repo").arg("show").output();
-            if let Ok(out) = fallback {
-                if out.status.success() {
-                    let clean = String::from_utf8_lossy(&out.stdout);
-                    repo_info = parse_repo_output(&clean);
+            if let Ok(fallback) = executor::execute(&["repo", "show"], "env_repo_fallback").await {
+                if fallback.success {
+                    repo_info = parse_repo_output(&fallback.stdout);
                 }
             }
         }
@@ -320,14 +178,15 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
     result.repos = repo_info.repos.clone();
 
     // 获取 ll-cli 版本
-    let version = get_ll_cli_version_inner().ok();
+    let version = get_ll_cli_version().await.ok();
     result.ll_version = version.clone();
 
     // 获取 linglong-bin 版本（APT 系）
-    if let Ok(output) = Command::new("apt-cache")
+    if let Ok(output) = AsyncCommand::new("apt-cache")
         .arg("policy")
         .arg("linglong-bin")
         .output()
+        .await
     {
         if output.status.success() {
             let stdout = String::from_utf8_lossy(&output.stdout);
@@ -342,15 +201,15 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
         }
     }
 
-    // 版本校验
+    // 版本校验：版本过低时仅警告，不阻止使用
     if let Some(ref v) = result.ll_version {
         if compare_versions(v, min_version) == std::cmp::Ordering::Less {
-            result.ok = false;
+            // 不设置 ok=false，允许用户继续使用
             result.reason = Some(format!(
-                "当前玲珑基础环境版本({})过低，需升级至 >= {}",
+                "当前玲珑基础环境版本({})过低，建议升级至 >= {}",
                 v, min_version
             ));
-            return Ok(result);
+            // 注意：这里不再 return，继续后续检查
         }
     } else {
         result.ok = false;
@@ -365,62 +224,4 @@ pub async fn check_linglong_env(min_version: &str) -> Result<LinglongEnvCheckRes
 
     result.ok = true;
     Ok(result)
-}
-
-pub async fn install_linglong_env(script_content: String) -> Result<InstallLinglongResult, String> {
-    if script_content.trim().is_empty() {
-        return Err("安装脚本内容为空".to_string());
-    }
-    let script = script_content.clone();
-    let handle = tokio::task::spawn_blocking(move || -> Result<InstallLinglongResult, String> {
-        let file_name = format!(
-            "install-linglong-{}.sh",
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map_err(|e| format!("获取时间失败: {}", e))?
-                .as_millis()
-        );
-        let mut path = PathBuf::from(std::env::temp_dir());
-        path.push(file_name);
-
-        {
-            let mut file = fs::File::create(&path)
-                .map_err(|e| format!("创建安装脚本失败: {}", e))?;
-            file.write_all(script.as_bytes())
-                .map_err(|e| format!("写入安装脚本失败: {}", e))?;
-        }
-        fs::set_permissions(&path, fs::Permissions::from_mode(0o755))
-            .map_err(|e| format!("设置脚本权限失败: {}", e))?;
-
-        info!("[install_linglong_env] executing script at {:?}", path);
-        let output = Command::new("pkexec")
-            .arg("bash")
-            .arg(&path)
-            .output()
-            .map_err(|e| format!("执行安装脚本失败: {}", e))?;
-
-        if !output.status.success() {
-            warn!(
-                "[install_linglong_env] script failed with code {:?}",
-                output.status.code()
-            );
-            let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-            return Err(format!(
-                "安装失败(code {:?}): {}",
-                output.status.code(),
-                stderr
-            ));
-        }
-
-        let stdout = String::from_utf8_lossy(&output.stdout).to_string();
-        let stderr = String::from_utf8_lossy(&output.stderr).to_string();
-
-        // 清理脚本文件
-        let _ = fs::remove_file(&path);
-        Ok(InstallLinglongResult { stdout, stderr })
-    });
-
-    handle
-        .await
-        .map_err(|e| format!("安装任务执行失败: {}", e))?
 }

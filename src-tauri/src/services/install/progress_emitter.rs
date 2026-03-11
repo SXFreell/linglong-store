@@ -14,13 +14,11 @@ const INSTALL_PROGRESS_EVENT: &str = "install-progress";
 /// 进度事件发送器
 ///
 /// 封装 Tauri 事件发送逻辑，提供类型安全的进度事件发送接口。
-#[allow(dead_code)]
 pub struct ProgressEmitter<'a> {
     app_handle: &'a AppHandle,
     app_id: String,
 }
 
-#[allow(dead_code)]
 impl<'a> ProgressEmitter<'a> {
     /// 创建新的进度发送器
     pub fn new(app_handle: &'a AppHandle, app_id: String) -> Self {
@@ -41,6 +39,7 @@ impl<'a> ProgressEmitter<'a> {
     }
 
     /// 发送进度更新事件
+    #[allow(dead_code)]
     pub fn emit_progress(&self, percentage: u32, message: &str) {
         let status = get_status_from_message(message);
 
@@ -58,6 +57,7 @@ impl<'a> ProgressEmitter<'a> {
     }
 
     /// 发送消息事件（不改变进度）
+    #[allow(dead_code)]
     pub fn emit_message(&self, message: &str, current_percentage: u32) {
         let status = get_status_from_message(message);
 

@@ -17,6 +17,7 @@
     "tauri": "tauri",
     "tauri:dev": "vite --mode ${NODE_ENV}",
     "tauri:build": "tsc && vite build --mode ${NODE_ENV}",
+    "generate:app-list-seeds": "python3 scripts/generate_app_list_seeds.py",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix"
   },
@@ -33,7 +34,8 @@
     "antd": "^5.27.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.7.0",
+    "react-router-dom": "^7.12.0",
+    "zod": "^4.3.6",
     "zustand": "^5.0.8"
   },
   "devDependencies": {

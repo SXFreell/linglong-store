@@ -1,0 +1,82 @@
+.applicationCardSkeleton {
+  min-width: 18rem;
+  height: 7.5rem;
+  padding: 0.5rem 1rem;
+  display: flex;
+  align-items: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--ant-color-border-secondary);
+  background: var(--ant-color-fill-quaternary);
+  overflow: hidden;
+
+  .icon {
+    flex: 0 0 auto;
+    width: 4rem;
+    height: 4rem;
+    margin-right: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .container {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .actions {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+  }
+
+  .title,
+  .description,
+  .descriptionShort,
+  .button {
+    width: 100%;
+  }
+
+  .title {
+    max-width: 9rem;
+  }
+
+  .description {
+    max-width: 12rem;
+  }
+
+  .descriptionShort {
+    max-width: 7rem;
+  }
+
+  .button {
+    width: 4.25rem;
+  }
+
+  :global(.ant-skeleton-avatar-square) {
+    border-radius: 0.5rem;
+  }
+
+  :global(.ant-skeleton-input) {
+    height: 0.875rem;
+    min-width: 0;
+  }
+
+  :global(.ant-skeleton-button) {
+    min-width: 4.25rem;
+  }
+}

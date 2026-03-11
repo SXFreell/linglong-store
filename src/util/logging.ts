@@ -20,8 +20,9 @@ export async function setupLoggingBridge() {
     fnName: 'log' | 'debug' | 'info' | 'warn' | 'error',
     logger: (message: string) => Promise<void>,
   ) => {
-    const original = console[fnName]
-    console[fnName] = (...args: unknown[]) => {
+    const browserConsole = globalThis.console as Console
+    const original = browserConsole[fnName]
+    browserConsole[fnName] = (...args: unknown[]) => {
       original(...args)
 
       // 检查日志内容是否包含插件标记，或当前正在转发日志，以避免反馈循环。

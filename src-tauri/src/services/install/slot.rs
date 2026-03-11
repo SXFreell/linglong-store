@@ -21,16 +21,16 @@ pub struct InstallSlotState {
 }
 
 /// 全局安装槽位（单槽位模式）
+/// 使用 std::sync::Mutex 而非 tokio::sync::Mutex：所有方法均为同步调用，
+/// 锁范围极小且不跨越 .await 点，std::sync::Mutex 性能更优
 static INSTALL_SLOT: Lazy<Arc<Mutex<Option<InstallSlotState>>>> =
     Lazy::new(|| Arc::new(Mutex::new(None)));
 
 /// 安装槽位管理器
 ///
 /// 提供静态方法管理全局安装槽位状态。
-#[allow(dead_code)]
 pub struct InstallSlot;
 
-#[allow(dead_code)]
 impl InstallSlot {
     /// 尝试占用槽位
     ///
@@ -106,6 +106,7 @@ impl InstallSlot {
     /// # Returns
     /// * `Some(String)` - 正在安装的应用 ID
     /// * `None` - 没有正在进行的安装
+    #[allow(dead_code)]
     pub fn current_app_id() -> Option<String> {
         if let Ok(slot) = Self::lock() {
             return slot.as_ref().map(|s| s.app_id.clone());
@@ -114,6 +115,7 @@ impl InstallSlot {
     }
 
     /// 检查槽位是否空闲
+    #[allow(dead_code)]
     pub fn is_idle() -> bool {
         if let Ok(slot) = Self::lock() {
             return slot.is_none();

@@ -13,7 +13,6 @@ import { useState, useEffect } from 'react'
 import { useInstallQueueStore } from '@/stores/installQueue'
 
 const Sidebar = ({ className }: { className: string }) => {
-  // const updateAppSum = useInitStore((state) => state.updateAppNum)
   const resetKeyword = useSearchStore((state) => state.resetKeyword)
   const customMenus = useGlobalStore((state) => state.customMenuCategory)
   const menuBadges = useMenuBadges()
@@ -57,13 +56,14 @@ const Sidebar = ({ className }: { className: string }) => {
     <div className={`${styles.sidebar} ${className}`}>
       <div className={styles.menu}>
         {
-          menuList.map((item, index) => {
+          // [React规范] 使用稳定的 menuPath 作为 key，而非数组索引，避免列表重排序时的渲染问题
+          menuList.map((item) => {
             const isActive = location.pathname === item.menuPath
             const badgeCount = menuBadges[item.menuPath] || 0
             return item.show && (
               <div
                 className={`${styles.menuItem} ${isActive ? styles.active : ''}`}
-                key={index}
+                key={item.menuPath}
                 onClick={() => handleMenuClick('page', item.menuPath)}
                 style={{ cursor: 'pointer' }}
               >
@@ -71,27 +71,31 @@ const Sidebar = ({ className }: { className: string }) => {
                   <img src={isActive ? item.activeIcon : item.icon} alt={item.menuName} />
                   {/* {isActive ? item.activeIcon : item.icon} */}
                 </span>
-                <Badge
-                  count={badgeCount}
-                  overflowCount={99}
-                  showZero={false}
-                  size='small'
-                  offset={[6, 0]}
-                  className={styles.menuBadge}
-                >
+                {badgeCount > 0 ? (
+                  <Badge
+                    count={badgeCount}
+                    overflowCount={99}
+                    size='small'
+                    offset={[6, 0]}
+                    className={styles.menuBadge}
+                  >
+                    <span className={styles.menuItemText}>{item.menuName}</span>
+                  </Badge>
+                ) : (
                   <span className={styles.menuItemText}>{item.menuName}</span>
-                </Badge>
+                )}
               </div>
             )
           })
         }
         {
-          customMenus.map((item, index) => {
+          // [React规范] 使用稳定的 code 作为 key，而非数组索引，避免列表重排序时的渲染问题
+          customMenus.map((item) => {
             const isActive = location.pathname === `/custom_category/${item.code}` && customMenuActive === item.code
             return item.enabled && (
               <div
                 className={`${styles.menuItem} ${isActive ? styles.active : ''}`}
-                key={index}
+                key={`custom-${item.code}`}
                 onClick={() => handleMenuClick('custom', item.code)}
                 style={{ cursor: 'pointer' }}
               >
@@ -99,16 +103,7 @@ const Sidebar = ({ className }: { className: string }) => {
                   <img src={isActive ? item.activeIcon : item.icon} alt={item.name} />
                   {/* {isActive ? item.activeIcon : item.icon} */}
                 </span>
-                <Badge
-                  count={0}
-                  overflowCount={99}
-                  showZero={false}
-                  size='small'
-                  offset={[6, 0]}
-                  className={styles.menuBadge}
-                >
-                  <span className={styles.menuItemText}>{item.name}</span>
-                </Badge>
+                <span className={styles.menuItemText}>{item.name}</span>
               </div>
             )
           })

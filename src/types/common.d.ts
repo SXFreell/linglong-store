@@ -1,4 +1,0 @@
-declare namespace Common {
-
-}
-

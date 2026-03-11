@@ -7,6 +7,10 @@ import adapterFetch from 'alova/fetch'
 import ReactHook from 'alova/react'
 
 const baseURL = import.meta.env.VITE_SERVER_URL
+// [错误处理] 添加环境变量校验，避免运行时因配置缺失导致难以定位的错误
+if (!baseURL) {
+  console.error('[Request] VITE_SERVER_URL is not configured')
+}
 
 // 创建 alova 实例
 const alovaInstance = createAlova({
@@ -14,6 +18,13 @@ const alovaInstance = createAlova({
   statesHook: ReactHook,
   requestAdapter: adapterFetch(),
   timeout: 10000,
+  // GET 请求默认 5 分钟内存缓存，避免短时间内的重复请求
+  cacheFor: {
+    GET: 5 * 60 * 1000,
+    POST: 0 as const,
+    PUT: 0 as const,
+    DELETE: 0 as const,
+  },
   beforeRequest(method) {
     const isFormData = typeof FormData !== 'undefined' && method.data instanceof FormData
     if (!isFormData) {
@@ -28,11 +39,18 @@ const alovaInstance = createAlova({
   },
   responded: {
     onSuccess: async(response) => {
-      const data = await response.json()
+      let data
+      // [错误处理] 添加 JSON 解析错误处理，防止响应不是有效 JSON 时抛出未捕获异常
+      try {
+        data = await response.json()
+      } catch {
+        throw new Error(`响应解析失败: ${response.status} ${response.statusText}`)
+      }
       if (!response.ok) {
         throw new Error(data.message || '请求失败')
       }
-      if (data.code && data.code !== 200) {
+      // [业务逻辑] 使用 !== undefined 检查 code 是否存在，避免 code=0 时被错误跳过
+      if (data.code !== undefined && data.code !== 200) {
         throw new Error(data.message || `请求失败，错误码[${data.code}]`)
       }
       return data

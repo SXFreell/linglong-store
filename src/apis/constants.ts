@@ -33,9 +33,10 @@ export const HTTP_STATUS = {
   GATEWAY_TIMEOUT: 504,
 } as const
 
-// 业务状态码
+// 业务状态码（与后端 API 响应的 code 字段对齐）
 export const BUSINESS_CODE = {
-  SUCCESS: 0,
+  /** 后端接口成功返回 code=200 */
+  SUCCESS: 200,
   UNKNOWN_ERROR: -1,
   NETWORK_ERROR: -2,
   TIMEOUT_ERROR: -3,

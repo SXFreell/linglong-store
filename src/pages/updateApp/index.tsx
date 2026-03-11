@@ -2,17 +2,20 @@ import { Spin, Empty, Button, message } from 'antd'
 import { useCallback, useMemo } from 'react'
 import { ReloadOutlined } from '@ant-design/icons'
 import styles from './index.module.scss'
-import ApplicationCard from '@/components/ApplicationCard'
+import ConnectedApplicationCard from '@/components/ConnectedApplicationCard'
 import { useCheckUpdates } from '@/hooks/useCheckUpdates'
 import { useAppInstall } from '@/hooks/useAppInstall'
 import { useInstallQueueStore } from '@/stores/installQueue'
+import { useShallow } from 'zustand/react/shallow'
 
 // ==================== 组件 ====================
 
 const UpdateApp = () => {
   const { loading: checking, updates, checkUpdates } = useCheckUpdates()
   const { handleBatchInstall, isAppInQueue } = useAppInstall()
-  const { queue, currentTask, isProcessing } = useInstallQueueStore()
+  const { queue, currentTask, isProcessing } = useInstallQueueStore(
+    useShallow((state) => ({ queue: state.queue, currentTask: state.currentTask, isProcessing: state.isProcessing })),
+  )
 
   // 获取正在安装/队列中的应用ID集合
   const installingAppIds = useMemo(() => {
@@ -91,7 +94,7 @@ const UpdateApp = () => {
             <div className={styles.updateApplicationList}>
               {updates.map((app) => (
                 <div key={app.appId} className={styles.cardWrapper}>
-                  <ApplicationCard
+                  <ConnectedApplicationCard
                     operateId={4}
                     appInfo={app}
                   />

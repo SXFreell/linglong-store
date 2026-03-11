@@ -45,7 +45,6 @@ pub enum InstallState {
 /// 安装状态机
 ///
 /// 负责管理安装过程中的状态转换，独立于具体的安装实现。
-#[allow(dead_code)]
 pub struct InstallStateMachine {
     /// 当前状态
     state: InstallState,
@@ -55,7 +54,6 @@ pub struct InstallStateMachine {
     last_percentage: f32,
 }
 
-#[allow(dead_code)]
 impl InstallStateMachine {
     /// 创建新的状态机实例
     pub fn new() -> Self {
@@ -67,11 +65,13 @@ impl InstallStateMachine {
     }
 
     /// 获取当前状态
+    #[allow(dead_code)]
     pub fn state(&self) -> &InstallState {
         &self.state
     }
 
     /// 获取上次进度百分比
+    #[allow(dead_code)]
     pub fn last_percentage(&self) -> f32 {
         self.last_percentage
     }

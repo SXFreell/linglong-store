@@ -1,7 +1,8 @@
 declare namespace API {
   namespace INVOKE {
     /**
-     * 应用主数据模型
+     * IPC DTO — 仅包含 Rust 端 `InstalledApp` 传输字段
+     * 不要在此混入前端增强字段（zhName / categoryName 等由 API 注入）
      */
     interface InstalledApp {
       appId: string;
@@ -16,10 +17,15 @@ declare namespace API {
       runtime: string;
       size: string;
       repoName: string;
+    }
+
+    /**
+     * 经 API 接口丰富后的已安装应用（Store 层使用）
+     * zhName / categoryName 来自后端 getAppDetails 接口
+     */
+    interface EnrichedInstalledApp extends InstalledApp {
       zhName?: string;
       categoryName?: string;
-      loading?: boolean;
-      occurrenceNumber?: number;
     }
 
     /**
@@ -49,13 +55,6 @@ declare namespace API {
       code?: number;
       /** 错误详情（后端原始消息），用于折叠展示 */
       errorDetail?: string;
-    }
-
-    // 安装取消事件（保留兼容，但建议使用 InstallProgress 的 error 类型）
-    interface InstallCancelled {
-      appId: string; // 应用ID
-      cancelled: boolean; // 是否已取消
-      message: string; // 取消消息
     }
 
     // 应用更新信息
@@ -106,6 +105,23 @@ declare namespace API {
     interface InstallLinglongResult {
       stdout: string;
       stderr: string;
+    }
+
+    /**
+     * 正在运行的玲珑应用信息
+     * id 等于 containerId，作为列表稳定唯一键
+     */
+    interface RunningApp {
+      /** 稳定唯一键（等于 containerId） */
+      id: string;
+      /** 应用 ID，如 org.deepin.calculator */
+      name: string;
+      version: string;
+      arch: string;
+      channel: string;
+      source: string;
+      pid: string;
+      containerId: string;
     }
   }
 }

@@ -1,10 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import { Empty } from 'antd'
 import styles from './index.module.scss'
-import ApplicationCard from '@/components/ApplicationCard'
+import ConnectedApplicationCard from '@/components/ConnectedApplicationCard'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 // import { useConfigStore } from '@/stores/appConfig'
 // import { uninstallApp } from '@/apis/invoke'
+
+/** 本页 ViewModel：在 EnrichedInstalledApp 基础上附加版本合并数 */
+type MergedApp = API.INVOKE.EnrichedInstalledApp & { occurrenceNumber: number }
 
 const MyApplications = () => {
   const {
@@ -13,7 +16,7 @@ const MyApplications = () => {
   } = useInstalledAppsStore()
 
   // const { showBaseService } = useConfigStore()
-  const [mergedApps, setMergedApps] = useState<API.INVOKE.InstalledApp[]>([])
+  const [mergedApps, setMergedApps] = useState<MergedApp[]>([])
   const listRef = useRef<HTMLDivElement>(null)
   // const [uninstallingAppId, setUninstallingAppId] = useState<string | null>(null)
 
@@ -21,7 +24,7 @@ const MyApplications = () => {
     // 合并同appId的应用（显示最新版本，记录版本数）
     if (installedApps.length > 0) {
       const grouped = installedApps.reduce<Record<string, {
-        app: API.INVOKE.InstalledApp;
+        app: API.INVOKE.EnrichedInstalledApp;
         count: number;
         highestVersion: string;
       }>>((acc, app) => {
@@ -106,15 +109,13 @@ const MyApplications = () => {
       {/* <div className={styles.title}>我的应用</div> */}
       {mergedApps.length > 0 ? <div className={styles.applicationList}>
         {
-          mergedApps.map((item, index) => {
-            return (
-              <ApplicationCard
-                key={`${item.appId}_${index}`}
-                appInfo={item}
-                operateId={0}
-              />
-            )
-          })
+          mergedApps.map((item, index) => (
+            <ConnectedApplicationCard
+              key={`${item.appId}_${index}`}
+              appInfo={item}
+              operateId={0}
+            />
+          ))
         }
       </div> : <Empty description="暂无已安装应用" />}
     </div>

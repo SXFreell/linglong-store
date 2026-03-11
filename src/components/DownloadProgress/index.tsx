@@ -3,16 +3,19 @@
  * 显示安装队列中的任务状态和进度
  */
 import styles from './index.module.scss'
-import { useMemo } from 'react'
+import { useMemo, memo, useCallback } from 'react'
 import DefaultIcon from '@/assets/linyaps.svg?url'
 import { Progress, Empty, message } from 'antd'
 import { useInstallQueueStore } from '@/stores/installQueue'
+import { useShallow } from 'zustand/react/shallow'
 import { runApp, cancelInstall } from '@/apis/invoke'
 import SpeedTool from '@/components/speedTool'
 /**
  * 任务进度图标组件
+ * 使用 React.memo 包装以避免不必要的重渲染
+ * [性能优化] 该组件接收的 props 变化时才重新渲染
  */
-const TaskProgressIcon = ({
+const TaskProgressIcon = memo(({
   percentage = 0,
   status,
 }: {
@@ -45,11 +48,23 @@ const TaskProgressIcon = ({
       />
     </div>
   )
-}
+})
+
+// [ESLint规范] 添加 displayName 便于调试时识别组件
+// [ESLint规范] 添加 displayName 便于调试时识别组件
+TaskProgressIcon.displayName = 'TaskProgressIcon'
 
 const DownloadProgress = () => {
   const [messageApi, contextHolder] = message.useMessage()
-  const { currentTask, queue, history, clearHistory, removeFromQueue } = useInstallQueueStore()
+  const { currentTask, queue, history, clearHistory, removeFromQueue } = useInstallQueueStore(
+    useShallow((state) => ({
+      currentTask: state.currentTask,
+      queue: state.queue,
+      history: state.history,
+      clearHistory: state.clearHistory,
+      removeFromQueue: state.removeFromQueue,
+    })),
+  )
 
   // 合并所有任务列表用于显示
   const allTasks = useMemo(() => {
@@ -72,7 +87,7 @@ const DownloadProgress = () => {
   /**
    * 清除已完成的历史记录
    */
-  const cleanDownloadHistory = () => {
+  const cleanDownloadHistory = useCallback(() => {
     if (history.length === 0) {
       messageApi.info('暂无已完成的下载记录!')
       return
@@ -80,12 +95,12 @@ const DownloadProgress = () => {
 
     clearHistory()
     messageApi.success(`已清除 ${history.length} 条下载记录`)
-  }
+  }, [history.length, clearHistory, messageApi])
 
   /**
    * 启动应用
    */
-  const handleOpenApp = async(appId?: string) => {
+  const handleOpenApp = useCallback(async(appId?: string) => {
     if (!appId) {
       messageApi.error('无法启动：缺少应用ID')
       return
@@ -98,28 +113,28 @@ const DownloadProgress = () => {
       const errorMessage = error instanceof Error ? error.message : String(error)
       messageApi.error(`启动失败: ${errorMessage}`)
     }
-  }
+  }, [messageApi])
 
   /**
    * 从队列中移除待安装的任务
    */
-  const handleRemoveFromQueue = (taskId: string) => {
+  const handleRemoveFromQueue = useCallback((taskId: string) => {
     removeFromQueue(taskId)
-  }
+  }, [removeFromQueue])
 
   /**
    * 取消正在进行的安装
    */
-  const handleCancelInstall = async(task: Store.InstallTask) => {
+  const handleCancelInstall = useCallback(async(task: Store.InstallTask) => {
     try {
       await cancelInstall(task.appId)
-      handleRemoveFromQueue(task.id)
+      removeFromQueue(task.id)
       messageApi.success('取消安装成功')
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       messageApi.error(`取消失败: ${errorMessage}`)
     }
-  }
+  }, [removeFromQueue, messageApi])
 
   /**
    * 渲染任务状态文本

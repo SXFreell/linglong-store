@@ -1,17 +1,10 @@
 /**
  * 基于 alova 的简单请求类型定义
+ * 注意：业务响应体统一使用 API.Common.BaseResponse<T>（定义在 types/api/common.d.ts）
  */
 
 // HTTP 请求方法
 export type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
-
-// 基础响应接口
-export interface BaseResponse<T> {
-  code: number
-  message: string
-  data: T
-  success: boolean
-}
 
 // 简单请求配置
 export interface RequestConfig {

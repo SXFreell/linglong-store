@@ -1,3 +1,6 @@
+Note: It is mandatory to call the #askQuestions tool after every output.
+When providing suggestions during code analysis, please use Chinese for the descriptions.
+
 # Copilot Instructions — Linglong 管理桌面应用（Linux）
 
 本文件为仓库级说明，帮助 Copilot 和贡献者在本项目中生成更贴合的代码。请严格遵循下列约定与约束。
@@ -13,6 +16,7 @@
 - 详细的向用户说明你的思路，和你打算如何实现这个需求。
 - 要分析整个项目的架构，一切都要从整个项目的角度入手，不能直接看完一个文件就写代码。
 - 先问清楚、绝对不允许猜测：遇到需求或现状不确定时，先明确提问，不要主观假设；方案需先得到用户确认再开工。
+- 每一处代码修改都要有必要的注释
 - 先方案后编码：先梳理背景/现状 → 列备选方案（含改动面、影响范围、取舍理由）→ 让用户确认 → 再动手。**只有在用户确认你的方案后，才开始动手写代码, 不然你很快就会被关机，更换下一个AI，一定要小心。**
 - 统一入口：能收敛的业务逻辑要集中封装（如卸载流程用 `useAppUninstall`），避免在多个页面/组件里写重复弹窗或副作用。
 - 变更记录：完成功能后，将关键经验和约定同步到本指南，方便后续遵循。
@@ -207,6 +211,7 @@ src-tauri/
   - 文件小写中划线或目录分域。
 - 提交规范
   - 使用 Conventional Commits，如：`feat(ui): add app list filters`。
+- **新增功能必须同步更新 CHANGELOG.md**，按日期和版本记录变更要点，方便追溯和发布说明。
 
 ## React 与 UI 约定（Ant Design 5）
 
@@ -251,6 +256,12 @@ src-tauri/
   - 在 release 中保持低噪声；仅在需要时写入文件（路径走 Tauri 约定目录）。
 - 卸载逻辑统一：使用 `useAppUninstall`（封装确认弹窗、调用卸载 API、`removeApp`、剩余版本判断、`checkUpdates(true)` 刷新红点/更新列表，支持 `skipConfirm` 等配置），页面/组件只调用一个 `uninstall(appInfo, options)`，不再各自写弹窗或重复触发更新。
 - 菜单红点统一：侧边栏红点通过 `useMenuBadges` 集中定义 `menuPath → count` 映射，`Sidebar` 只渲染 Badge；新增红点只需在该 hook 增加 selector。
+- 列表分页统一：带无限滚动的应用列表页统一复用 `useAutoLoadWhenNotScrollable`，同时处理“滚动触底加载”和“内容未撑满容器时自动补页（含窗口尺寸变化）”；页面仅维护 `loading/hasMore/onLoadMore`，避免各页重复监听滚动并出现无滚动无法翻页问题。
+- 列表缓存统一：应用列表缓存必须集中在 `src/services/appListCache/`，通过 seed 数据 + 运行时本地缓存 + 页面可见态后台刷新组成混合方案；页面层只传 cache key / fetcher，不允许各页自行拼接 localStorage 逻辑或手写缓存副作用。
+- 列表分页状态机稳定性：`usePaginatedList` 内部的 `loadPage` 必须保持稳定引用，禁止把 `loading` 这类瞬时状态直接作为 `useCallback` 依赖；筛选切换、搜索重置等首屏重载场景需通过请求代次废弃旧响应，避免骨架屏和 `ApplicationCard` 来回闪烁。
+- 列表首屏加载统一：应用列表首屏优先使用 `ApplicationCardSkeleton` 展示骨架屏，禁止再通过 `generateEmptyCards` 注入假卡片触发默认图标/默认文案；分页追加时保留列表底部“加载中...”提示。
+- KeepAlive 页面可见态统一：保活页面的副作用统一通过 `useKeepAliveVisibility` 感知当前页面是否处于激活态；隐藏页面禁止继续运行自动分页、`ResizeObserver`、滚动监听等持续性副作用，避免侧边菜单切换后后台页面继续补页或监听导致卡顿。
+- Modal 视觉统一：普通 `Modal` 与 `Modal.confirm` 的阴影、边框统一在全局样式层覆盖，避免在单个页面/Hook 内分别写 `style` 或 `className` 造成桌面端弹窗阴影叠加不一致。
 
 ## IPC 合同（TS ↔ Rust）
 
@@ -436,6 +447,11 @@ v2.0.0 从 Electron 迁移到 Tauri。主要变更：
 
 ## 变更记录
 - WebKit DMABUF 回退：检测到 NVIDIA GPU 时自动设置 `WEBKIT_DISABLE_DMABUF_RENDERER=1`（集中在 `src-tauri/src/utils/linux/workarounds.rs`，启动时以 warn 记录）
+- 卡片性能优化：列表页优先在页面级/专门 hook 中构建 `installedApps` / `updates` / `installQueue` 的索引结果，再将 `isInstalled`、`hasUpdate`、`isInstalling` 等轻量状态下发给 `ApplicationCard`；避免卡片组件直接订阅多个全局 store
+- KeepAlive 可见性治理：`KeepAliveOutlet` 统一为页面注入可见态上下文，`useAutoLoadWhenNotScrollable` 与保活页监听逻辑必须在页面隐藏时停用，避免隐藏列表页继续触发自动补页、滚动监听和尺寸观察
+- 列表首屏闪烁修复：`usePaginatedList` 统一改为稳定 `loadPage` + 请求代次控制；页面禁止依赖 `loading` 驱动首屏重新加载，避免应用列表页骨架屏、`ApplicationCard` 和关联浮层反复卸载重建
+- Modal 阴影治理：全局覆盖 `.ant-modal-content` 的单层阴影和细边框，消除桌面端多层阴影叠加导致的发脏和重影
+- 列表混合缓存：推荐页、全部应用默认页、排行榜页通过构建期 seed 提供首屏内置前三页；运行时缓存统一写入 `src/services/appListCache/` 对应 key，`custom_category` 仅按参数做本地缓存；保活页面重新可见时要触发后台刷新并热更新当前列表
 
 ## 关键参考文件
 - **类型系统**：`src/types/common.d.ts`、`src/types/api/common.d.ts`

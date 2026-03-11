@@ -1,7 +1,7 @@
 import { create } from 'zustand'
-import { getInstalledLinglongApps } from '@/apis/invoke'
 import { appCheckUpdate } from '@/apis/apps'
 import { useGlobalStore } from './global'
+import { useInstalledAppsStore } from './installedApps'
 
 // ==================== 类型定义 ====================
 
@@ -37,7 +37,9 @@ interface UpdatesStore {
 const AUTO_REFRESH_INTERVAL = 60 * 60 * 1000
 
 /** 定时器引用 */
-let autoRefreshTimer: NodeJS.Timeout | null = null
+// [类型兼容] 使用 ReturnType<typeof setInterval> 替代 NodeJS.Timeout
+// 确保在浏览器和 Node.js 环境中都能正确推断定时器返回值类型
+let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
 
 // ==================== 辅助函数 ====================
 
@@ -87,8 +89,8 @@ function mapRemoteUpdatesToStore(
       description: remoteApp.description || installedApp.description || '',
       icon: remoteApp.icon || installedApp.icon,
       arch: remoteApp.arch || installedApp.arch,
-      categoryName: remoteApp.categoryName || installedApp.categoryName,
-      zhName: remoteApp.zhName || installedApp.zhName || remoteApp.name || installedApp.name,
+      categoryName: remoteApp.categoryName,
+      zhName: remoteApp.zhName || remoteApp.name || installedApp.name,
     })
   }
 
@@ -118,11 +120,10 @@ export const useUpdatesStore = create<UpdatesStore>((set, get) => ({
     set({ checking: true })
 
     try {
-      // 1. 获取已安装的应用列表
-      const installedApps = await getInstalledLinglongApps()
+      // 1. 从 installedApps store 获取已安装列表，避免重复 IPC 调用
+      const installedApps = useInstalledAppsStore.getState().installedApps
       if (installedApps.length === 0) {
         set({ updates: [], lastChecked: Date.now() })
-        useGlobalStore.getState().getUpdateAppNum(0)
         return
       }
 
@@ -137,7 +138,6 @@ export const useUpdatesStore = create<UpdatesStore>((set, get) => ({
       const searchParams = buildCheckUpdateParams(installedApps, arch)
       if (searchParams.length === 0) {
         set({ updates: [], lastChecked: Date.now() })
-        useGlobalStore.getState().getUpdateAppNum(0)
         return
       }
 
@@ -146,7 +146,6 @@ export const useUpdatesStore = create<UpdatesStore>((set, get) => ({
       if (!response.data) {
         console.warn('[checkUpdates] No data returned from appCheckUpdate')
         set({ updates: [], lastChecked: Date.now() })
-        useGlobalStore.getState().getUpdateAppNum(0)
         return
       }
 
@@ -155,7 +154,6 @@ export const useUpdatesStore = create<UpdatesStore>((set, get) => ({
 
       // 6. 更新状态
       set({ updates: updateList, lastChecked: Date.now() })
-      useGlobalStore.getState().getUpdateAppNum(updateList.length)
 
     } catch (error) {
       console.error('[checkUpdates] Failed to check updates:', error)

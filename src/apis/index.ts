@@ -23,7 +23,6 @@ export {
 // 导出所有类型定义
 export type {
   HttpMethod,
-  BaseResponse,
   RequestConfig,
   UploadConfig,
   PaginationParams,

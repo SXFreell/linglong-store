@@ -8,7 +8,21 @@ import react from 'eslint-plugin-react'
 
 export default [
   {
-    ignores: ['dist', 'node_modules', 'build', 'src-tauri/target/**/*']
+    ignores: [
+      'dist',
+      'node_modules',
+      'build',
+      'public',
+      'src-tauri/target/**/*',
+      'src-tauri/gen/**/*',
+      'src/services/appListCache/seeds/appListSeeds.ts',
+      '.vscode',
+      '.idea',
+      '.env',
+      '.env.*',
+      '*.log',
+      '*.tmp',
+    ]
   },
   {
     files: ['src/**/*.{ts,tsx}'],

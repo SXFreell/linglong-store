@@ -58,8 +58,6 @@ declare namespace Store {
   interface Global extends EnvState {
     /** 应用是否初始化完成 */
     isInited: boolean
-    /** 需要更新的应用数量 */
-    updateAppNum: number
     /** 当前客户端/商店版本（来自 package.json） */
     appVersion: string
     /** 设备指纹ID（匿名统计用） */
@@ -73,8 +71,6 @@ declare namespace Store {
     setArch: (value: string) => void
     /** 更改仓库 */
     setRepoName: (value: string) => void
-    /** 更新需要更新的应用数量 */
-    getUpdateAppNum: (num: number) => void
     /** 更新 app 版本号 */
     setAppVersion: (value: string) => void
     /** 设置设备指纹ID */
@@ -108,8 +104,11 @@ declare namespace Store {
    * 管理系统中已安装的玲珑应用
    */
   interface InstalledApps {
-    /** 已安装应用列表 */
-    installedApps: API.INVOKE.InstalledApp[];
+    /** 已安装应用列表（经 API 丰富后） */
+    installedApps: API.INVOKE.EnrichedInstalledApp[];
+
+    /** O(1) 查找已安装应用：appId → 最新版本应用信息 */
+    installedAppMap: ReadonlyMap<string, API.INVOKE.EnrichedInstalledApp>;
 
     /**
      * 获取已安装应用列表

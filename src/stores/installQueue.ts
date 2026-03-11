@@ -12,6 +12,8 @@ import { installApp } from '@/apis/invoke'
 
 // 本地存储 key
 const CURRENT_TASK_STORAGE_KEY = 'linglong-store-current-install-task'
+// 历史记录最大保留条数，防止内存无限增长
+const MAX_HISTORY_SIZE = 50
 
 /**
  * 生成唯一任务ID
@@ -187,7 +189,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
     set((state) => ({
       currentTask: null,
       isProcessing: false,
-      history: [completedTask, ...state.history],
+      history: [completedTask, ...state.history].slice(0, MAX_HISTORY_SIZE),
     }))
 
     // 清除持久化
@@ -220,7 +222,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
     set((state) => ({
       currentTask: null,
       isProcessing: false,
-      history: [failedTask, ...state.history],
+      history: [failedTask, ...state.history].slice(0, MAX_HISTORY_SIZE),
     }))
 
     // 清除持久化
@@ -325,7 +327,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       }
 
       set((state) => ({
-        history: [successTask, ...state.history],
+        history: [successTask, ...state.history].slice(0, MAX_HISTORY_SIZE),
       }))
     } else {
       // 应用未安装，标记为失败
@@ -340,7 +342,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       }
 
       set((state) => ({
-        history: [failedTask, ...state.history],
+        history: [failedTask, ...state.history].slice(0, MAX_HISTORY_SIZE),
       }))
     }
 
@@ -368,6 +370,8 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       }
     } catch (error) {
       console.error('[InstallQueue] Failed to load persisted task:', error)
+      // [错误恢复] 清理损坏的 localStorage 数据，避免下次启动时反复解析失败
+      localStorage.removeItem(CURRENT_TASK_STORAGE_KEY)
     }
     return null
   },

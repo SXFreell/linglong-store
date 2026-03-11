@@ -11,6 +11,7 @@
 //! - `progress_emitter`: 进度事件发送器
 //! - `installer`: 安装器核心逻辑
 //! - `operations`: 其他操作（list, search, run, uninstall）
+//! - `desktop`: 桌面快捷方式集成
 
 mod models;
 mod error_codes;
@@ -19,11 +20,15 @@ mod state_machine;
 mod slot;
 mod progress_emitter;
 mod installer;
-mod operations;
+pub(crate) mod operations;
+mod desktop;
 
 // 重新导出公共 API
 pub use models::InstalledApp;
+// 供 process.rs 等跨模块复用的解析工具
+pub(crate) use models::{LLCliListItem, arch_to_string};
 pub use installer::{install_linglong_app, cancel_linglong_install};
+pub use desktop::create_desktop_shortcut;
 pub use operations::{
     get_installed_apps,
     uninstall_linglong_app,

@@ -1,5 +1,96 @@
 .linglongProcess {
-    height: 100%;
-    padding: 0 1.5rem 1.5rem 1.5rem;
-    overflow-y: auto;
+  height: 100%;
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/* 顶部工具栏 */
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--ant-color-bg-container);
+  border: 1px solid var(--ant-color-border);
+  border-radius: var(--ant-border-radius-lg);
+}
+
+.countBadge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.countLabel {
+  font-size: 0.85rem;
+  color: var(--ant-color-text-secondary);
+}
+
+.refreshInfo {
+  font-size: 0.8rem;
+  color: var(--ant-color-text-tertiary);
+}
+
+.refreshing {
+  color: var(--ant-color-primary);
+}
+
+.refreshError {
+  color: var(--ant-color-warning);
+  cursor: pointer;
+  text-decoration: underline dotted;
+}
+
+.refreshTime {
+  color: var(--ant-color-text-tertiary);
+}
+
+/* 错误提示横幅 */
+.errorBanner {
+  flex-shrink: 0;
+}
+
+/* 表格行样式 */
+.processRow {
+  cursor: default;
+  transition: background 0.15s;
+}
+
+.rowKilling {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.rowSelected {
+  background: var(--ant-color-primary-bg) !important;
+}
+
+/* 应用名称 */
+.appName {
+  font-weight: 500;
+  color: var(--ant-color-text);
+}
+
+/* 等宽字体（PID / 容器 ID） */
+.monoText {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.82rem;
+  color: var(--ant-color-text-secondary);
+}
+
+/* 空值占位 */
+.emptyCell {
+  color: var(--ant-color-text-quaternary);
+}
+
+/* 加载/空状态居中容器 */
+.centerState {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
 }

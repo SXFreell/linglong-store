@@ -13,10 +13,10 @@
     "windows": [
       {
         "title": "玲珑应用商店社区版",
-        "width": 1800,
-        "height": 1030,
-        "minWidth": 1280,
-        "minHeight": 720,
+        "width": 1200,
+        "height": 800,
+        "minWidth": 600,
+        "minHeight": 400,
         "decorations": false
       }
     ],

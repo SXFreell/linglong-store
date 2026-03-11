@@ -24,6 +24,8 @@ struct NetworkData {
 }
 
 // 全局网络数据存储
+// 使用 std::sync::Mutex 而非 tokio::sync::Mutex：所有锁操作均在同步代码块内完成，
+// 不跨越 .await 点；std::sync::Mutex 开销更低且不需要 async 上下文
 static NETWORK_DATA: once_cell::sync::Lazy<Arc<Mutex<Option<NetworkData>>>> =
     once_cell::sync::Lazy::new(|| Arc::new(Mutex::new(None)));
 

@@ -60,6 +60,7 @@
     }
   }
 
+  .emptyState,
   .loadingTip,
   .noMoreTip {
     grid-column: 1 / -1;
@@ -69,6 +70,10 @@
     padding: 2rem 0;
     color: var(--color-text-3);
     font-size: 0.875rem;
+  }
+
+  .emptyState {
+    min-height: 18rem;
   }
 
   .loadingTip {

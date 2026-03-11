@@ -12,16 +12,19 @@ import { useEffect } from 'react'
 import { message } from 'antd'
 import { onInstallProgress } from '@/apis/invoke'
 import { useInstallQueueStore } from '@/stores/installQueue'
-import { useUpdatesStore } from '@/stores/updates'
-import { useInstalledAppsStore } from '@/stores/installedApps'
+import { useShallow } from 'zustand/react/shallow'
 import { sendInstallRecord } from '@/services/analyticsService'
+import { syncAfterAppChange } from '@/utils/appChangeSync'
 import { getInstallErrorMessage, InstallErrorCode } from '@/constants/installErrorCodes'
 
 export const useGlobalInstallProgress = () => {
-  const { updateProgress, markSuccess, markFailed, currentTask } = useInstallQueueStore()
-  const checkUpdates = useUpdatesStore((state) => state.checkUpdates)
-  const checkingUpdates = useUpdatesStore((state) => state.checking)
-  const fetchInstalledApps = useInstalledAppsStore((state) => state.fetchInstalledApps)
+  const { updateProgress, markSuccess, markFailed } = useInstallQueueStore(
+    useShallow((state) => ({
+      updateProgress: state.updateProgress,
+      markSuccess: state.markSuccess,
+      markFailed: state.markFailed,
+    })),
+  )
   const [messageApi] = message.useMessage()
 
 
@@ -33,7 +36,9 @@ export const useGlobalInstallProgress = () => {
       unlistenProgress = await onInstallProgress((progress) => {
         console.info('[useGlobalInstallProgress] Progress received:', progress)
 
-        const appName = currentTask?.appInfo?.zhName || currentTask?.appInfo?.name || progress.appId
+        // 使用 getState() 获取最新值，避免闭包陷阱
+        const task = useInstallQueueStore.getState().currentTask
+        const appName = task?.appInfo?.zhName || task?.appInfo?.name || progress.appId
 
         // 根据事件类型处理
         switch (progress.eventType) {
@@ -55,12 +60,12 @@ export const useGlobalInstallProgress = () => {
             })
 
             // 发送安装统计记录（异步，不阻塞主流程）
-            if (currentTask?.appInfo) {
-              const appInfo = currentTask.appInfo
+            if (task?.appInfo) {
+              const appInfo = task.appInfo
               sendInstallRecord({
                 appId: appInfo.appId,
                 name: appInfo.name,
-                version: currentTask.version || appInfo.version,
+                version: task.version || appInfo.version,
                 arch: appInfo.arch,
                 module: appInfo.module,
                 channel: appInfo.channel,
@@ -68,12 +73,7 @@ export const useGlobalInstallProgress = () => {
             }
 
             // 后台刷新已安装列表和更新列表
-            if (!checkingUpdates) {
-              checkUpdates()
-            }
-            fetchInstalledApps().catch((err) =>
-              console.error('[useGlobalInstallProgress] Failed to refresh installed apps:', err),
-            )
+            syncAfterAppChange()
           }
           break
         }
@@ -130,20 +130,25 @@ export const useGlobalInstallProgress = () => {
               key: `install-success-${progress.appId}`,
             })
 
-            if (!checkingUpdates) {
-              checkUpdates()
-            }
-            fetchInstalledApps().catch((err) =>
-              console.error('[useGlobalInstallProgress] Failed to refresh installed apps:', err),
-            )
+            // 后台刷新已安装列表和更新列表
+            syncAfterAppChange()
           }
 
           // 检查是否安装失败
-          if (progress.status.includes('失败') || progress.status.includes('取消')) {
+          if (progress.status.includes('失败')) {
             markFailed(progress.appId, progress.status)
             messageApi.error({
               content: `${appName} ${progress.status}`,
               key: `install-failed-${progress.appId}`,
+            })
+          }
+
+          // 检查是否安装取消（旧格式兼容，使用 info 级别提示）
+          if (progress.status.includes('取消')) {
+            markFailed(progress.appId, progress.status)
+            messageApi.info({
+              content: `${appName} 安装已取消`,
+              key: `install-cancelled-${progress.appId}`,
             })
           }
           break
@@ -163,6 +168,6 @@ export const useGlobalInstallProgress = () => {
         unlistenProgress()
       }
     }
-  }, [updateProgress, markSuccess, markFailed, currentTask, checkUpdates, checkingUpdates, fetchInstalledApps])
+  }, [updateProgress, markSuccess, markFailed])
 }
 

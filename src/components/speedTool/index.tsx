@@ -1,13 +1,8 @@
 import styles from './index.module.scss'
 import { useState, useEffect } from 'react'
-import { invoke } from '@tauri-apps/api/core'
+import { getNetworkSpeed, type NetworkSpeed } from '@/apis/invoke'
 
 import { Download, Upload } from '@icon-park/react'
-
-interface NetworkSpeed {
-  upload_speed: number;
-  download_speed: number;
-}
 
 const SpeedTool = () => {
   const [networkSpeed, setNetworkSpeed] = useState<NetworkSpeed>({
@@ -36,7 +31,7 @@ const SpeedTool = () => {
   // 获取网络速度
   const fetchNetworkSpeed = async() => {
     try {
-      const speed = await invoke<NetworkSpeed>('get_network_speed')
+      const speed = await getNetworkSpeed()
       setNetworkSpeed(speed)
     } catch (error) {
       console.error('获取网络速度失败:', error)

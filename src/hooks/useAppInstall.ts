@@ -101,9 +101,12 @@ export interface VersionInstallState {
 }
 
 export const useAppInstall = () => {
-  const { enqueueInstall, enqueueBatch, isAppInQueue, getAppInstallStatus, currentTask, queue } =
-    useInstallQueueStore()
-  const installedApps = useInstalledAppsStore((state) => state.installedApps)
+  const enqueueInstall = useInstallQueueStore((state) => state.enqueueInstall)
+  const enqueueBatch = useInstallQueueStore((state) => state.enqueueBatch)
+  const isAppInQueue = useInstallQueueStore((state) => state.isAppInQueue)
+  const getAppInstallStatus = useInstallQueueStore((state) => state.getAppInstallStatus)
+  const currentTask = useInstallQueueStore((state) => state.currentTask)
+  const queuedAppCount = useInstallQueueStore((state) => state.queue.length)
   const [messageApi] = message.useMessage()
 
 
@@ -131,6 +134,7 @@ export const useAppInstall = () => {
 
       // 如果没有跳过确认，检查是否需要强制安装
       if (!options?.skipConfirm) {
+        const installedApps = useInstalledAppsStore.getState().installedApps
         const { needForce, installedVersion } = checkNeedForceInstall(version, installedApps, app.appId)
 
         if (needForce && installedVersion && version) {
@@ -151,7 +155,7 @@ export const useAppInstall = () => {
         key: `enqueue-${app.appId}`,
       })
     },
-    [enqueueInstall, isAppInQueue, installedApps],
+    [enqueueInstall, isAppInQueue, messageApi],
   )
 
   /**
@@ -177,7 +181,7 @@ export const useAppInstall = () => {
 
       return taskIds
     },
-    [enqueueBatch, isAppInQueue],
+    [enqueueBatch, isAppInQueue, messageApi],
   )
 
   /**
@@ -262,8 +266,8 @@ export const useAppInstall = () => {
    * 队列中等待安装的应用数量
    */
   const queueLength = useMemo(() => {
-    return queue.length
-  }, [queue])
+    return queuedAppCount
+  }, [queuedAppCount])
 
   return {
     /** 当前正在安装的应用ID */

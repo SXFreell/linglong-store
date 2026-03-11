@@ -17,7 +17,7 @@ const MyApplications = () => {
       <h3 className={[styles.title, activeKey === 'process' ? styles.activeTitle : ''].join(' ')} onClick={() => handleChange('process')}>玲珑进程</h3>
     </header>
     <div className={styles.content} >
-      {activeKey === 'app' ? <Myapps /> : <LinglongProcess />}
+      {activeKey === 'app' ? <Myapps /> : <LinglongProcess isTabActive={activeKey === 'process'} />}
     </div>
   </div>
 }

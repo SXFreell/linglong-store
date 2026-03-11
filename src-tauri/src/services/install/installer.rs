@@ -11,13 +11,13 @@
 //! - INSTALLING/WAITING -> FAILED: 收到错误/超时/进程异常退出
 //! - INSTALLING -> SUCCEEDED: 进程正常退出 (exit code 0)
 
-use log::{error, info, warn};
-use std::io::{BufRead, BufReader};
+use log::{debug, error, info, trace, warn};
 use std::process::Stdio;
 use std::sync::{Arc, Mutex};
 use tauri::AppHandle;
+use tokio::io::AsyncBufReadExt;
 
-use crate::services::ll_cli_command;
+use crate::services::ll_cli_async_command;
 
 use super::json_parser::{JsonEventType, JsonLineParser};
 use super::progress_emitter::{ProgressEmitter, ThreadSafeProgressEmitter};
@@ -41,10 +41,7 @@ pub async fn install_linglong_app(
     version: Option<String>,
     force: bool,
 ) -> Result<String, String> {
-    info!("========== [Installer] START ==========");
-    info!("[Installer] app_id: {}", app_id);
-    info!("[Installer] version: {:?}", version);
-    info!("[Installer] force: {}", force);
+    info!("[Installer] START app_id={}, version={:?}, force={}", app_id, version, force);
 
     // 1. 尝试占用安装槽位
     InstallSlot::acquire(&app_id)?;
@@ -59,8 +56,8 @@ pub async fn install_linglong_app(
         app_id.clone()
     };
 
-    // 3. 构建命令
-    let mut cmd = ll_cli_command();
+    // 3. 构建异步命令
+    let mut cmd = ll_cli_async_command();
     cmd.arg("install")
         .arg(&app_ref)
         .arg("--json")
@@ -73,32 +70,31 @@ pub async fn install_linglong_app(
     cmd.stdout(Stdio::piped());
     cmd.stderr(Stdio::piped());
 
-    let command_str = format!(
-        "ll-cli install {} --json -y{}",
+    info!(
+        "[Installer] Executing: ll-cli install {} --json -y{}",
         app_ref,
         if force { " --force" } else { "" }
     );
-    info!("[Installer] Executing: {}", command_str);
 
-    // 4. 启动子进程
+    // 4. 启动子进程（异步 tokio::process）
     let mut child = match cmd.spawn() {
         Ok(child) => child,
         Err(e) => {
             let err_msg = format!("Failed to spawn ll-cli process: {}", e);
-            error!("[Installer] ERROR: {}", err_msg);
+            error!("[Installer] {}", err_msg);
             InstallSlot::release();
             return Err(err_msg);
         }
     };
 
-    info!("[Installer] Process spawned successfully");
+    debug!("[Installer] Process spawned");
 
-    // 5. 获取 stdout
+    // 5. 获取 stdout（tokio::process::ChildStdout，实现 AsyncRead）
     let stdout = match child.stdout.take() {
         Some(stdout) => stdout,
         None => {
             let err_msg = "Failed to capture stdout".to_string();
-            error!("[Installer] ERROR: {}", err_msg);
+            error!("[Installer] {}", err_msg);
             InstallSlot::release();
             return Err(err_msg);
         }
@@ -107,37 +103,26 @@ pub async fn install_linglong_app(
     // 6. 初始化状态机
     let state_machine = Arc::new(Mutex::new(InstallStateMachine::new()));
 
-    // 启动状态机
     if let Ok(mut sm) = state_machine.lock() {
         sm.start();
     }
 
-    // 存储 child 以便后续等待
-    let child_arc = Arc::new(Mutex::new(child));
-
     // 7. 发送初始等待事件
     emitter.emit_waiting();
 
-    // 8. 在子线程中读取 stdout
+    // 8. 在 tokio 任务中异步读取 stdout（替代 std::thread::spawn）
     let thread_emitter = ThreadSafeProgressEmitter::new(app_handle.clone(), app_id.clone());
-    let state_machine_clone = state_machine.clone();
+    let sm_reader = state_machine.clone();
     let last_error: Arc<Mutex<Option<(i32, String)>>> = Arc::new(Mutex::new(None));
     let last_error_clone = last_error.clone();
 
-    let reader_handle = std::thread::spawn(move || {
-        let reader = BufReader::new(stdout);
+    let reader_handle = tokio::spawn(async move {
+        let reader = tokio::io::BufReader::new(stdout);
+        let mut lines = reader.lines();
         let mut last_percentage: u32 = 0;
 
-        for line_result in reader.lines() {
-            let line = match line_result {
-                Ok(l) => l,
-                Err(e) => {
-                    warn!("[Installer:Reader] Error reading line: {}", e);
-                    continue;
-                }
-            };
-
-            info!("[Installer:Reader] Raw line: {}", line);
+        while let Ok(Some(line)) = lines.next_line().await {
+            trace!("[Installer:Reader] Raw: {}", line);
 
             // 解析 JSON 行
             let event = match JsonLineParser::parse(&line) {
@@ -145,12 +130,11 @@ pub async fn install_linglong_app(
                 None => continue,
             };
 
-            info!("[Installer:Reader] Parsed event: {:?}", event);
+            debug!("[Installer:Reader] Event: {:?}", event);
 
             match event.event_type {
                 JsonEventType::Progress => {
-                    // 更新状态机
-                    if let Ok(mut sm) = state_machine_clone.lock() {
+                    if let Ok(mut sm) = sm_reader.lock() {
                         sm.on_progress(event.percentage.unwrap_or(0.0));
                     }
 
@@ -163,8 +147,7 @@ pub async fn install_linglong_app(
                     }
                 }
                 JsonEventType::Error => {
-                    // 更新状态机
-                    if let Ok(mut sm) = state_machine_clone.lock() {
+                    if let Ok(mut sm) = sm_reader.lock() {
                         sm.on_error();
                     }
 
@@ -178,8 +161,7 @@ pub async fn install_linglong_app(
                     thread_emitter.emit_error(code, &event.message);
                 }
                 JsonEventType::Message => {
-                    // 刷新状态机时间戳
-                    if let Ok(mut sm) = state_machine_clone.lock() {
+                    if let Ok(mut sm) = sm_reader.lock() {
                         sm.touch();
                     }
                     thread_emitter.emit_message(&event.message, last_percentage);
@@ -187,81 +169,52 @@ pub async fn install_linglong_app(
             }
         }
 
-        info!("[Installer:Reader] Finished reading stdout");
+        debug!("[Installer:Reader] Finished reading stdout");
     });
 
-    info!("[Installer] Waiting for process to complete...");
-
-    // 9. 轮询等待进程结束，同时检查超时
-    let exit_status = loop {
-        // 检查进程状态
-        let status = {
-            let mut child = match child_arc.lock() {
-                Ok(c) => c,
-                Err(e) => {
-                    let err_msg = format!("Failed to lock child process: {}", e);
-                    error!("[Installer] ERROR: {}", err_msg);
-                    InstallSlot::release();
-                    return Err(err_msg);
-                }
-            };
-
-            match child.try_wait() {
-                Ok(Some(status)) => {
-                    info!("[Installer] Process exited: {:?}", status);
-                    Some(status)
-                }
-                Ok(None) => None,
-                Err(e) => {
-                    let err_msg = format!("Failed to check process status: {}", e);
-                    error!("[Installer] ERROR: {}", err_msg);
-                    InstallSlot::release();
-                    return Err(err_msg);
-                }
-            }
-        };
-
-        // 检查超时
-        {
-            let sm = match state_machine.lock() {
-                Ok(sm) => sm,
-                Err(e) => {
-                    let err_msg = format!("Lock error: {}", e);
-                    InstallSlot::release();
-                    return Err(err_msg);
-                }
-            };
-
-            if sm.check_timeout() {
-                warn!("[Installer] Progress timeout. Killing process...");
-
-                // 终止进程
-                if let Ok(mut child) = child_arc.lock() {
-                    let _ = child.kill();
-                }
-
-                // 发送超时事件
-                emitter.emit_timeout();
-
-                // 释放槽位
-                InstallSlot::release();
-
-                return Err("Installation timed out".to_string());
+    // 9. 异步等待进程结束，同时检查超时（替代同步轮询循环）
+    let sm_timeout = state_machine.clone();
+    let timeout_check = async {
+        loop {
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            let timed_out = sm_timeout
+                .lock()
+                .map(|sm| sm.check_timeout())
+                .unwrap_or(false);
+            if timed_out {
+                return;
             }
         }
-
-        if let Some(status) = status {
-            break status;
-        }
-
-        // 短暂休眠
-        std::thread::sleep(std::time::Duration::from_millis(100));
     };
 
-    // 10. 等待读取线程完成
-    let _ = reader_handle.join();
+    let exit_status;
+    tokio::select! {
+        result = child.wait() => {
+            match result {
+                Ok(status) => {
+                    debug!("[Installer] Process exited: {:?}", status);
+                    exit_status = status;
+                }
+                Err(e) => {
+                    let err_msg = format!("Failed to wait for process: {}", e);
+                    error!("[Installer] {}", err_msg);
+                    InstallSlot::release();
+                    return Err(err_msg);
+                }
+            }
+        }
+        _ = timeout_check => {
+            warn!("[Installer] Progress timeout. Killing process...");
+            let _ = child.kill().await;
+            emitter.emit_timeout();
+            InstallSlot::release();
+            return Err("Installation timed out".to_string());
+        }
+    }
 
-    info!("==========================================================");
+    // 10. 等待读取任务完成
+    let _ = reader_handle.await;
+
     info!("[Installer] Process exited with status: {:?}", exit_status);
 
     // 11. 检查是否被用户取消
@@ -272,7 +225,6 @@ pub async fn install_linglong_app(
 
     // 13. 根据退出状态和取消标志判断结果
     if exit_status.success() {
-        // 安装成功
         if let Ok(mut sm) = state_machine.lock() {
             sm.on_success();
         }
@@ -285,15 +237,9 @@ pub async fn install_linglong_app(
 
         info!("[Installer] SUCCESS: {}", success_msg);
         emitter.emit_success();
-
-        info!("========== [Installer] END ==========");
         Ok(success_msg)
     } else if was_cancelled {
-        // 用户取消导致的退出，不发送失败消息（取消方法已发送）
-        info!("[Installer] Process killed by user cancellation, skipping error event");
-        info!("========== [Installer] END ==========");
-
-        // 返回特殊的取消消息
+        info!("[Installer] Cancelled by user");
         Err("Installation cancelled by user".to_string())
     } else {
         // 真正的安装失败
@@ -311,8 +257,6 @@ pub async fn install_linglong_app(
 
         error!("[Installer] FAILED: {}", failure_msg);
         emitter.emit_error(error_code, &error_message);
-
-        info!("========== [Installer] END ==========");
         Err(failure_msg)
     }
 }
@@ -344,11 +288,12 @@ pub async fn cancel_linglong_install(
     // 2. 杀死安装进程
     info!("[Installer:Cancel] Executing: pkexec killall -15 ll-package-manager ll-cli");
 
-    let _output = std::process::Command::new("pkexec")
+    let _output = tokio::process::Command::new("pkexec")
         .arg("killall")
         .arg("-15") // SIGTERM 优雅终止
         .arg("ll-cli")
-        .output();
+        .output()
+        .await;
 
     // 3. 发送取消事件
     let emitter = ProgressEmitter::new(&app_handle, app_id);

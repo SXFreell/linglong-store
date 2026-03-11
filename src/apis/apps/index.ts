@@ -151,6 +151,11 @@ export const suggest = (data: API.APP.AppLoginSaveBO) => {
  * @returns 日志下载链接
  */
 export const uploadLog = (file: File) => {
+  // [安全验证] 限制文件大小，防止上传过大文件导致服务器压力
+  const MAX_SIZE = 10 * 1024 * 1024 // 10MB
+  if (file.size > MAX_SIZE) {
+    throw new Error('文件大小不能超过 10MB')
+  }
   return upload<API.Common.BaseResponse<string>>('/app/uploadLog', file)
 }
 

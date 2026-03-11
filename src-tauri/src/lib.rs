@@ -11,6 +11,7 @@ use services::{
     uninstall_linglong_app,
     search_app_versions,
     run_linglong_app,
+    create_desktop_shortcut as create_desktop_shortcut_service,
     install_linglong_app,
     cancel_linglong_install,
     InstalledApp,
@@ -23,8 +24,10 @@ use services::linglong::{
 };
 use services::linglong_env::{
     check_linglong_env,
-    install_linglong_env,
     LinglongEnvCheckResult,
+};
+use services::linglong_env_install::{
+    install_linglong_env,
     InstallLinglongResult,
 };
 use tauri_plugin_log::{RotationStrategy, Target, TargetKind};
@@ -90,6 +93,11 @@ async fn search_versions(app_id: String) -> Result<Vec<InstalledApp>, String> {
 #[tauri::command]
 async fn run_app(app_id: String) -> Result<String, String> {
     run_linglong_app(app_id).await
+}
+
+#[tauri::command]
+async fn create_desktop_shortcut(app_id: String) -> Result<String, String> {
+    create_desktop_shortcut_service(app_id).await
 }
 
 #[tauri::command]
@@ -167,6 +175,7 @@ pub fn run() {
             uninstall_app,
             search_versions,
             run_app,
+            create_desktop_shortcut,
             install_app,
             cancel_install,
             prune_apps,

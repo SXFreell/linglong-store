@@ -1,6 +1,7 @@
 //! 数据模型定义
 //!
-//! 本模块定义了安装相关的核心数据结构。
+//! 本模块定义了安装相关的核心数据结构，
+//! 包括 ll-cli JSON 输出的通用解析工具（arch 字段处理等）。
 
 use serde::{Deserialize, Serialize};
 
@@ -78,20 +79,26 @@ pub(crate) struct LLCliListItem {
     pub size: Option<serde_json::Value>,
 }
 
+/// 将 ll-cli JSON 中的 arch 字段统一转换为字符串。
+///
+/// ll-cli 输出的 arch 可能是字符串 `"x86_64"` 或数组 `["x86_64"]`，
+/// 本函数统一处理两种情况，供所有解析 ll-cli list/search 输出的地方复用。
+pub(crate) fn arch_to_string(arch: &serde_json::Value) -> String {
+    match arch {
+        serde_json::Value::String(s) => s.clone(),
+        serde_json::Value::Array(arr) => arr
+            .iter()
+            .filter_map(|v| v.as_str())
+            .collect::<Vec<_>>()
+            .join(", "),
+        _ => String::new(),
+    }
+}
+
 impl LLCliListItem {
     /// 将 LLCliListItem 转换为 InstalledApp
     pub fn into_installed_app(self) -> InstalledApp {
-        // 处理 arch 字段，可能是字符串或数组
-        let arch = match self.arch {
-            serde_json::Value::String(s) => s,
-            serde_json::Value::Array(arr) => {
-                arr.first()
-                    .and_then(|v| v.as_str())
-                    .unwrap_or("")
-                    .to_string()
-            }
-            _ => String::new(),
-        };
+        let arch = arch_to_string(&self.arch);
 
         // 处理 size 字段
         let size = match self.size {

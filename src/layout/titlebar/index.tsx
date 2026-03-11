@@ -4,7 +4,7 @@
  */
 
 import styles from './index.module.scss'
-import { SetStateAction, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, ChangeEvent, KeyboardEvent } from 'react'
 import { Close, Copy, Minus, Square } from '@icon-park/react'
 import { Modal, message } from 'antd'
 import { getCurrentWindow } from '@tauri-apps/api/window'
@@ -26,8 +26,6 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
   const hasActiveTasks = useInstallQueueStore((state) => state.hasActiveTasks)
   /** 清空待安装队列 */
   const clearQueue = useInstallQueueStore((state) => state.clearQueue)
-  /** 全局搜索关键词 */
-  const keyword = useSearchStore((state) => state.keyword)
   /** 更新搜索关键词的方法 */
   const changeKeyword = useSearchStore((state) => state.changeKeyword)
   /** 重置搜索关键词的方法 */
@@ -144,9 +142,8 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
    * 处理搜索框输入变化
    * @param event - 输入事件对象
    */
-  const handleInputChange = (event: { target: { value: SetStateAction<string> } }) => {
-    const keyword = event.target.value as string
-    setRealKeyword(keyword)
+  const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setRealKeyword(event.target.value)
   }
 
   /**
@@ -154,10 +151,10 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
    * Enter键触发搜索，Delete键清空输入
    * @param event - 键盘事件对象
    */
-  const handleKeyDown = (event: { key: string; preventDefault: () => void }) => {
+  const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
       handleSearch()
-      event.preventDefault() // 阻止表单提交的默认行为
+      event.preventDefault()
     }
     if (event.key === 'Delete') {
       handleClean()
@@ -217,7 +214,7 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
           </div>
           <div className={styles.inputIcon}>
             {/* 清空按钮（仅在有关键词时显示） */}
-            {keyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt="清空" /> : null}
+            {realKeyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt="清空" /> : null}
             {/* 搜索按钮 */}
             <img src={searchIcon} onClick={handleSearch} width='50%' height='100%' alt="搜索" />
           </div>

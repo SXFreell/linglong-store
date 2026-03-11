@@ -6,14 +6,6 @@ import update from '@/assets/icons/update.svg'
 import updateA from '@/assets/icons/updateA.svg'
 import classify from '@/assets/icons/classify.svg'
 import classifyA from '@/assets/icons/classifyA.svg'
-// import office from '@/assets/icons/office.svg'
-// import officeA from '@/assets/icons/officeA.svg'
-// import system from '@/assets/icons/system.svg'
-// import systemA from '@/assets/icons/systemA.svg'
-// import develop from '@/assets/icons/develop.svg'
-// import developA from '@/assets/icons/developA.svg'
-// import games from '@/assets/icons/games.svg'
-// import gamesA from '@/assets/icons/gamesA.svg'
 
 
 export default [

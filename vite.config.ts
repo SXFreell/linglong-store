@@ -26,7 +26,7 @@ export default defineConfig(async() => ({
     react(),
     eslint({
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['node_modules', 'dist'],
+      exclude: ['node_modules', 'dist', 'src/services/appListCache/seeds/appListSeeds.ts'],
       cache: false, // 禁用缓存以确保实时检查
       fix: false, // 开发时不自动修复，避免意外修改
       emitWarning: true, // 在终端显示警告

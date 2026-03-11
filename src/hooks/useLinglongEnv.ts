@@ -60,6 +60,10 @@ export const useLinglongEnv = () => {
         setRepoName(res.repoName)
       }
       setEnvReady(res.ok)
+      // 版本过低警告：环境可用但有警告信息时提示用户
+      if (res.ok && res.reason) {
+        message.warning(res.reason)
+      }
       setReason(res.ok ? undefined : (res.reason || DEFAULT_REASON))
       return res
     } catch (error) {

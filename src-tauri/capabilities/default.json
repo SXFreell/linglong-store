@@ -24,6 +24,10 @@
     "os:allow-arch",
     "log:default",
     "fs:default",
+    "core:menu:default",
+    "core:menu:allow-popup",
+    "core:menu:allow-new",
+    "core:menu:allow-append",
     {
       "identifier": "fs:allow-read-file",
       "allow": [

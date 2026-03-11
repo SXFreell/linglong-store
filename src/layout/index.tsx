@@ -5,12 +5,11 @@
  */
 
 import styles from './index.module.scss'
-import { Outlet } from 'react-router-dom'
-import { Suspense, useEffect } from 'react'
+import { useEffect } from 'react'
 import Titlebar from './titlebar'
 import Sidebar from './sidebar'
 import LaunchPage from './launchPage'
-import Loading from '../components/Loading'
+import KeepAliveOutlet from '@/components/KeepAliveOutlet'
 
 import { useGlobalStore } from '@/stores/global'
 import { useUpdatesStore } from '@/stores/updates'
@@ -18,11 +17,6 @@ import { useConfigStore } from '@/stores/appConfig'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { sendVisitRecord } from '@/services/analyticsService'
 import { getCustomMenuCategory } from '@/apis/apps'
-// import { arch } from '@tauri-apps/plugin-os'
-
-// 暂时注释的 Antd Layout 组件，可能用于未来的布局重构
-// import { Layout } from 'antd'
-// const { Header, Sider, Content } = Layout
 
 /**
  * 主应用布局组件
@@ -55,11 +49,6 @@ const AppLayout = () => {
       stopAutoRefresh()
     }
   }, [startAutoRefresh, stopAutoRefresh])
-  // // 从全局状态store中获取初始化相关方法
-  // const onInited = useGlobalStore((state) => state.onInited)
-  // const getUpdateAppNum = useGlobalStore((state) => state.getUpdateAppNum)
-  // const changeArch = useGlobalStore((state) => state.setArch)
-
 
   /** 从已安装应用store中获取更新和加载方法 */
   const {
@@ -69,24 +58,13 @@ const AppLayout = () => {
   /** 从配置store中获取是否显示基础服务的设置 */
   const { showBaseService } = useConfigStore()
 
-  /** 监听基础服务显示配置变化，重新加载应用列表 */
+  /** 监听基础服务显示配置变化，重新加载应用列表（仅在初始化完成后响应配置变更） */
   useEffect(() => {
-    fetchInstalledApps(showBaseService)
-  }, [showBaseService, fetchInstalledApps])
-
-  // /**
-  //  * 应用初始化效果
-  //  * 1. 获取并设置系统架构
-  //  * 2. 完成初始化配置
-  //  * 3. 统计需要更新的应用数量
-  //  */
-  // useEffect(() => {
-  //   const currentArch = arch()
-  //   changeArch(currentArch)
-  //   setIsInit(true) // 修复: 初始化完成后应该设置为 true
-  //   onInited()
-  //   getUpdateAppNum(needUpdateApps.length || 0)
-  // }, [])
+    // 初始加载已由 useLaunch.initialize() 完成，此处仅在初始化后响应配置变更
+    if (isInited) {
+      fetchInstalledApps(showBaseService)
+    }
+  }, [showBaseService]) // 仅监听 showBaseService 变化，不包含 isInited 避免初始化完成时重复加载
 
   /**
    * 渲染应用布局
@@ -104,32 +82,12 @@ const AppLayout = () => {
           <Sidebar className={styles.sider} />
           {/* 主内容区域，使用 Suspense 处理异步加载 */}
           <div className={styles.content}>
-            <Suspense fallback={<Loading />}>
-              <Outlet />
-            </Suspense>
+            <KeepAliveOutlet />
           </div>
         </div> : <LaunchPage />
       }
     </div>
   )
-  // 备选的 Antd Layout 布局方案
-  // return (
-  //   <Layout>
-  //     <Header>
-  //       <Titlebar/>
-  //     </Header>
-  //     <Layout>
-  //       <Sider>
-  //         <Sidebar className={styles.sider} />
-  //       </Sider>
-  //       <Content className={styles.content}>
-  //         <Suspense fallback={<Loading />}>
-  //           <Outlet />
-  //         </Suspense>
-  //       </Content>
-  //     </Layout>
-  //   </Layout>
-  // )
 }
 
 export default AppLayout
