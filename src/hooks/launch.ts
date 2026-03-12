@@ -20,12 +20,14 @@ import { useUpdateStore } from './useUploadStore'
 import { app } from '@tauri-apps/api'
 import { useLinglongEnv } from './useLinglongEnv'
 import { initAnalytics } from '@/services/analyticsService'
+import { useI18n } from '@/i18n'
 
 /**
  * 应用启动初始化 Hook
  * @returns {Hooks.Launch.UseLaunchReturn} 初始化状态和控制方法
  */
 export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
+  const { t } = useI18n()
   // ==================== 状态管理 ====================
   /** 初始化完成标识 */
   const [isInit, setIsInit] = useState(false)
@@ -33,8 +35,11 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
   const [progress, setProgress] = useState(0)
   /** 错误信息 */
   const [error, setError] = useState<string | null>(null)
-  /** 当前步骤 */
-  const [currentStep, setCurrentStep] = useState<string>('初始化应用')
+  /**
+   * 当前步骤文案直接存储翻译后的结果。
+   * 启动页只会在初始化阶段展示，按当前语言即时翻译即可，避免再维护一套额外的步骤枚举。
+   */
+  const [currentStep, setCurrentStep] = useState<string>(t('layout.launchPage.steps.initializingApp'))
 
   // ==================== 环境状态（统一从 global store 读取，不再维护本地副本） ====================
   const envReady = useGlobalStore((state) => state.envReady)
@@ -69,9 +74,9 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       setAppVersion(version)
       return version
     } catch (err) {
-      throw new Error(`获取应用版本失败: ${err}`)
+      throw new Error(t('hooks.launch.appVersionFailed', { error: String(err) }))
     }
-  }, [])
+  }, [setAppVersion, t])
 
   /**
    * 步骤1: 获取系统架构信息
@@ -81,9 +86,9 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       const currentArch = arch()
       setArch(currentArch)
     } catch (err) {
-      throw new Error(`获取系统架构失败: ${err}`)
+      throw new Error(t('hooks.launch.systemInfoFailed', { error: String(err) }))
     }
-  }, [setArch])
+  }, [setArch, t])
 
   /**
    * 步骤2: 加载已安装应用列表（内部已包含详情补全）
@@ -92,9 +97,9 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
     try {
       await fetchInstalledApps(showBaseService)
     } catch (err) {
-      throw new Error(`加载已安装应用失败: ${err}`)
+      throw new Error(t('hooks.launch.loadInstalledAppsFailed', { error: String(err) }))
     }
-  }, [fetchInstalledApps, showBaseService])
+  }, [fetchInstalledApps, showBaseService, t])
 
   /**
    * 步骤3: 检查商店版本更新
@@ -148,18 +153,18 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       console.info('[launch] initialize start')
 
       // Phase 1: 检查玲珑环境（阻塞门禁，必须先通过）
-      setCurrentStep('检测玲珑环境')
+      setCurrentStep(t('layout.launchPage.steps.checkingEnv'))
       const envResult = await checkEnv()
       setProgress(20)
       if (!envResult.ok) {
-        setError(envResult.reason || '检测到玲珑环境缺失或版本过低，请先安装')
+        setError(envResult.reason || t('hooks.launch.envMissing'))
         console.warn('[launch] env check failed', envResult.reason)
         return
       }
       console.info('[launch] env ready')
 
       // Phase 2: 获取版本 + 系统信息（互相独立，并行执行）
-      setCurrentStep('获取系统信息')
+      setCurrentStep(t('layout.launchPage.steps.gettingSystemInfo'))
       const [version] = await Promise.all([
         getAppVersion(),
         initSystemInfo(),
@@ -167,7 +172,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       setProgress(40)
 
       // Phase 3: 加载已安装应用 + 检查商店版本 + 初始化统计（互相独立，并行执行）
-      setCurrentStep('加载应用数据')
+      setCurrentStep(t('layout.launchPage.steps.loadingAppData'))
       await Promise.all([
         loadInstalledApps(),
         checkStoreVersion(version),
@@ -179,7 +184,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
       checkAppUpdates().catch((err) => console.warn('[launch] checkAppUpdates failed', err))
 
       // Phase 4: 恢复中断的安装任务（依赖已安装列表已加载）
-      setCurrentStep('检查安装任务')
+      setCurrentStep(t('layout.launchPage.steps.checkingInstallTasks'))
       recoverInstallTask()
       setProgress(100)
 
@@ -198,6 +203,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
     recoverInstallTask,
     onInited,
     checkAppUpdates,
+    t,
   ])
 
   /**

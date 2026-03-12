@@ -7,10 +7,12 @@ import { useEffect, useRef, useCallback } from 'react'
 import { Empty } from 'antd'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import { debounce } from '@/utils/performance'
+import { useI18n } from '@/i18n'
 const defaultPageSize = 10 // 每页显示数量
 
 type AppInfo = API.APP.AppMainDto
 const SearchList = ()=>{
+  const { t } = useI18n()
   const keyword = useSearchStore((state) => state.keyword)
   const arch = useGlobalStore((state) => state.arch)
   const repoName = useGlobalStore((state) => state.repoName)
@@ -58,7 +60,7 @@ const SearchList = ()=>{
   }, [keyword, loadPage, reset])
 
   return <div className={styles.searchPage} ref={listRef}>
-    <p className={styles.SearchResult}>搜索结果：</p>
+    <p className={styles.SearchResult}>{t('searchList.searchResult')}</p>
     <div className={initialLoading || searchAppList.length > 0 ? styles.SearchList : styles.SearchListEmpty}>
       {
         initialLoading ? <ApplicationCardSkeleton count={defaultPageSize} /> : searchAppList.length > 0 ? searchAppList.map((item, index) => (
@@ -66,10 +68,10 @@ const SearchList = ()=>{
             key={`${item.appId}_${index}`}
             appInfo={item}
           />
-        )) : <Empty description="没有搜索到数据哦！"/>
+        )) : <Empty description={t('searchList.empty')}/>
       }
-      {!initialLoading && loading && <div className={styles.loadingTip}>加载中...</div>}
-      {!initialLoading && !loading && !hasMore && searchAppList.length > 0 && <div className={styles.noMoreTip}>没有更多数据了</div>}
+      {!initialLoading && loading && <div className={styles.loadingTip}>{t('searchList.loadingMore')}</div>}
+      {!initialLoading && !loading && !hasMore && searchAppList.length > 0 && <div className={styles.noMoreTip}>{t('searchList.noMoreData')}</div>}
     </div>
   </div>
 }

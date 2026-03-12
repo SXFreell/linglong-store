@@ -56,72 +56,79 @@ export enum InstallErrorCode {
   ProgressTimeout = -2, // 进度超时
 }
 
+import type { TranslationKey } from '@/i18n'
+
 /**
- * 错误码到用户友好消息的映射
+ * 错误码到 i18n key 的映射
  */
-export const installErrorCodeMessages: Record<number, string> = {
+export const installErrorCodeKeys: Record<number, TranslationKey> = {
   // 通用
-  [InstallErrorCode.Failed]: '通用失败',
-  [InstallErrorCode.Success]: '成功',
-  [InstallErrorCode.Cancelled]: '操作已取消',
-  [InstallErrorCode.Unknown]: '未知错误',
-  [InstallErrorCode.AppNotFoundFromRemote]: '远程仓库找不到应用',
-  [InstallErrorCode.AppNotFoundFromLocal]: '本地找不到应用',
+  [InstallErrorCode.Failed]: 'installError.failed',
+  [InstallErrorCode.Success]: 'installError.success',
+  [InstallErrorCode.Cancelled]: 'installError.cancelled',
+  [InstallErrorCode.Unknown]: 'installError.unknown',
+  [InstallErrorCode.AppNotFoundFromRemote]: 'installError.appNotFoundFromRemote',
+  [InstallErrorCode.AppNotFoundFromLocal]: 'installError.appNotFoundFromLocal',
 
   // 安装
-  [InstallErrorCode.AppInstallFailed]: '安装失败',
-  [InstallErrorCode.AppInstallNotFoundFromRemote]: '远程无该应用',
-  [InstallErrorCode.AppInstallAlreadyInstalled]: '已安装同版本',
-  [InstallErrorCode.AppInstallNeedDowngrade]: '需要降级安装',
-  [InstallErrorCode.AppInstallModuleNoVersion]: '安装模块时不允许指定版本',
-  [InstallErrorCode.AppInstallModuleRequireAppFirst]: '安装模块需先安装应用',
-  [InstallErrorCode.AppInstallModuleAlreadyExists]: '模块已存在',
-  [InstallErrorCode.AppInstallArchNotMatch]: '架构不匹配',
-  [InstallErrorCode.AppInstallModuleNotFound]: '远程无该模块',
-  [InstallErrorCode.AppInstallErofsNotFound]: '缺少 erofs 解压命令',
-  [InstallErrorCode.AppInstallUnsupportedFileFormat]: '不支持的文件格式',
+  [InstallErrorCode.AppInstallFailed]: 'installError.appInstallFailed',
+  [InstallErrorCode.AppInstallNotFoundFromRemote]: 'installError.appInstallNotFoundFromRemote',
+  [InstallErrorCode.AppInstallAlreadyInstalled]: 'installError.appInstallAlreadyInstalled',
+  [InstallErrorCode.AppInstallNeedDowngrade]: 'installError.appInstallNeedDowngrade',
+  [InstallErrorCode.AppInstallModuleNoVersion]: 'installError.appInstallModuleNoVersion',
+  [InstallErrorCode.AppInstallModuleRequireAppFirst]: 'installError.appInstallModuleRequireAppFirst',
+  [InstallErrorCode.AppInstallModuleAlreadyExists]: 'installError.appInstallModuleAlreadyExists',
+  [InstallErrorCode.AppInstallArchNotMatch]: 'installError.appInstallArchNotMatch',
+  [InstallErrorCode.AppInstallModuleNotFound]: 'installError.appInstallModuleNotFound',
+  [InstallErrorCode.AppInstallErofsNotFound]: 'installError.appInstallErofsNotFound',
+  [InstallErrorCode.AppInstallUnsupportedFileFormat]: 'installError.appInstallUnsupportedFileFormat',
 
   // 卸载
-  [InstallErrorCode.AppUninstallFailed]: '卸载失败',
-  [InstallErrorCode.AppUninstallNotFoundFromLocal]: '本地无该应用',
-  [InstallErrorCode.AppUninstallAppIsRunning]: '应用正在运行',
-  [InstallErrorCode.LayerCompatibilityError]: '找不到兼容 layer',
-  [InstallErrorCode.AppUninstallMultipleVersions]: '存在多版本',
-  [InstallErrorCode.AppUninstallBaseOrRuntime]: 'base/runtime 不允许卸载',
+  [InstallErrorCode.AppUninstallFailed]: 'installError.appUninstallFailed',
+  [InstallErrorCode.AppUninstallNotFoundFromLocal]: 'installError.appUninstallNotFoundFromLocal',
+  [InstallErrorCode.AppUninstallAppIsRunning]: 'installError.appUninstallAppIsRunning',
+  [InstallErrorCode.LayerCompatibilityError]: 'installError.layerCompatibilityError',
+  [InstallErrorCode.AppUninstallMultipleVersions]: 'installError.appUninstallMultipleVersions',
+  [InstallErrorCode.AppUninstallBaseOrRuntime]: 'installError.appUninstallBaseOrRuntime',
 
   // 升级
-  [InstallErrorCode.AppUpgradeFailed]: '升级失败',
-  [InstallErrorCode.AppUpgradeLocalNotFound]: '本地无可升级应用',
+  [InstallErrorCode.AppUpgradeFailed]: 'installError.appUpgradeFailed',
+  [InstallErrorCode.AppUpgradeLocalNotFound]: 'installError.appUpgradeLocalNotFound',
 
   // 网络
-  [InstallErrorCode.NetworkError]: '网络错误',
+  [InstallErrorCode.NetworkError]: 'installError.networkError',
 
   // 解析/平台
-  [InstallErrorCode.InvalidFuzzyReference]: '无效引用',
-  [InstallErrorCode.UnknownArchitecture]: '未知架构',
+  [InstallErrorCode.InvalidFuzzyReference]: 'installError.invalidFuzzyReference',
+  [InstallErrorCode.UnknownArchitecture]: 'installError.unknownArchitecture',
 
   // 自定义
-  [InstallErrorCode.ProgressTimeout]: '进度超时',
+  [InstallErrorCode.ProgressTimeout]: 'installError.progressTimeout',
 }
 
 /**
  * 根据错误码获取用户友好的错误消息
  * @param code 错误码
+ * @param t 翻译函数
  * @param fallbackMessage 兜底消息（当错误码未映射时使用）
  * @returns 用户友好的错误消息
  */
-export function getInstallErrorMessage(code: number | undefined, fallbackMessage?: string): string {
+export function getInstallErrorMessage(
+  code: number | undefined,
+  t: (key: TranslationKey, params?: Record<string, string | number>) => string,
+  fallbackMessage?: string,
+): string {
   if (code === undefined || code === null) {
-    return fallbackMessage || '未知错误'
+    return fallbackMessage || t('installError.fallbackUnknown')
   }
 
-  const mappedMessage = installErrorCodeMessages[code]
-  if (mappedMessage) {
-    return mappedMessage
+  const mappedKey = installErrorCodeKeys[code]
+  if (mappedKey) {
+    return t(mappedKey)
   }
 
   // 未映射的错误码，使用兜底消息或显示错误码
-  return fallbackMessage || `错误码: ${code}`
+  return fallbackMessage || t('installError.errorCodeFallback', { code })
 }
 
 /**

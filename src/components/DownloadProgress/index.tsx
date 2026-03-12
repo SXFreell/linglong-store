@@ -10,6 +10,8 @@ import { useInstallQueueStore } from '@/stores/installQueue'
 import { useShallow } from 'zustand/react/shallow'
 import { runApp, cancelInstall } from '@/apis/invoke'
 import SpeedTool from '@/components/speedTool'
+import { useI18n } from '@/i18n'
+import { getAppDisplayName } from '@/utils/appDisplay'
 /**
  * 任务进度图标组件
  * 使用 React.memo 包装以避免不必要的重渲染
@@ -55,6 +57,7 @@ const TaskProgressIcon = memo(({
 TaskProgressIcon.displayName = 'TaskProgressIcon'
 
 const DownloadProgress = () => {
+  const { t, locale } = useI18n()
   const [messageApi, contextHolder] = message.useMessage()
   const { currentTask, queue, history, clearHistory, removeFromQueue } = useInstallQueueStore(
     useShallow((state) => ({
@@ -89,31 +92,31 @@ const DownloadProgress = () => {
    */
   const cleanDownloadHistory = useCallback(() => {
     if (history.length === 0) {
-      messageApi.info('暂无已完成的下载记录!')
+      messageApi.info(t('components.downloadProgress.noCompletedHistory'))
       return
     }
 
     clearHistory()
-    messageApi.success(`已清除 ${history.length} 条下载记录`)
-  }, [history.length, clearHistory, messageApi])
+    messageApi.success(t('components.downloadProgress.clearedHistory', { count: history.length }))
+  }, [history.length, clearHistory, messageApi, t])
 
   /**
    * 启动应用
    */
   const handleOpenApp = useCallback(async(appId?: string) => {
     if (!appId) {
-      messageApi.error('无法启动：缺少应用ID')
+      messageApi.error(t('components.downloadProgress.openMissingAppId'))
       return
     }
 
     try {
       await runApp(appId)
-      messageApi.success('应用启动成功')
+      messageApi.success(t('components.downloadProgress.openSuccess'))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      messageApi.error(`启动失败: ${errorMessage}`)
+      messageApi.error(t('components.downloadProgress.openFailed', { error: errorMessage }))
     }
-  }, [messageApi])
+  }, [messageApi, t])
 
   /**
    * 从队列中移除待安装的任务
@@ -129,12 +132,12 @@ const DownloadProgress = () => {
     try {
       await cancelInstall(task.appId)
       removeFromQueue(task.id)
-      messageApi.success('取消安装成功')
+      messageApi.success(t('components.downloadProgress.cancelSuccess'))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
-      messageApi.error(`取消失败: ${errorMessage}`)
+      messageApi.error(t('components.downloadProgress.cancelFailed', { error: errorMessage }))
     }
-  }, [removeFromQueue, messageApi])
+  }, [removeFromQueue, messageApi, t])
 
   /**
    * 渲染任务状态文本
@@ -142,14 +145,17 @@ const DownloadProgress = () => {
   const renderStatusText = (task: Store.InstallTask) => {
     switch (task.status) {
     case 'pending':
-      return '等待中'
+      return t('components.downloadProgress.statusPending')
     case 'installing':
-      return `${task.message} ${task.progress}%`
+      return t('components.downloadProgress.statusInstalling', {
+        message: task.message,
+        progress: task.progress,
+      })
     case 'success':
-      return '安装完成'
+      return t('components.downloadProgress.statusSuccess')
     case 'failed': {
       // 显示错误信息，如果有详情则一并显示
-      const errorMsg = task.error || '未知错误'
+      const errorMsg = task.error || t('components.downloadProgress.defaultError')
       const detail = task.errorDetail && task.errorDetail !== errorMsg ? ` (${task.errorDetail})` : ''
       return `${errorMsg}${detail}`
     }
@@ -177,7 +183,7 @@ const DownloadProgress = () => {
           <div
             className={styles.cancelDownload}
             onClick={() => handleCancelInstall(task)}
-            title="取消安装"
+            title={t('components.downloadProgress.cancelInstallTooltip')}
           >
             ×
           </div>
@@ -188,12 +194,12 @@ const DownloadProgress = () => {
       return (
         <div style={{ display: 'flex', gap: '8px' }}>
           <button className={styles.downloadBtn} onClick={() => handleOpenApp(task.appId)}>
-              打开
+            {t('common.actions.open')}
           </button>
           <div
             className={styles.cancelDownload}
             onClick={() => handleRemoveFromQueue(task.id)}
-            title="移除"
+            title={t('components.downloadProgress.removeTooltip')}
           >
             ×
           </div>
@@ -208,7 +214,7 @@ const DownloadProgress = () => {
           <div
             className={styles.cancelDownload}
             onClick={() => handleRemoveFromQueue(task.id)}
-            title="移除"
+            title={t('components.downloadProgress.removeTooltip')}
           >
             ×
           </div>
@@ -228,11 +234,11 @@ const DownloadProgress = () => {
               <div className={styles.downloadItem} key={task.id}>
                 <div className={styles.itemLeft}>
                   <div className={styles.itemLeft_icon}>
-                    <img src={task.appInfo?.icon || DefaultIcon} alt="应用图标" />
+                    <img src={task.appInfo?.icon || DefaultIcon} alt={t('common.fallback.appIcon')} />
                   </div>
                   <div className={styles.itemLeft_content}>
                     <p className={styles.contentName}>
-                      {task.appInfo?.zhName || task.appInfo?.name || task.appId || '应用名称'}
+                      {getAppDisplayName(task.appInfo, locale, task.appId || t('common.fallback.appName'))}
                     </p>
                     <p className={styles.contentSize}>{renderStatusText(task)}</p>
                   </div>
@@ -241,7 +247,7 @@ const DownloadProgress = () => {
               </div>
             ))
           ) : (
-            <Empty description="暂无安装任务" />
+            <Empty description={t('components.downloadProgress.emptyTasks')} />
           )}
         </div>
         <div className={styles.speedToolAndDownloadFooter}>
@@ -249,7 +255,7 @@ const DownloadProgress = () => {
           {contextHolder}
           {history.length > 0 ? (
             <div className={styles.downloadFooter} onClick={cleanDownloadHistory}>
-            清除下载记录
+              {t('components.downloadProgress.clearHistory')}
             </div>
           ) : null}
         </div>

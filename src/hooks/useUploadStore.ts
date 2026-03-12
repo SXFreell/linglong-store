@@ -7,6 +7,7 @@ import React, { useState, useCallback } from 'react'
 import { message, Modal } from 'antd'
 import { createAlova } from 'alova'
 import adapterFetch from 'alova/fetch'
+import { translate, useI18n } from '@/i18n'
 
 // Gitee 仓库配置
 const GITEE_REPO = 'Shirosu/linglong-store'
@@ -226,7 +227,8 @@ export async function fetchLatestUpdate(
     }
 
     const version = latestRelease.tag_name.replace(/^v/, '')
-    const changelog = latestRelease.body || '暂无更新日志'
+    // 组件外的辅助函数无法直接用 Hook，这里使用 i18n 单例维持用户可见回退文案的一致性。
+    const changelog = latestRelease.body || translate('common.fallback.none')
 
     // 筛选对应架构的安装包
     const debAsset = latestRelease.assets.find(
@@ -267,6 +269,7 @@ export async function fetchLatestUpdate(
  * 提供版本检测、更新信息获取等功能
  */
 export function useUpdateStore() {
+  const { t } = useI18n()
   const [state, setState] = useState<UpdateCheckState>({
     checking: false,
     hasUpdate: false,
@@ -295,11 +298,11 @@ export function useUpdateStore() {
           checking: false,
           hasUpdate: false,
           updateInfo: null,
-          error: '未找到更新信息',
+          error: t('hooks.updateStore.noAvailableUpdate'),
         })
 
         if (!silent) {
-          message.info('暂无可用更新')
+          message.info(t('hooks.updateStore.noAvailableUpdate'))
         }
         return
       }
@@ -329,8 +332,8 @@ export function useUpdateStore() {
 
           // 使用 Modal 弹窗显示更新信息
           const contentElements = [
-            React.createElement('p', { key: 'current' }, `当前版本: v${currentVersion}`),
-            React.createElement('p', { key: 'latest' }, `最新版本: v${updateInfo.version}`),
+            React.createElement('p', { key: 'current' }, t('hooks.updateStore.currentVersion', { version: currentVersion })),
+            React.createElement('p', { key: 'latest' }, t('hooks.updateStore.latestVersion', { version: updateInfo.version })),
           ]
 
           if (updateInfo.changelog) {
@@ -338,7 +341,7 @@ export function useUpdateStore() {
               React.createElement(
                 'div',
                 { key: 'changelog', style: { marginTop: '16px' } },
-                React.createElement('p', { style: { fontWeight: 'bold', marginBottom: '8px' } }, '更新内容:'),
+                React.createElement('p', { style: { fontWeight: 'bold', marginBottom: '8px' } }, t('hooks.updateStore.changelog')),
                 React.createElement(
                   'div',
                   {
@@ -362,7 +365,7 @@ export function useUpdateStore() {
             React.createElement(
               'div',
               { key: 'download-link', style: { marginTop: '16px' } },
-              React.createElement('p', { style: { fontWeight: 'bold', marginBottom: '8px' } }, '下载地址:'),
+              React.createElement('p', { style: { fontWeight: 'bold', marginBottom: '8px' } }, t('hooks.updateStore.downloadLink')),
               React.createElement(
                 'div',
                 {
@@ -381,11 +384,11 @@ export function useUpdateStore() {
           )
 
           Modal.confirm({
-            title: '发现新版本',
+            title: t('hooks.updateStore.newVersionTitle'),
             content: React.createElement('div', null, ...contentElements),
-            okText: '复制下载链接',
+            okText: t('hooks.updateStore.copyDownloadLink'),
             okType: 'primary',
-            cancelText: '稍后再说',
+            cancelText: t('hooks.updateStore.later'),
             width: 600,
             onOk: () => {
               try {
@@ -393,15 +396,15 @@ export function useUpdateStore() {
                 navigator.clipboard
                   .writeText(releaseUrl)
                   .then(() => {
-                    message.success('下载链接已复制到剪贴板')
+                    message.success(t('hooks.updateStore.copyLinkSuccess'))
                   })
                   .catch((err) => {
                     console.error('复制失败:', err)
-                    message.error('复制失败，请手动复制链接')
+                    message.error(t('hooks.updateStore.copyLinkFailed'))
                   })
               } catch (err) {
                 console.error('复制失败:', err)
-                message.error('复制失败，请手动复制链接')
+                message.error(t('hooks.updateStore.copyLinkFailed'))
               }
             },
           })
@@ -416,11 +419,11 @@ export function useUpdateStore() {
         })
 
         if (!silent) {
-          message.info('当前已是最新版本')
+          message.info(t('hooks.updateStore.upToDate'))
         }
       }
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '检查更新失败'
+      const errorMessage = error instanceof Error ? error.message : t('common.fallback.unknown')
 
       setState({
         checking: false,
@@ -430,12 +433,12 @@ export function useUpdateStore() {
       })
 
       if (!silent) {
-        message.error(`检查更新失败：${errorMessage}`)
+        message.error(t('hooks.updateStore.checkFailed', { error: errorMessage }))
       }
 
       console.error('检查更新失败：', error)
     }
-  }, [])
+  }, [t])
 
   /**
    * 重置更新状态

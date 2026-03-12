@@ -1,6 +1,7 @@
 /**
  * API 相关常量定义
  */
+import type { TranslationKey } from '@/i18n'
 
 // HTTP 状态码
 export const HTTP_STATUS = {
@@ -58,20 +59,20 @@ export const DEFAULT_CONFIG = {
   CHARSET: 'utf-8',
 } as const
 
-// 错误信息
-export const ERROR_MESSAGES = {
-  NETWORK_ERROR: '网络连接失败，请检查网络设置',
-  TIMEOUT_ERROR: '请求超时，请稍后重试',
-  SERVER_ERROR: '服务器错误，请稍后重试',
-  UNKNOWN_ERROR: '未知错误，请稍后重试',
-  CANCELED_ERROR: '请求已取消',
-  PARSE_ERROR: '数据解析失败',
-  FORBIDDEN: '权限不足，请联系管理员',
-  UNAUTHORIZED: '登录已过期，请重新登录',
-  NOT_FOUND: '请求的资源不存在',
-  BAD_REQUEST: '请求参数错误',
-  TOO_MANY_REQUESTS: '请求过于频繁，请稍后重试',
-  SERVICE_UNAVAILABLE: '服务暂时不可用，请稍后重试',
+// 错误信息 i18n key 映射
+export const ERROR_MESSAGE_KEYS: Record<string, TranslationKey> = {
+  NETWORK_ERROR: 'apiError.networkError',
+  TIMEOUT_ERROR: 'apiError.timeoutError',
+  SERVER_ERROR: 'apiError.serverError',
+  UNKNOWN_ERROR: 'apiError.unknownError',
+  CANCELED_ERROR: 'apiError.canceledError',
+  PARSE_ERROR: 'apiError.parseError',
+  FORBIDDEN: 'apiError.forbidden',
+  UNAUTHORIZED: 'apiError.unauthorized',
+  NOT_FOUND: 'apiError.notFound',
+  BAD_REQUEST: 'apiError.badRequest',
+  TOO_MANY_REQUESTS: 'apiError.tooManyRequests',
+  SERVICE_UNAVAILABLE: 'apiError.serviceUnavailable',
 } as const
 
 // 内容类型

@@ -4,6 +4,8 @@ import { getRunningLinglongApps, uninstallApp } from '@/apis/invoke'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { sendUninstallRecord } from '@/services/analyticsService'
 import { syncAfterAppChange } from '@/utils/appChangeSync'
+import { useI18n } from '@/i18n'
+import { getAppDisplayName } from '@/utils/appDisplay'
 
 type UninstallOptions = {
   /** 所有版本卸载完后的回调（例如跳转） */
@@ -32,6 +34,7 @@ type BasicAppInfo = {
  * 统一的卸载逻辑
  */
 export const useAppUninstall = () => {
+  const { t, locale } = useI18n()
   const removeApp = useInstalledAppsStore(state => state.removeApp)
 
   const performUninstall = useCallback(
@@ -61,17 +64,17 @@ export const useAppUninstall = () => {
         }).catch((err) => console.warn('[useAppUninstall] sendUninstallRecord failed:', err))
 
         if (!options?.silent) {
-          message.success('卸载成功')
+          message.success(t('hooks.appUninstall.uninstallSuccess'))
         }
         return true
       } catch (error) {
         if (!options?.silent) {
-          message.error(`卸载失败: ${error}`)
+          message.error(t('hooks.appUninstall.uninstallFailed', { error: String(error) }))
         }
         throw error
       }
     },
-    [removeApp],
+    [removeApp, t],
   )
 
   const uninstall = useCallback(
@@ -80,7 +83,7 @@ export const useAppUninstall = () => {
       const version = appInfo.version || ''
 
       if (!appId || !version) {
-        message.error('应用信息不完整')
+        message.error(t('hooks.appUninstall.incompleteAppInfo'))
         return false
       }
 
@@ -100,25 +103,25 @@ export const useAppUninstall = () => {
       })()
 
       // 根据运行状态构建弹窗配置
-      const appDisplayName = appInfo.zhName || appInfo.name || appId
+      const appDisplayName = getAppDisplayName(appInfo, locale, appId)
       let modalConfig = {}
       if (options?.confirmTitle || options?.confirmMessage) {
         modalConfig = {
           title: options.confirmTitle,
           content: options.confirmMessage,
-          okText: '确认卸载',
+          okText: t('hooks.appUninstall.confirmUninstall'),
         }
       } else {
         modalConfig = isRunning
           ? {
-            title: `${appDisplayName} 正在运行`,
-            content: '应用正在运行，卸载会强制关闭，是否继续？',
-            okText: '强制关闭并卸载',
+            title: t('hooks.appUninstall.runningTitle', { appName: appDisplayName }),
+            content: t('hooks.appUninstall.runningContent'),
+            okText: t('hooks.appUninstall.forceCloseAndUninstall'),
           }
           : {
-            title: '确认卸载',
-            content: `确认要卸载 ${appDisplayName} 的版本 ${version} 吗？`,
-            okText: '确认卸载',
+            title: t('hooks.appUninstall.confirmUninstall'),
+            content: t('hooks.appUninstall.confirmUninstallContent', { appName: appDisplayName, version }),
+            okText: t('hooks.appUninstall.confirmUninstall'),
           }
       }
 
@@ -127,7 +130,7 @@ export const useAppUninstall = () => {
       return new Promise<boolean>((resolve) => {
         Modal.confirm({
           ...modalConfig,
-          cancelText: '取消',
+          cancelText: t('common.actions.cancel'),
           okButtonProps: { type: 'default' },
           cancelButtonProps: { type: 'primary' },
           onOk: async() => {
@@ -143,7 +146,7 @@ export const useAppUninstall = () => {
         })
       })
     },
-    [performUninstall],
+    [locale, performUninstall, t],
   )
 
   return { uninstall }

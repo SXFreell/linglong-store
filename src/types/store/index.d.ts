@@ -4,6 +4,8 @@
  */
 
 declare namespace Store {
+  type LanguagePreference = 'system' | 'zh-CN' | 'en-US'
+
   /**
    * Config Store（应用配置存储）
    * 用于存储应用启动和显示相关的配置选项
@@ -13,10 +15,14 @@ declare namespace Store {
     checkVersion: boolean
     /** 是否显示基础运行服务 */
     showBaseService: boolean
+    /** 界面语言偏好 */
+    languagePreference: LanguagePreference
     /** 切换版本检查状态 */
     changeCheckVersionStatus: (value: boolean) => void
     /** 切换基础服务显示状态 */
     changeBaseServiceStatus: (value: boolean) => void
+    /** 切换界面语言偏好 */
+    changeLanguagePreference: (value: LanguagePreference) => void
   }
 
   /**

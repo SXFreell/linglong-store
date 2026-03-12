@@ -1,11 +1,11 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { ConfigProvider, App } from 'antd'
 import './styles/App.scss'
-import { Token, ComponentsTheme } from './styles/Theme'
 import Router from './router'
-import { tauriAppConfigHandler } from './stores/appConfig'
+import { tauriAppConfigHandler, useConfigStore } from './stores/appConfig'
 import { setupLoggingBridge } from './util/logging'
+import { initializeI18n } from './i18n'
+import AppProviders from './providers/AppProviders'
 
 const root = ReactDOM.createRoot(document.getElementById('root') as HTMLElement)
 
@@ -21,22 +21,19 @@ async function initializeApp() {
   await setupLoggingBridge()
 
   await tauriAppConfigHandler.start()
+  await initializeI18n(useConfigStore.getState().languagePreference)
 
   // 在开发环境使用 StrictMode 进行检测
   // 在生产环境移除 StrictMode 以避免性能开销
   if (import.meta.env.DEV) {
     root.render(
       <React.StrictMode>
-        <ConfigProvider theme={{ cssVar: true, hashed: false, token: Token, components: ComponentsTheme }}>
-          <App><Router /></App>
-        </ConfigProvider>
+        <AppProviders><Router /></AppProviders>
       </React.StrictMode>,
     )
   } else {
     root.render(
-      <ConfigProvider theme={{ cssVar: true, hashed: false, token: Token, components: ComponentsTheme }}>
-        <App><Router /></App>
-      </ConfigProvider>,
+      <AppProviders><Router /></AppProviders>,
     )
   }
 }

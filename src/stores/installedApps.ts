@@ -5,6 +5,7 @@ import { create } from 'zustand'
 import { getInstalledLinglongApps } from '@/apis/invoke'
 import { getAppDetails } from '@/apis/apps'
 import { message } from 'antd'
+import { translate } from '@/i18n'
 
 /** 从应用列表构建 appId → app 的索引 Map */
 function buildAppMap(apps: API.INVOKE.EnrichedInstalledApp[]) {
@@ -35,7 +36,7 @@ export const useInstalledAppsStore = create<Store.InstalledApps>((set, get) => (
       set({ installedApps: enrichedApps, installedAppMap: buildAppMap(enrichedApps) })
     } catch (error) {
       // 错误处理：转换错误信息并更新状态
-      message.error('获取已安装应用失败，请重试！')
+      message.error(translate('installedApps.fetchFailed'))
       console.error('Failed to fetch installed apps:', error)
     }
   },
@@ -50,7 +51,7 @@ export const useInstalledAppsStore = create<Store.InstalledApps>((set, get) => (
       set({ installedApps: updatedApps, installedAppMap: buildAppMap(updatedApps) })
     } catch (error) {
       console.error('Failed to update app details:', error)
-      message.error('更新应用详情失败，请重试！')
+      message.error(translate('installedApps.updateDetailsFailed'))
     }
   },
   removeApp: (appId: string, version: string) => {

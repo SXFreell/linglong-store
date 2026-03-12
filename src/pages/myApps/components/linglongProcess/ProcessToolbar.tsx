@@ -1,9 +1,10 @@
 import { Button, Tooltip, Badge, Space } from 'antd'
 import { ReloadOutlined, LoadingOutlined, CheckCircleOutlined } from '@ant-design/icons'
 import styles from './index.module.scss'
+import { useI18n } from '@/i18n'
 
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+function formatTime(date: Date, locale: string): string {
+  return date.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
 }
 
 interface ProcessToolbarProps {
@@ -26,9 +27,10 @@ const ProcessToolbar: React.FC<ProcessToolbarProps> = ({
   error,
   onRefresh,
 }) => {
+  const { t, locale } = useI18n()
   const lastRefreshText = lastRefreshedAt
-    ? `上次刷新：${formatTime(lastRefreshedAt)}`
-    : '尚未刷新'
+    ? t('process.toolbar.lastRefreshed', { time: formatTime(lastRefreshedAt, locale) })
+    : t('process.toolbar.notRefreshedYet')
 
   return (
     <div className={styles.toolbar}>
@@ -40,18 +42,18 @@ const ProcessToolbar: React.FC<ProcessToolbarProps> = ({
             color="var(--ant-color-primary)"
             overflowCount={99}
           />
-          <span className={styles.countLabel}>运行中</span>
+          <span className={styles.countLabel}>{t('process.toolbar.runningCountLabel')}</span>
         </div>
 
         <div className={styles.refreshInfo}>
           {isRefreshing ? (
             <span className={styles.refreshing}>
               <LoadingOutlined style={{ marginRight: 4 }} />
-              刷新中…
+              {t('process.toolbar.refreshing')}
             </span>
           ) : error ? (
             <Tooltip title={error}>
-              <span className={styles.refreshError}>刷新失败，自动重试中</span>
+              <span className={styles.refreshError}>{t('process.toolbar.refreshFailedRetrying')}</span>
             </Tooltip>
           ) : (
             <span className={styles.refreshTime}>
@@ -62,7 +64,7 @@ const ProcessToolbar: React.FC<ProcessToolbarProps> = ({
         </div>
       </Space>
 
-      <Tooltip title="手动刷新">
+      <Tooltip title={t('process.toolbar.manualRefresh')}>
         <Button
           type="text"
           icon={<ReloadOutlined spin={isRefreshing} />}

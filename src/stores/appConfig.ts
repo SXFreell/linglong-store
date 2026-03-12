@@ -14,6 +14,8 @@ export const useConfigStore = create<Store.Config>((set) => ({
   checkVersion: false,
   /** 是否显示基础服务应用的标志 */
   showBaseService: false,
+  /** 界面语言偏好；system 表示跟随系统语言 */
+  languagePreference: 'system',
 
   /**
    * 更改版本检查功能的状态
@@ -29,6 +31,14 @@ export const useConfigStore = create<Store.Config>((set) => ({
    */
   changeBaseServiceStatus: (value: boolean) => set((_state) => ({
     showBaseService: value,
+  })),
+
+  /**
+   * 更改界面语言偏好
+   * @param value - 新的语言偏好
+   */
+  changeLanguagePreference: (value: Store.LanguagePreference) => set((_state) => ({
+    languagePreference: value,
   })),
 }))
 

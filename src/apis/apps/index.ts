@@ -1,4 +1,5 @@
 import { get, post, upload } from '..'
+import { translate } from '@/i18n'
 
 /**
  * 获取应用分类列表
@@ -154,7 +155,7 @@ export const uploadLog = (file: File) => {
   // [安全验证] 限制文件大小，防止上传过大文件导致服务器压力
   const MAX_SIZE = 10 * 1024 * 1024 // 10MB
   if (file.size > MAX_SIZE) {
-    throw new Error('文件大小不能超过 10MB')
+    throw new Error(translate('api.fileSizeExceed'))
   }
   return upload<API.Common.BaseResponse<string>>('/app/uploadLog', file)
 }

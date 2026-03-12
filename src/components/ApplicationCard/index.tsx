@@ -6,16 +6,10 @@ import DefaultIcon from '@/assets/linyaps.svg'
 
 import { runApp } from '@/apis/invoke'
 import { OperateType } from '@/constants/applicationCard'
+import { useI18n } from '@/i18n'
+import { getAppDescription, getAppDisplayName } from '@/utils/appDisplay'
 
 const { Text, Paragraph, Title } = Typography
-
-// 操作按钮配置（提取为常量）
-const OPERATE_LIST: COMP.APPCARD.OperateItem[] = [
-  { name: '卸载', id: OperateType.UNINSTALL },
-  { name: '安装', id: OperateType.INSTALL },
-  { name: '更新', id: OperateType.UPDATE },
-  { name: '打开', id: OperateType.OPEN },
-]
 
 const ApplicationCard = ({
   operateId = OperateType.INSTALL,
@@ -27,10 +21,13 @@ const ApplicationCard = ({
   onInstall,
   onUninstall,
 }: COMP.APPCARD.ApplicationCardProps) => {
+  const { t, locale } = useI18n()
   const navigate = useNavigate()
 
   const [buttonLoading, setButtonLoading] = useState(false)
   const cardLoading = !appInfo?.appId || appInfo.appId.startsWith('empty-')
+  const appDisplayName = getAppDisplayName(appInfo, locale, t('common.fallback.appName'))
+  const appDescription = getAppDescription(appInfo, t('common.fallback.appDescription'))
 
   // 根据 store 中的安装状态和版本对比，决定展示的操作类型
   const resolvedOperateId = useMemo(() => {
@@ -59,8 +56,15 @@ const ApplicationCard = ({
 
   // 计算当前显示的操作按钮
   const currentOperate = useMemo(() => {
-    return OPERATE_LIST[resolvedOperateId] || OPERATE_LIST[OperateType.INSTALL]
-  }, [resolvedOperateId])
+    const operateMap: Record<number, COMP.APPCARD.OperateItem> = {
+      [OperateType.UNINSTALL]: { name: t('common.actions.uninstall'), id: OperateType.UNINSTALL },
+      [OperateType.INSTALL]: { name: t('common.actions.install'), id: OperateType.INSTALL },
+      [OperateType.UPDATE]: { name: t('common.actions.update'), id: OperateType.UPDATE },
+      [OperateType.OPEN]: { name: t('common.actions.open'), id: OperateType.OPEN },
+    }
+
+    return operateMap[resolvedOperateId] || operateMap[OperateType.INSTALL]
+  }, [resolvedOperateId, t])
 
   // 监听安装队列，保持按钮 loading 与实际安装/更新进度同步
   useEffect(() => {
@@ -137,10 +141,10 @@ const ApplicationCard = ({
       const handleRunApp = async() => {
         try {
           await runApp(appInfo.appId as string)
-          message.success('应用启动成功')
+          message.success(t('components.applicationCard.runSuccess'))
         } catch (error) {
           console.error('[handleRunApp] 启动应用失败:', error)
-          message.error(`启动应用失败: ${error}`)
+          message.error(t('components.applicationCard.runFailed', { error: String(error) }))
         } finally {
           setButtonLoading(false)
         }
@@ -148,7 +152,7 @@ const ApplicationCard = ({
 
       handleRunApp()
     }
-  }, [appInfo, onInstall, onUninstall, resolvedOperateId])
+  }, [appInfo, onInstall, onUninstall, resolvedOperateId, t])
 
   return (
     <div
@@ -156,28 +160,28 @@ const ApplicationCard = ({
       onClick={handleNavigateToDetail}
     >
       <div className={styles.icon}>
-        <img src={iconUrl} alt={appInfo.name || '应用图标'} />
+        <img src={iconUrl} alt={appInfo.name || t('common.fallback.appIcon')} />
       </div>
       <div className={`${type === 'recommend' ? styles.containerR : styles.containerD} ${styles.container}`}>
         <div className={styles.content}>
           <div className={styles.title}>
-            <Title level={5} ellipsis={{ tooltip: appInfo.zhName || appInfo.name || '应用名称' }}>
-              {appInfo.zhName || appInfo.name || '应用名称'}
+            <Title level={5} ellipsis={{ tooltip: appDisplayName }}>
+              {appDisplayName}
             </Title>
           </div>
 
           <div className={styles.description}>
-            <Paragraph ellipsis={{ tooltip: appInfo.description || '应用简介', rows: 1, expandable: false }}>
-              {appInfo.description || '应用简介'}
+            <Paragraph ellipsis={{ tooltip: appDescription, rows: 1, expandable: false }}>
+              {appDescription}
             </Paragraph>
           </div>
           {
             type === 'recommend' && (<div className={styles.version}>
-              <Paragraph ellipsis={{ tooltip: appInfo.version || '版本', rows: 1, expandable: false }} style={{ fontSize: '12px' }}>
-            版本: {appInfo.version || '-'}
+              <Paragraph ellipsis={{ tooltip: appInfo.version || t('common.fallback.version'), rows: 1, expandable: false }} style={{ fontSize: '12px' }}>
+                {t('components.applicationCard.versionLabel', { version: appInfo.version || '-' })}
               </Paragraph>
               <Text type="secondary" style={{ width: '1.875rem', fontSize: '10px', color: '#cda354' }}>
-            TOP
+                {t('components.applicationCard.topLabel')}
               </Text>
             </div>
             )

@@ -14,12 +14,14 @@ import { useSearchStore } from '@/stores/global'
 import searchIcon from '@/assets/icons/searchIcon.svg'
 import cleanIcon from '@/assets/icons/clean.svg'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { useI18n } from '@/i18n'
 
 /**
  * 标题栏组件
  * 处理窗口控制、搜索功能和下载管理
  */
 const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
+  const { t } = useI18n()
   /** 当前安装任务 */
   const currentTask = useInstallQueueStore((state) => state.currentTask)
   /** 检查是否有正在进行的安装任务 */
@@ -82,10 +84,10 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
       // 检查是否有安装任务
       if (hasActiveTasks()) {
         Modal.confirm({
-          title: '有安装任务正在进行',
-          content: '当前有应用正在安装或等待安装，退出将会取消这些安装任务。确定要退出吗？',
-          okText: '取消安装并退出',
-          cancelText: '暂不退出',
+          title: t('layout.titlebar.installTaskRunningTitle'),
+          content: t('layout.titlebar.installTaskRunningContent'),
+          okText: t('layout.titlebar.quitAndCancelInstall'),
+          cancelText: t('layout.titlebar.stayInApp'),
           okButtonProps: { danger: true },
           onOk: async() => {
             try {
@@ -112,7 +114,7 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
     } catch (error) {
       console.error('Failed to quit:', error)
     }
-  }, [hasActiveTasks, currentTask, clearQueue])
+  }, [clearQueue, currentTask, hasActiveTasks, t])
 
   /**
    * 最小化窗口
@@ -186,7 +188,7 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
       }
       return
     }
-    message.info('请输入查询条件！')
+    message.info(t('layout.titlebar.emptyKeyword'))
   }
 
   /**
@@ -196,8 +198,8 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
     <div className={styles.titlebar} data-tauri-drag-region="true">
       {/* 左侧：Logo和标题 */}
       <div className={styles.titlebarLeft}>
-        <img src="/logo.svg" alt="logo" className={styles.logo} draggable={false} />
-        <span className={styles.title}>玲珑应用商店社区版</span>
+        <img src="/logo.svg" alt={t('layout.titlebar.logoAlt')} className={styles.logo} draggable={false} />
+        <span className={styles.title}>{t('common.appName')}</span>
       </div>
       {/* 中间：搜索框（仅在初始化完成后显示） */}
       {
@@ -209,14 +211,14 @@ const Titlebar = ({ showSearch }: { showSearch: boolean}) => {
               value={realKeyword}
               onChange={handleInputChange}
               onKeyDown={handleKeyDown}
-              placeholder='在这里搜索你想搜索的应用'
+              placeholder={t('layout.titlebar.searchPlaceholder')}
             />
           </div>
           <div className={styles.inputIcon}>
             {/* 清空按钮（仅在有关键词时显示） */}
-            {realKeyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt="清空" /> : null}
+            {realKeyword ? <img src={cleanIcon} onClick={handleClean} width='50%' height='100%' alt={t('layout.titlebar.clearInput')} /> : null}
             {/* 搜索按钮 */}
-            <img src={searchIcon} onClick={handleSearch} width='50%' height='100%' alt="搜索" />
+            <img src={searchIcon} onClick={handleSearch} width='50%' height='100%' alt={t('layout.titlebar.search')} />
           </div>
         </div> : null
       }

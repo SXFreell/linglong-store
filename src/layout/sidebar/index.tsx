@@ -11,8 +11,10 @@ import Appsetting from '@/assets/icons/appSetting.svg'
 import DownloadProgress from '@/components/DownloadProgress'
 import { useState, useEffect } from 'react'
 import { useInstallQueueStore } from '@/stores/installQueue'
+import { useI18n } from '@/i18n'
 
 const Sidebar = ({ className }: { className: string }) => {
+  const { t } = useI18n()
   const resetKeyword = useSearchStore((state) => state.resetKeyword)
   const customMenus = useGlobalStore((state) => state.customMenuCategory)
   const menuBadges = useMenuBadges()
@@ -68,7 +70,7 @@ const Sidebar = ({ className }: { className: string }) => {
                 style={{ cursor: 'pointer' }}
               >
                 <span className={styles.menuItemIcon}>
-                  <img src={isActive ? item.activeIcon : item.icon} alt={item.menuName} />
+                  <img src={isActive ? item.activeIcon : item.icon} alt={t(item.menuNameKey)} />
                   {/* {isActive ? item.activeIcon : item.icon} */}
                 </span>
                 {badgeCount > 0 ? (
@@ -79,10 +81,10 @@ const Sidebar = ({ className }: { className: string }) => {
                     offset={[6, 0]}
                     className={styles.menuBadge}
                   >
-                    <span className={styles.menuItemText}>{item.menuName}</span>
+                    <span className={styles.menuItemText}>{t(item.menuNameKey)}</span>
                   </Badge>
                 ) : (
-                  <span className={styles.menuItemText}>{item.menuName}</span>
+                  <span className={styles.menuItemText}>{t(item.menuNameKey)}</span>
                 )}
               </div>
             )
@@ -110,12 +112,12 @@ const Sidebar = ({ className }: { className: string }) => {
         }
       </div>
       <div className={styles.footerIcons} >
-        <img src={MyApp} alt="MyApp" onClick={() => handleMenuClick('page', '/my_apps')} />
-        <img src={hasDownloading ? downloadAppActive : downloadApp} alt="downloadApp" onClick={() => handleMenuClick('component', 'downloadApp')} />
-        <img src={Appsetting} alt="Appsetting" onClick={() => handleMenuClick('page', '/setting')} />
+        <img src={MyApp} alt={t('layout.sidebar.myApps')} onClick={() => handleMenuClick('page', '/my_apps')} />
+        <img src={hasDownloading ? downloadAppActive : downloadApp} alt={t('layout.sidebar.downloadManager')} onClick={() => handleMenuClick('component', 'downloadApp')} />
+        <img src={Appsetting} alt={t('layout.sidebar.settings')} onClick={() => handleMenuClick('page', '/setting')} />
       </div>
       <Modal
-        title="下载管理"
+        title={t('layout.sidebar.downloadManager')}
         footer={null}
         centered={true}
         closable={false}

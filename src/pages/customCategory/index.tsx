@@ -9,9 +9,11 @@ import { useParams } from 'react-router-dom'
 import { useCachedPaginatedList } from '@/hooks/useCachedPaginatedList'
 import { useKeepAliveVisibility } from '@/hooks/useKeepAliveVisibility'
 import { getBestAppListCache, writeRuntimeAppListCache } from '@/services/appListCache'
+import { useI18n } from '@/i18n'
 const defaultPageSize = 30 // 每页显示数量
 type AppInfo = API.APP.AppMainDto
 const OfficeApps = () => {
+  const { t } = useI18n()
   const { arch, repoName, customMenuCategory } = useGlobalStore()
   const { isVisible } = useKeepAliveVisibility()
   const [recommendAppList, setRecommendAppList] = useState<AppInfo[]>([])
@@ -133,13 +135,13 @@ const OfficeApps = () => {
           style={{ minWidth: '5rem', maxWidth: '20rem', flex: 1 }}
           onChange={handleSortTypeChange}
           options={[
-            { value: 'createTime', label: '按上架时间排序' },
-            { value: 'installCount', label: '按安装量排序' },
-            { value: 'last30Downloads', label: '按近30天下载量排序' },
+            { value: 'createTime', label: t('customCategory.sortByTime') },
+            { value: 'installCount', label: t('customCategory.sortByInstall') },
+            { value: 'last30Downloads', label: t('customCategory.sortByRecent30') },
           ]}
         />
         <Checkbox checked={filter}
-          onChange={handleFilterChange}>过滤低分应用</Checkbox>
+          onChange={handleFilterChange}>{t('customCategory.filterLowScore')}</Checkbox>
       </div>
     </div>
     <div className={styles.recommendApplicationList} style={{ marginTop: !initialLoading && recommendAppList.length > 0 ? '3rem' : 0 }}>
@@ -168,12 +170,12 @@ const OfficeApps = () => {
               />
             ))
           }
-          {loading && <div className={styles.loadingTip}>加载中...</div>}
-          {!loading && !hasMore && <div className={styles.noMoreTip}>没有更多数据了</div>}
+          {loading && <div className={styles.loadingTip}>{t('customCategory.loadingMore')}</div>}
+          {!loading && !hasMore && <div className={styles.noMoreTip}>{t('customCategory.noMoreData')}</div>}
         </>
       ) : (
         <div className={styles.emptyState}>
-          <Empty description="查无数据" image={null} />
+          <Empty description={t('customCategory.empty')} image={null} />
         </div>
       )}
     </div>

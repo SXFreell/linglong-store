@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.3.3] - 2026-03-12
+
+### 新增
+- 新增项目级 i18n 基础设施
+  - 新增 `src/i18n/` 统一处理语言偏好解析、翻译资源、Ant Design locale 映射与组件翻译 Hook
+  - 新增根级 `src/providers/AppProviders.tsx`，统一同步 `ConfigProvider.locale` 与页面语言上下文
+  - 设置页新增界面语言切换，语言偏好持久化到 `useConfigStore`
+  - 新增 `src/utils/appDisplay.ts`，统一封装应用名称/描述展示回退规则
+  - 新增设计文档 `docs/i18n-architecture.md`
+
+### 优化
+- 标题栏、侧边栏、启动页、环境检测弹窗、设置页、安装/卸载/下载等高频界面文案改为可翻译资源
+- 远端请求统一附带 `Accept-Language` 请求头，为后续远端内容多语言协商预留能力
+
 ## [2.3.2] - 2026-03-10
 
 ### 新增

@@ -17,6 +17,7 @@ import { InstallOptions, useAppInstall } from '@/hooks/useAppInstall'
 import { useAppUninstall } from '@/hooks/useAppUninstall'
 import { compareVersions } from '@/util/checkVersion'
 import { formatFileSize } from '@/util/format'
+import { useI18n } from '@/i18n'
 
 interface VersionInfo extends API.APP.AppMainDto {
   version?: string
@@ -27,6 +28,7 @@ const SCREENSHOT_PLACEHOLDER_COUNT = 3
 const AppDetail = () => {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useI18n()
   const app = location.state as API.INVOKE.EnrichedInstalledApp | undefined
 
   const [versions, setVersions] = useState<VersionInfo[]>([])
@@ -161,7 +163,7 @@ const AppDetail = () => {
       setVersions(list)
     } catch (err) {
       console.error('loadVersions: error', err)
-      message.error(`加载版本列表失败: ${err instanceof Error ? err.message : String(err)}`)
+      message.error(t('appDetail.loadVersionsFailed', { error: err instanceof Error ? err.message : String(err) }))
     } finally {
       setLoading(false)
     }
@@ -185,7 +187,7 @@ const AppDetail = () => {
     } catch (err) {
       console.error('appAllInfo: error', err)
       const errorMessage = err instanceof Error ? err.message : String(err)
-      message.error(`获取应用详情失败: ${errorMessage}`)
+      message.error(t('appDetail.loadDetailFailed', { error: errorMessage }))
     } finally {
       setScreenshotLoading(false)
     }
@@ -215,7 +217,7 @@ const AppDetail = () => {
       }
     } catch (error) {
       console.error('[handleUninstall] Error uninstalling:', currentApp.appId, version, error)
-      message.error(`卸载失败: ${error}`)
+      message.error(t('appDetail.uninstallFailed', { error: String(error) }))
     } finally {
       setUninstallingVersion(null)
     }
@@ -232,45 +234,45 @@ const AppDetail = () => {
     try {
       // 根据 ll-cli 文档，启动应用只需要 appId，不需要版本号
       await runApp(currentApp.appId)
-      message.success('应用启动成功')
+      message.success(t('appDetail.runSuccess'))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       console.error('[handleRun] Failed to run app:', errorMessage)
-      message.error(`启动失败: ${errorMessage}`)
+      message.error(t('appDetail.runFailed', { error: errorMessage }))
     }
   }
 
   const handleCopyAppId = async(appId?: string) => {
     if (!appId) {
-      message.error('应用ID不存在')
+      message.error(t('appDetail.appIdMissing'))
       return
     }
 
     try {
       await navigator.clipboard.writeText(appId)
-      message.success('应用ID已复制')
+      message.success(t('appDetail.appIdCopied'))
     } catch (error) {
       console.error('[handleCopyAppId] Failed to copy:', error)
-      message.error('复制失败，请手动复制')
+      message.error(t('appDetail.copyFailed'))
     }
   }
 
   const handleCreateDesktopShortcut = async() => {
     if (!currentApp?.appId) {
-      message.error('应用ID不存在')
+      message.error(t('appDetail.appIdMissing'))
       return
     }
 
     setCreatingShortcut(true)
     try {
       const resultMessage = await createDesktopShortcut(currentApp.appId)
-      message.success(resultMessage || '桌面快捷方式创建成功')
+      message.success(resultMessage || t('appDetail.shortcutCreated'))
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error)
       if (errorMessage.includes('已存在') || errorMessage.includes('不会覆盖')) {
         message.warning(errorMessage)
       } else {
-        message.error(`创建快捷方式失败: ${errorMessage}`)
+        message.error(t('appDetail.shortcutFailed', { error: errorMessage }))
       }
     } finally {
       setCreatingShortcut(false)
@@ -285,7 +287,7 @@ const AppDetail = () => {
     const installParam: InstallOptions = {}
 
     if (!currentApp?.appId) {
-      message.error('应用信息不完整')
+      message.error(t('appDetail.appInfoIncomplete'))
       return
     }
 
@@ -311,46 +313,46 @@ const AppDetail = () => {
 
   const columns: TableColumnProps<VersionInfo>[] = [
     {
-      title: '版本号',
+      title: t('appDetail.columns.version'),
       dataIndex: 'version',
       align: 'center',
     },
     {
-      title: '应用类型',
+      title: t('appDetail.columns.appType'),
       dataIndex: 'kind',
       align: 'center',
       render: (value: string | undefined) => value || '--',
     },
     {
-      title: '通道',
+      title: t('appDetail.columns.channel'),
       dataIndex: 'channel',
       align: 'center',
     },
     {
-      title: '模式',
+      title: t('appDetail.columns.module'),
       dataIndex: 'module',
       align: 'center',
     },
     {
-      title: '仓库来源',
+      title: t('appDetail.columns.repoSource'),
       dataIndex: 'repoName',
       align: 'center',
       render: (value: string | undefined) => value || '--',
     },
     {
-      title: '文件大小',
+      title: t('appDetail.columns.fileSize'),
       dataIndex: 'size',
       align: 'center',
       render: (value: string | undefined) => formatFileSize(value),
     },
     {
-      title: '下载量',
+      title: t('appDetail.columns.downloads'),
       dataIndex: 'installCount',
       align: 'center',
       render: (value: number | undefined) => value ?? '--',
     },
     {
-      title: '操作',
+      title: t('appDetail.columns.operate'),
       dataIndex: 'operate',
       align: 'center',
       render: (_col, record) => {
@@ -379,7 +381,7 @@ const AppDetail = () => {
                 onClick={() => handleRun()}
                 disabled={isUninstalling}
               >
-                启动
+                {t('appDetail.actions.run')}
               </Button>,
               <Button
                 key={`${versionValue}-uninstall`}
@@ -391,7 +393,7 @@ const AppDetail = () => {
                 loading={isUninstalling}
                 disabled={isAppInstallBusy}
               >
-                卸载
+                {t('common.actions.uninstall')}
               </Button>,
             ]) : (
               <Button
@@ -402,7 +404,7 @@ const AppDetail = () => {
                 loading={isActiveInstalling}
                 disabled={isUninstalling || isActivePending || isActiveInstalling || shouldDisableForBusy}
               >
-                {isActiveInstalling ? '安装中...' : isActivePending ? '排队中' : '安装'}
+                {isActiveInstalling ? t('appDetail.actions.installing') : isActivePending ? t('appDetail.actions.queued') : t('common.actions.install')}
               </Button>
             )}
           </Space>
@@ -414,7 +416,7 @@ const AppDetail = () => {
   if (!currentApp) {
     return (
       <div className={styles.appDetail}>
-        <div className={styles.error}>应用信息加载失败</div>
+        <div className={styles.error}>{t('appDetail.status.loadFailed')}</div>
       </div>
     )
   }
@@ -425,7 +427,7 @@ const AppDetail = () => {
    */
   const handleInstallBtnClick = async() => {
     if (!currentApp?.appId) {
-      message.error('应用信息不完整')
+      message.error(t('appDetail.appInfoIncomplete'))
       return
     }
 
@@ -465,7 +467,7 @@ const AppDetail = () => {
                   loading={isInstalling}
                   disabled={isInstalling}
                 >
-                  {isInstalling ? '安装中...' : (shouldRunInstalled ? '启动' : (hasInstalledVersion ? '更新' : '安装'))}
+                  {isInstalling ? t('appDetail.actions.installing') : (shouldRunInstalled ? t('appDetail.actions.run') : (hasInstalledVersion ? t('common.actions.update') : t('common.actions.install')))}
                 </Button>
                 {isInstalling && installProgress && (
                   <div style={{ marginTop: '12px', width: '100%' }}>
@@ -491,7 +493,7 @@ const AppDetail = () => {
                     disabled={creatingShortcut}
                     onClick={handleCreateDesktopShortcut}
                   >
-                    创建桌面快捷方式
+                    {t('appDetail.actions.createShortcut')}
                   </Button>
                 )}
               </div>
@@ -502,7 +504,7 @@ const AppDetail = () => {
                   {currentApp.kind || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
-                  应用类型
+                  {t('appDetail.labels.appType')}
                 </Typography.Text>
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
@@ -510,7 +512,7 @@ const AppDetail = () => {
                   {currentApp.channel || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
-                  通道
+                  {t('appDetail.labels.channel')}
                 </Typography.Text>
               </div>
               <div className={[styles.modules, styles.separate].join(' ')}>
@@ -518,7 +520,7 @@ const AppDetail = () => {
                   {currentApp.version || '--'}
                 </Typography.Text>
                 <Typography.Text ellipsis>
-                  当前版本
+                  {t('appDetail.labels.currentVersion')}
                 </Typography.Text>
               </div>
               <div className={styles.modules}>
@@ -530,13 +532,13 @@ const AppDetail = () => {
                     type='text'
                     size='small'
                     icon={<CopyOutlined />}
-                    aria-label='复制应用ID'
+                    aria-label={t('appDetail.actions.copyAppId')}
                     className={styles.copyButton}
                     onClick={() => handleCopyAppId(currentApp.appId)}
                   />
                 </div>
                 <Typography.Text ellipsis>
-                  应用ID
+                  {t('appDetail.labels.appId')}
                 </Typography.Text>
               </div>
             </div>
@@ -545,13 +547,13 @@ const AppDetail = () => {
       </div>
 
       <div className={styles.describe}>
-        <div className={styles.title}>应用描述</div>
+        <div className={styles.title}>{t('appDetail.sections.description')}</div>
         <div className={styles.content}>
-          {currentApp.description || '暂无描述信息'}
+          {currentApp.description || t('appDetail.sections.noDescription')}
         </div>
       </div>
       {shouldShowScreenshotSection ? <div className={styles.screenshot}>
-        <div className={styles.title}>屏幕截图</div>
+        <div className={styles.title}>{t('appDetail.sections.screenshot')}</div>
         <div className={styles.imgBox}>
           <div className={styles.imgList}>
             {screenshotLoading
@@ -569,7 +571,7 @@ const AppDetail = () => {
                     <Image
                       className={styles.screenshotImage}
                       src={item.screenshotKey}
-                      alt='应用截图'
+                      alt={t('appDetail.sections.screenshotAlt')}
                       fallback={DefaultIcon}
                     />
                   </div>
@@ -582,7 +584,7 @@ const AppDetail = () => {
 
 
       <div className={styles.version}>
-        <div className={styles.title}>版本选择</div>
+        <div className={styles.title}>{t('appDetail.sections.versionSelect')}</div>
         <div className={styles.content}>
           <Spin spinning={loading}>
             <Table

@@ -13,6 +13,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getRunningLinglongApps, killLinglongApp } from '@/apis/invoke'
 import { App } from 'antd'
+import { useI18n } from '@/i18n'
 
 type RunningApp = API.INVOKE.RunningApp
 
@@ -50,6 +51,7 @@ interface Props {
 
 export function useLinglongProcesses({ isTabActive }: Props): UseLinglongProcessesReturn {
   const { message } = App.useApp()
+  const { t } = useI18n()
 
   const [processes, setProcesses] = useState<RunningApp[]>([])
   const [isInitialLoading, setIsInitialLoading] = useState(true)
@@ -169,11 +171,11 @@ export function useLinglongProcesses({ isTabActive }: Props): UseLinglongProcess
     setKillLoadingIds(prev => new Set(prev).add(app.id))
     try {
       await killLinglongApp(app.name)
-      message.success(`已停止 ${app.name}`)
+      message.success(t('hooks.linglongProcess.stopSuccess', { appName: app.name }))
       // 停止成功后立即刷新
       refresh()
     } catch (e) {
-      message.error(`停止 ${app.name} 失败：${e}`)
+      message.error(t('hooks.linglongProcess.stopFailed', { appName: app.name, error: String(e) }))
     } finally {
       setKillLoadingIds(prev => {
         const next = new Set(prev)
@@ -181,7 +183,7 @@ export function useLinglongProcesses({ isTabActive }: Props): UseLinglongProcess
         return next
       })
     }
-  }, [message, refresh])
+  }, [message, refresh, t])
 
   return {
     processes,

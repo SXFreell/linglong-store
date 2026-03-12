@@ -3,6 +3,7 @@ import { Empty } from 'antd'
 import styles from './index.module.scss'
 import ConnectedApplicationCard from '@/components/ConnectedApplicationCard'
 import { useInstalledAppsStore } from '@/stores/installedApps'
+import { useI18n } from '@/i18n'
 // import { useConfigStore } from '@/stores/appConfig'
 // import { uninstallApp } from '@/apis/invoke'
 
@@ -10,6 +11,7 @@ import { useInstalledAppsStore } from '@/stores/installedApps'
 type MergedApp = API.INVOKE.EnrichedInstalledApp & { occurrenceNumber: number }
 
 const MyApplications = () => {
+  const { t } = useI18n()
   const {
     installedApps,
     // fetchInstalledApps,
@@ -117,7 +119,7 @@ const MyApplications = () => {
             />
           ))
         }
-      </div> : <Empty description="暂无已安装应用" />}
+      </div> : <Empty description={t('myApps.empty')} />}
     </div>
   )
 }

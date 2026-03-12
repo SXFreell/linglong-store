@@ -7,10 +7,12 @@ import { useCheckUpdates } from '@/hooks/useCheckUpdates'
 import { useAppInstall } from '@/hooks/useAppInstall'
 import { useInstallQueueStore } from '@/stores/installQueue'
 import { useShallow } from 'zustand/react/shallow'
+import { useI18n } from '@/i18n'
 
 // ==================== 组件 ====================
 
 const UpdateApp = () => {
+  const { t } = useI18n()
   const { loading: checking, updates, checkUpdates } = useCheckUpdates()
   const { handleBatchInstall, isAppInQueue } = useAppInstall()
   const { queue, currentTask, isProcessing } = useInstallQueueStore(
@@ -49,7 +51,7 @@ const UpdateApp = () => {
     const appsToUpdate = updates.filter((app) => app.appId && !isAppInQueue(app.appId))
 
     if (appsToUpdate.length === 0) {
-      message.warning('所有应用都已在更新队列中')
+      message.warning(t('updateApp.allInQueue'))
       return
     }
 
@@ -77,18 +79,18 @@ const UpdateApp = () => {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <p className={styles.updateAppTitle}>更新应用</p>
+        <p className={styles.updateAppTitle}>{t('updateApp.title')}</p>
         <Button
           type="text"
           icon={<ReloadOutlined spin={checking} />}
           onClick={handleCheckUpdates}
           disabled={checking}
         >
-          检查更新
+          {t('updateApp.checkUpdate')}
         </Button>
       </div>
 
-      <Spin spinning={checking && updates.length === 0} tip="正在检查更新...">
+      <Spin spinning={checking && updates.length === 0} tip={t('updateApp.checkingUpdate')}>
         {updates.length > 0 ? (
           <>
             <div className={styles.updateApplicationList}>
@@ -111,14 +113,14 @@ const UpdateApp = () => {
                 loading={isProcessing}
                 disabled={isUpdateAllDisabled}
               >
-                一键更新 ({updates.length})
+                {t('updateApp.updateAll', { count: String(updates.length) })}
               </Button>
             </div>
           </>
         ) : (
           !checking && (
             <div className={styles.emptyContainer}>
-              <Empty description="暂无需更新应用" image={null} />
+              <Empty description={t('updateApp.empty')} image={null} />
             </div>
           )
         )}

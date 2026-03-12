@@ -3,10 +3,10 @@ import { message } from 'antd'
 import { findShellString } from '@/apis/apps'
 import { checkLinglongEnv, installLinglongEnv } from '@/apis/invoke'
 import { useGlobalStore } from '@/stores/global'
-
-const DEFAULT_REASON = '检测到系统未安装玲珑环境，请先安装'
+import { useI18n } from '@/i18n'
 
 export const useLinglongEnv = () => {
+  const { t } = useI18n()
   // 直接从 store 获取 setter 函数，避免使用 selector 返回对象导致无限循环
   // setter 函数是稳定的，不需要响应式订阅
   const {
@@ -64,7 +64,7 @@ export const useLinglongEnv = () => {
       if (res.ok && res.reason) {
         message.warning(res.reason)
       }
-      setReason(res.ok ? undefined : (res.reason || DEFAULT_REASON))
+      setReason(res.ok ? undefined : (res.reason || t('hooks.linglongEnv.defaultReason')))
       return res
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : String(error)
@@ -87,20 +87,20 @@ export const useLinglongEnv = () => {
     } finally {
       setChecking(false)
     }
-  }, [])
+  }, [setArch, setChecking, setEnvInfo, setEnvReady, setReason, setRepoName, t])
 
   const runInstall = useCallback(async(): Promise<API.INVOKE.InstallLinglongResult> => {
     setInstalling(true)
-    const hide = message.loading({ content: '正在自动安装玲珑环境...', key: 'install-linglong', duration: 0 })
+    const hide = message.loading({ content: t('hooks.linglongEnv.autoInstalling'), key: 'install-linglong', duration: 0 })
     try {
       const res = await findShellString()
       const shellString = res.data
       if (res.code !== 200 || !shellString) {
-        throw new Error('获取安装脚本失败，请稍后重试')
+        throw new Error(t('hooks.linglongEnv.installScriptFailed'))
       }
       const output = await installLinglongEnv(shellString)
       hide()
-      message.success({ content: '玲珑环境安装完成，正在重新检测...', key: 'install-linglong' })
+      message.success({ content: t('hooks.linglongEnv.installCompleteRecheck'), key: 'install-linglong' })
       console.info('[useLinglongEnv] installEnv success', output)
       return output
     } catch (error) {
@@ -113,7 +113,7 @@ export const useLinglongEnv = () => {
     } finally {
       setInstalling(false)
     }
-  }, [])
+  }, [setInstalling, setReason, t])
 
   return {
     checkEnv: runCheck,

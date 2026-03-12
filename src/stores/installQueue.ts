@@ -9,6 +9,7 @@
  */
 import { create } from 'zustand'
 import { installApp } from '@/apis/invoke'
+import { translate } from '@/i18n'
 
 // 本地存储 key
 const CURRENT_TASK_STORAGE_KEY = 'linglong-store-current-install-task'
@@ -36,7 +37,7 @@ const createInstallTask = (
   force: options?.force ?? false,
   status: 'pending',
   progress: 0,
-  message: '等待安装...',
+  message: translate('installQueue.waitingInstall'),
   createdAt: Date.now(),
 })
 
@@ -125,7 +126,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       currentTask: {
         ...nextTask,
         status: 'installing',
-        message: '准备安装...',
+        message: translate('installQueue.preparingInstall'),
         startedAt: Date.now(),
       },
     })
@@ -182,7 +183,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       ...state.currentTask,
       status: 'success',
       progress: 100,
-      message: '安装完成',
+      message: translate('installQueue.installComplete'),
       finishedAt: Date.now(),
     }
 
@@ -212,7 +213,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
     const failedTask: Store.InstallTask = {
       ...state.currentTask,
       status: 'failed',
-      message: error || '安装失败',
+      message: error || translate('installQueue.installFailed'),
       error,
       errorCode,
       errorDetail,
@@ -322,7 +323,7 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
         ...persistedTask,
         status: 'success',
         progress: 100,
-        message: '安装完成',
+        message: translate('installQueue.installComplete'),
         finishedAt: Date.now(),
       }
 
@@ -336,8 +337,8 @@ export const useInstallQueueStore = create<Store.InstallQueue>((set, get) => ({
       const failedTask: Store.InstallTask = {
         ...persistedTask,
         status: 'failed',
-        message: '安装失败（应用异常退出）',
-        error: '安装过程中应用异常退出，请重新安装',
+        message: translate('installQueue.installFailedCrash'),
+        error: translate('installQueue.installFailedCrashDetail'),
         finishedAt: Date.now(),
       }
 

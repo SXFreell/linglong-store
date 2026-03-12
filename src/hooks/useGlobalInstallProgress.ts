@@ -16,8 +16,10 @@ import { useShallow } from 'zustand/react/shallow'
 import { sendInstallRecord } from '@/services/analyticsService'
 import { syncAfterAppChange } from '@/utils/appChangeSync'
 import { getInstallErrorMessage, InstallErrorCode } from '@/constants/installErrorCodes'
+import { useI18n } from '@/i18n'
 
 export const useGlobalInstallProgress = () => {
+  const { t } = useI18n()
   const { updateProgress, markSuccess, markFailed } = useInstallQueueStore(
     useShallow((state) => ({
       updateProgress: state.updateProgress,
@@ -55,7 +57,7 @@ export const useGlobalInstallProgress = () => {
 
             // 显示成功消息
             messageApi.success({
-              content: `${appName} 安装成功！`,
+              content: t('installProgress.success', { appName }),
               key: `install-success-${progress.appId}`,
             })
 
@@ -81,7 +83,7 @@ export const useGlobalInstallProgress = () => {
         case 'error': {
           // 错误事件
           const errorCode = progress.code
-          const errorMessage = getInstallErrorMessage(errorCode, progress.status)
+          const errorMessage = getInstallErrorMessage(errorCode, t, progress.status)
           const errorDetail = progress.errorDetail || progress.message
 
           console.error(
@@ -98,13 +100,13 @@ export const useGlobalInstallProgress = () => {
           if (errorCode === InstallErrorCode.Cancelled) {
             // 取消操作使用 info 级别
             messageApi.info({
-              content: `${appName} 安装已取消`,
+              content: t('installProgress.cancelled', { appName }),
               key: `install-cancelled-${progress.appId}`,
             })
           } else {
             // 其他错误使用 error 级别
             messageApi.error({
-              content: `${appName} ${errorMessage}`,
+              content: t('installProgress.failed', { appName, error: errorMessage }),
               key: `install-failed-${progress.appId}`,
             })
           }
@@ -123,10 +125,10 @@ export const useGlobalInstallProgress = () => {
           updateProgress(progress.appId, progress.percentage, progress.status)
 
           // 检查是否安装完成
-          if (progress.percentage >= 100 || progress.status.includes('安装完成')) {
+          if (progress.percentage >= 100 || progress.status.includes(t('installProgress.completedKeyword'))) {
             markSuccess(progress.appId)
             messageApi.success({
-              content: `${appName} 安装成功！`,
+              content: t('installProgress.success', { appName }),
               key: `install-success-${progress.appId}`,
             })
 
@@ -135,7 +137,7 @@ export const useGlobalInstallProgress = () => {
           }
 
           // 检查是否安装失败
-          if (progress.status.includes('失败')) {
+          if (progress.status.includes(t('installProgress.failedKeyword'))) {
             markFailed(progress.appId, progress.status)
             messageApi.error({
               content: `${appName} ${progress.status}`,
@@ -144,10 +146,10 @@ export const useGlobalInstallProgress = () => {
           }
 
           // 检查是否安装取消（旧格式兼容，使用 info 级别提示）
-          if (progress.status.includes('取消')) {
+          if (progress.status.includes(t('installProgress.cancelledKeyword'))) {
             markFailed(progress.appId, progress.status)
             messageApi.info({
-              content: `${appName} 安装已取消`,
+              content: t('installProgress.cancelled', { appName }),
               key: `install-cancelled-${progress.appId}`,
             })
           }
@@ -168,6 +170,5 @@ export const useGlobalInstallProgress = () => {
         unlistenProgress()
       }
     }
-  }, [updateProgress, markSuccess, markFailed])
+  }, [updateProgress, markSuccess, markFailed, t])
 }
-

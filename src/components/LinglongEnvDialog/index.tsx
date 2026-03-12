@@ -4,6 +4,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { openUrl } from '@tauri-apps/plugin-opener'
 import { useLinglongEnv } from '@/hooks/useLinglongEnv'
 import { useGlobalStore } from '@/stores/global'
+import { useI18n } from '@/i18n'
 
 const MANUAL_INSTALL_URL = 'https://www.linglong.space/guide/start/install.html'
 
@@ -18,6 +19,7 @@ const LinglongEnvDialog = ({
   reason,
   onEnvReady,
 }: Props) => {
+  const { t } = useI18n()
   const { installEnv, checkEnv } = useLinglongEnv()
   // 分开订阅 store 状态，避免 selector 返回对象导致无限循环
   const checking = useGlobalStore((state) => state.checking)
@@ -61,38 +63,38 @@ const LinglongEnvDialog = ({
       centered
       closable={false}
       maskClosable={false}
-      title="检测到当前系统缺少玲珑环境"
+      title={t('layout.envDialog.title')}
       footer={
         <Space>
-          <Button onClick={handleExit}>退出商店</Button>
-          <Button onClick={handleManualInstall}>手动安装</Button>
+          <Button onClick={handleExit}>{t('layout.envDialog.exitStore')}</Button>
+          <Button onClick={handleManualInstall}>{t('layout.envDialog.manualInstall')}</Button>
           <Button
             type="primary"
             loading={installing}
             disabled={checking}
             onClick={handleAutoInstall}>
-            自动安装
+            {t('layout.envDialog.autoInstall')}
           </Button>
           <Button
             type="link"
             disabled={checking}
             onClick={handleRetry}>
-            重新检测
+            {t('layout.envDialog.recheck')}
           </Button>
         </Space>
       }>
       <Space direction="vertical" size={8} style={{ width: '100%' }}>
         <Typography.Paragraph type="danger" strong style={{ marginBottom: 0 }}>
-          检测到系统中不存在或版本过低的玲珑组件，需先安装后才能使用商店。
+          {t('layout.envDialog.missingEnvTip')}
         </Typography.Paragraph>
         <Typography.Paragraph style={{ marginBottom: 0 }}>
-          {reason || '请确认已安装玲珑环境。自动安装会弹出系统授权窗口，请输入密码继续。'}
+          {reason || t('layout.envDialog.reasonFallback')}
         </Typography.Paragraph>
         <Typography.Paragraph style={{ marginBottom: 0 }}>
-          自动安装适配 Deepin 23/25、UOS 1070、openEuler 23.09/24.03、Ubuntu 24.04、Debian 12/13、openKylin 2.0、Fedora 41/42、AnolisOS 8、Arch/Manjaro/Parabola。
+          {t('layout.envDialog.supportedDistros')}
         </Typography.Paragraph>
         <Typography.Text type="secondary">
-          自动安装完成后，无需重启应用。
+          {t('layout.envDialog.noRestartNeeded')}
         </Typography.Text>
       </Space>
     </Modal>

@@ -7,6 +7,7 @@ import styles from './index.module.scss'
 import { useMemo, useState, useRef, useCallback } from 'react'
 import { useCachedPaginatedList } from '@/hooks/useCachedPaginatedList'
 import { useKeepAliveVisibility } from '@/hooks/useKeepAliveVisibility'
+import { useI18n } from '@/i18n'
 
 const defaultPageSize = 10 // 每页显示数量
 const NEW_TAB_KEY = 'new'
@@ -14,6 +15,7 @@ const INSTALL_TAB_KEY = 'install'
 
 type AppInfo = API.APP.AppMainDto
 const Ranking = () => {
+  const { t } = useI18n()
   const arch = useGlobalStore((state) => state.arch)
   const repoName = useGlobalStore((state) => state.repoName)
   const { isVisible } = useKeepAliveVisibility()
@@ -47,7 +49,7 @@ const Ranking = () => {
     enabled: isVisible,
   })
 
-  // tab切换
+  // tab key 用稳定值表示数据源，文案交给 i18n，避免语言切换时触发错误缓存命中。
   const handleTabChange = (key: string) => {
     setActiveTab(key)
   }
@@ -56,10 +58,10 @@ const Ranking = () => {
     <div className={styles.rankHeader}>
       <Tabs activeKey={activeTab} onChange={handleTabChange} className={styles.customTabs}>
         <Tabs.TabPane tab={ <span style={{ fontSize: '1rem' }}>
-            最新上架(前100)
+          {t('ranking.tabs.newestTop100')}
         </span>} key={NEW_TAB_KEY} />
         <Tabs.TabPane tab={ <span style={{ fontSize: '1rem' }}>
-           下载量(前100)
+          {t('ranking.tabs.mostDownloadedTop100')}
         </span>} key={INSTALL_TAB_KEY} />
       </Tabs>
     </div>
@@ -76,8 +78,8 @@ const Ranking = () => {
                 appInfo={item}
               />
             ))}
-            {loading && <div className={styles.loadingTip}>加载中...</div>}
-            {!hasMore && RankList.length > 0 && <div className={styles.noMoreTip}>没有更多数据了</div>}
+            {loading && <div className={styles.loadingTip}>{t('ranking.loadingMore')}</div>}
+            {!hasMore && RankList.length > 0 && <div className={styles.noMoreTip}>{t('ranking.noMoreData')}</div>}
           </>
         )}
       </div>

@@ -9,6 +9,7 @@ import { getDisCategoryList, getSearchAppList } from '@/apis/apps/index'
 import { useGlobalStore } from '@/stores/global'
 import { useCachedPaginatedList } from '@/hooks/useCachedPaginatedList'
 import { useKeepAliveVisibility } from '@/hooks/useKeepAliveVisibility'
+import { useI18n } from '@/i18n'
 
 const defaultPageSize = 30 // 每页显示数量
 
@@ -17,6 +18,7 @@ type AppInfo = API.APP.AppMainDto
 
 
 const AllApps = () => {
+  const { t } = useI18n()
   const arch = useGlobalStore((state) => state.arch)
   const repoName = useGlobalStore((state) => state.repoName)
   const { isVisible } = useKeepAliveVisibility()
@@ -65,7 +67,7 @@ const AllApps = () => {
         {
           id: 'all',
           categoryId: '',
-          categoryName: '全部应用',
+          categoryName: t('allApps.allCategory'),
         } as Category,
         ...(result.data || []),
       ]
@@ -197,8 +199,8 @@ const AllApps = () => {
               />
             ))
           }
-          {loading && <div className={styles.loadingTip}>加载中...</div>}
-          {!hasMore && allAppList.length > 0 && <div className={styles.noMoreTip}>没有更多数据了</div>}
+          {loading && <div className={styles.loadingTip}>{t('allApps.loadingMore')}</div>}
+          {!hasMore && allAppList.length > 0 && <div className={styles.noMoreTip}>{t('allApps.noMoreData')}</div>}
         </>
       )}
     </div>

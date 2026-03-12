@@ -5,6 +5,7 @@ import DefaultIcon from '@/assets/linyaps.svg'
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Typography } from 'antd'
+import { useI18n } from '@/i18n'
 
 type AppInfo = API.APP.AppMainDto
 
@@ -12,6 +13,7 @@ const Paragraph = Typography.Paragraph
 
 const AppCarousel = ({ carouselList }: { carouselList: AppInfo[] }) => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   // 跳转到应用详情页
   const handleNavigateToDetail = useCallback((item: AppInfo) => {
     navigate('/app_detail', {
@@ -38,14 +40,14 @@ const AppCarousel = ({ carouselList }: { carouselList: AppInfo[] }) => {
         {carouselList.map((item) => (
           <div className={styles.carouselItemWrapper} key={item.appId}>
             <div className={styles.carouselItem}>
-              <img src={item.icon || DefaultIcon} className={styles.carouselItemIcon} alt={item.name || '应用图标'} />
+              <img src={item.icon || DefaultIcon} className={styles.carouselItemIcon} alt={item.name || t('carousel.defaultIconAlt')} />
               <div className={styles.carouselItemContent}>
-                <Paragraph ellipsis className={styles.carouselItemName}>{item.zhName || item.name || '应用名称'}</Paragraph>
-                <Paragraph ellipsis className={styles.carouselItemSmall}>描述：{item.description || '应用描述'}</Paragraph>
-                <Paragraph ellipsis className={styles.carouselItemSmall}>版本：{item.version || '-'}</Paragraph>
-                <Paragraph ellipsis className={styles.carouselItemSmall}>分类：{item.categoryName || '分类名称'}</Paragraph>
+                <Paragraph ellipsis className={styles.carouselItemName}>{item.zhName || item.name || t('carousel.defaultAppName')}</Paragraph>
+                <Paragraph ellipsis className={styles.carouselItemSmall}>{t('carousel.descriptionLabel')}{item.description || t('carousel.defaultDescription')}</Paragraph>
+                <Paragraph ellipsis className={styles.carouselItemSmall}>{t('carousel.versionLabel')}{item.version || '-'}</Paragraph>
+                <Paragraph ellipsis className={styles.carouselItemSmall}>{t('carousel.categoryLabel')}{item.categoryName || t('carousel.defaultCategory')}</Paragraph>
                 <Button type='primary' size="small" shape='round' className={styles.installButton} onClick={()=>handleNavigateToDetail(item)}>
-                  查看详情
+                  {t('carousel.viewDetail')}
                 </Button>
               </div>
             </div>

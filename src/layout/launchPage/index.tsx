@@ -4,9 +4,11 @@ import Logo from '@/assets/linyaps.svg'
 import { useLaunch } from '@/hooks/launch'
 import { Progress } from 'antd'
 import LinglongEnvDialog from '@/components/LinglongEnvDialog'
+import { useI18n } from '@/i18n'
 
 // 首屏页面
 const LaunchPage = ()=>{
+  const { t } = useI18n()
   const {
     progress,
     currentStep,
@@ -20,28 +22,19 @@ const LaunchPage = ()=>{
     <div className={styles.main}>
       <div className={
         styles.logo
-      }> <img src={Logo} alt="logo" />   </div>
-      <div className={styles.name}>玲珑应用商店社区版</div>
+      }> <img src={Logo} alt={t('layout.launchPage.logoAlt')} />   </div>
+      <div className={styles.name}>{t('common.appName')}</div>
       <div className={styles.step}>{currentStep}</div>
       <div className={styles.progress}>
         <Progress percent={progress} showInfo={false} />
       </div>
     </div>
     <div className={styles.footer}>
-      <p className={styles.notice}>注意:
-      </p>
-      <p className={styles.notice}>
-        1.当运行程序时，会检测当前系统是否满足玲珑环境；如果环境不满足则弹出提示，程序不会进入到后续界面；这里需要您手动安装玲珑环境方可使用。
-      </p>
-      <p className={styles.notice}>
-        2.点击安装时，受网速和程序包大小（本体+依赖）的影响，程序安装比较缓慢甚至可能会没反应，此时请耐心等待。
-      </p>
-      <p className={styles.notice}>
-        3.执行操作时，若出现长时间卡住无反应，或者报错提示时，请使用官方命令行方式进行操作，尝试玲珑基础环境组件是否异常，如无异常，请重启商店重试。
-      </p>
-      <p className={styles.notice}>
-        4.如出现特殊现象，请在商店内 [关于程序] - [意见反馈]，进行反馈。
-      </p>
+      <p className={styles.notice}>{t('layout.launchPage.noticeTitle')}</p>
+      <p className={styles.notice}>1.{t('layout.launchPage.notice1')}</p>
+      <p className={styles.notice}>2.{t('layout.launchPage.notice2')}</p>
+      <p className={styles.notice}>3.{t('layout.launchPage.notice3')}</p>
+      <p className={styles.notice}>4.{t('layout.launchPage.notice4')}</p>
     </div>
     <LinglongEnvDialog
       open={envChecked && !envReady}

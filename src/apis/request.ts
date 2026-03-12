@@ -5,6 +5,7 @@
 import { createAlova, RequestBody } from 'alova'
 import adapterFetch from 'alova/fetch'
 import ReactHook from 'alova/react'
+import { getCurrentLocale, translate } from '@/i18n'
 
 const baseURL = import.meta.env.VITE_SERVER_URL
 // [错误处理] 添加环境变量校验，避免运行时因配置缺失导致难以定位的错误
@@ -27,14 +28,24 @@ const alovaInstance = createAlova({
   },
   beforeRequest(method) {
     const isFormData = typeof FormData !== 'undefined' && method.data instanceof FormData
+    const locale = getCurrentLocale()
     if (!isFormData) {
       // 设置默认请求头
       method.config.headers = {
         'Content-Type': 'application/json',
+        'Accept-Language': locale,
         ...method.config.headers,
       }
     } else if (method.config.headers) {
       delete (method.config.headers as Record<string, string>)['Content-Type']
+      method.config.headers = {
+        'Accept-Language': locale,
+        ...method.config.headers,
+      }
+    } else {
+      method.config.headers = {
+        'Accept-Language': locale,
+      }
     }
   },
   responded: {
@@ -44,14 +55,17 @@ const alovaInstance = createAlova({
       try {
         data = await response.json()
       } catch {
-        throw new Error(`响应解析失败: ${response.status} ${response.statusText}`)
+        throw new Error(translate('network.responseParseFailed', {
+          status: response.status,
+          statusText: response.statusText,
+        }))
       }
       if (!response.ok) {
-        throw new Error(data.message || '请求失败')
+        throw new Error(data.message || translate('network.requestFailed'))
       }
       // [业务逻辑] 使用 !== undefined 检查 code 是否存在，避免 code=0 时被错误跳过
       if (data.code !== undefined && data.code !== 200) {
-        throw new Error(data.message || `请求失败，错误码[${data.code}]`)
+        throw new Error(data.message || translate('network.requestFailedWithCode', { code: data.code }))
       }
       return data
     },

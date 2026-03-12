@@ -6,6 +6,7 @@ import { useLinglongProcesses } from '@/hooks/useLinglongProcesses'
 import ProcessToolbar from './ProcessToolbar'
 import ProcessTable from './ProcessTable'
 import styles from './index.module.scss'
+import { useI18n } from '@/i18n'
 
 type RunningApp = API.INVOKE.RunningApp
 
@@ -16,6 +17,7 @@ interface LinglongProcessProps {
 
 const LinglongProcess: React.FC<LinglongProcessProps> = ({ isTabActive }) => {
   const { message } = App.useApp()
+  const { t } = useI18n()
 
   const {
     processes,
@@ -43,43 +45,43 @@ const LinglongProcess: React.FC<LinglongProcessProps> = ({ isTabActive }) => {
 
     // 安全操作优先（复制类），危险操作（停止）置于底部，防止误触
     const copyEnterCmd = await MenuItem.new({
-      text: '复制进入容器命令',
+      text: t('process.menu.copyEnterCommand'),
       action: async() => {
         try {
           await navigator.clipboard.writeText(`ll-cli enter ${record.name}`)
-          message.success('命令已复制到剪贴板，请粘贴到终端中执行')
+          message.success(t('process.menu.copyEnterCommandSuccess'))
         } catch (e) {
-          message.error(`复制失败：${e}`)
+          message.error(t('process.menu.copyFailed', { error: String(e) }))
         }
       },
     })
 
     const copyAppId = await MenuItem.new({
-      text: '复制应用 ID',
+      text: t('process.menu.copyAppId'),
       action: async() => {
         await navigator.clipboard.writeText(record.name)
-        message.success('已复制')
+        message.success(t('process.menu.copied'))
       },
     })
 
     const copyPid = await MenuItem.new({
-      text: '复制 PID',
+      text: t('process.menu.copyPid'),
       action: async() => {
         await navigator.clipboard.writeText(record.pid)
-        message.success('已复制')
+        message.success(t('process.menu.copied'))
       },
     })
 
     const copyContainerId = await MenuItem.new({
-      text: '复制容器 ID',
+      text: t('process.menu.copyContainerId'),
       action: async() => {
         await navigator.clipboard.writeText(record.containerId)
-        message.success('已复制')
+        message.success(t('process.menu.copied'))
       },
     })
 
     const refreshItem = await MenuItem.new({
-      text: '刷新进程列表',
+      text: t('process.menu.refreshProcessList'),
       action: refresh,
     })
 
@@ -88,7 +90,7 @@ const LinglongProcess: React.FC<LinglongProcessProps> = ({ isTabActive }) => {
 
     // 危险操作置于底部（符合桌面惯例，防止右键松开时误触第一项）
     const stopItem = await MenuItem.new({
-      text: '停止进程',
+      text: t('process.menu.stopProcess'),
       enabled: !isKilling,
       action: () => killProcess(record),
     })
@@ -99,7 +101,7 @@ const LinglongProcess: React.FC<LinglongProcessProps> = ({ isTabActive }) => {
 
     // 向右下偏移 4px：避免菜单出现时第一项直接在光标下方被误触
     await menu.popup(new LogicalPosition(x + 4, y + 4))
-  }, [killLoadingIds, killProcess, message, refresh])
+  }, [killLoadingIds, killProcess, message, refresh, t])
 
   const handleContextMenu = useCallback((e: React.MouseEvent, record: RunningApp) => {
     e.preventDefault()
@@ -130,7 +132,7 @@ const LinglongProcess: React.FC<LinglongProcessProps> = ({ isTabActive }) => {
       {error !== null && processes.length > 0 && (
         <Alert
           type="warning"
-          message="进程列表刷新失败，显示的是上次数据"
+          message={t('process.errorBanner')}
           showIcon
           closable
           className={styles.errorBanner}

@@ -452,6 +452,9 @@ v2.0.0 从 Electron 迁移到 Tauri。主要变更：
 - 列表首屏闪烁修复：`usePaginatedList` 统一改为稳定 `loadPage` + 请求代次控制；页面禁止依赖 `loading` 驱动首屏重新加载，避免应用列表页骨架屏、`ApplicationCard` 和关联浮层反复卸载重建
 - Modal 阴影治理：全局覆盖 `.ant-modal-content` 的单层阴影和细边框，消除桌面端多层阴影叠加导致的发脏和重影
 - 列表混合缓存：推荐页、全部应用默认页、排行榜页通过构建期 seed 提供首屏内置前三页；运行时缓存统一写入 `src/services/appListCache/` 对应 key，`custom_category` 仅按参数做本地缓存；保活页面重新可见时要触发后台刷新并热更新当前列表
+- i18n 统一：界面静态文案统一走 `src/i18n/` 的 key 资源与 `useI18n()`，语言偏好持久化在 `useConfigStore.languagePreference`；根级 `AppProviders` 负责同步 locale 与 Ant Design `ConfigProvider.locale`
+- 文案分层约束：界面翻译与应用业务数据必须分层；应用名/描述等展示逻辑统一收口到 `src/utils/appDisplay.ts`，禁止在组件里散落 `zhName || name || appId` 回退
+- 多语言缓存边界：若远端应用元数据未来按语言返回，`src/services/appListCache/` 的 cache key 必须显式带上 locale，避免中英文界面串缓存
 
 ## 关键参考文件
 - **类型系统**：`src/types/common.d.ts`、`src/types/api/common.d.ts`

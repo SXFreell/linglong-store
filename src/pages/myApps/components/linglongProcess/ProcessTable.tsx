@@ -2,6 +2,7 @@ import { Table, Tag, Spin, Empty, Button, Tooltip } from 'antd'
 import { MoreOutlined, LoadingOutlined } from '@ant-design/icons'
 import type { TableColumnsType } from 'antd'
 import styles from './index.module.scss'
+import { useI18n } from '@/i18n'
 
 type RunningApp = API.INVOKE.RunningApp
 
@@ -26,9 +27,10 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
   onContextMenu,
   onMoreClick,
 }) => {
+  const { t } = useI18n()
   const columns: TableColumnsType<RunningApp> = [
     {
-      title: '应用名称',
+      title: t('process.table.columns.name'),
       dataIndex: 'name',
       ellipsis: true,
       render: (name: string) => (
@@ -36,14 +38,14 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
       ),
     },
     {
-      title: '版本号',
+      title: t('process.table.columns.version'),
       dataIndex: 'version',
       width: 120,
       align: 'center',
       render: (v: string) => v || <span className={styles.emptyCell}>—</span>,
     },
     {
-      title: '架构',
+      title: t('process.table.columns.arch'),
       dataIndex: 'arch',
       width: 100,
       align: 'center',
@@ -51,7 +53,7 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
         v ? <Tag bordered={false}>{v}</Tag> : <span className={styles.emptyCell}>—</span>,
     },
     {
-      title: '渠道',
+      title: t('process.table.columns.channel'),
       dataIndex: 'channel',
       width: 90,
       align: 'center',
@@ -59,7 +61,7 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
         v ? <Tag bordered={false} color="blue">{v}</Tag> : <span className={styles.emptyCell}>—</span>,
     },
     {
-      title: '来源',
+      title: t('process.table.columns.source'),
       dataIndex: 'source',
       width: 90,
       align: 'center',
@@ -67,14 +69,14 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
         v ? <Tag bordered={false} color="geekblue">{v}</Tag> : <span className={styles.emptyCell}>—</span>,
     },
     {
-      title: 'PID',
+      title: t('process.table.columns.pid'),
       dataIndex: 'pid',
       width: 90,
       align: 'center',
       render: (v: string) => <span className={styles.monoText}>{v}</span>,
     },
     {
-      title: '容器 ID',
+      title: t('process.table.columns.containerId'),
       dataIndex: 'containerId',
       ellipsis: true,
       render: (v: string) => (
@@ -125,7 +127,7 @@ const ProcessTable: React.FC<ProcessTableProps> = ({
         emptyText: (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="当前没有运行中的玲珑应用"
+            description={t('process.table.empty')}
           />
         ),
       }}

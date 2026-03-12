@@ -13,6 +13,9 @@ import { useInstallQueueStore } from '@/stores/installQueue'
 import { useInstalledAppsStore } from '@/stores/installedApps'
 import { isForceRequired } from '@/services/installService'
 import { compareVersions } from '@/util/checkVersion'
+import { translate, useI18n } from '@/i18n'
+import type { TranslationKey, TranslationParams } from '@/i18n'
+import { getAppDisplayName } from '@/utils/appDisplay'
 
 type AppInfo = API.APP.AppMainDto
 
@@ -59,13 +62,14 @@ const checkNeedForceInstall = (
 const confirmDowngradeInstall = (
   installedVersion: string,
   targetVersion: string,
+  t: (key: TranslationKey, params?: TranslationParams) => string,
 ): Promise<boolean> => {
   return new Promise((resolve) => {
     Modal.confirm({
-      title: '确认覆盖安装',
-      content: `已安装更高版本（${installedVersion}），确认安装旧版本 ${targetVersion} 吗？降级安装可能导致应用无法正常使用。`,
-      okText: '继续安装',
-      cancelText: '取消',
+      title: t('hooks.appInstall.confirmDowngradeTitle'),
+      content: t('hooks.appInstall.confirmDowngradeContent', { installedVersion, targetVersion }),
+      okText: t('hooks.appInstall.continueInstall'),
+      cancelText: t('common.actions.cancel'),
       centered: true,
       onOk: () => resolve(true),
       onCancel: () => resolve(false),
@@ -76,13 +80,15 @@ const confirmDowngradeInstall = (
 /**
  * 确认强制安装弹窗（版本已存在）
  */
-const confirmForceInstall = (appName: string): Promise<boolean> => {
+const confirmForceInstall = (
+  appName: string,
+): Promise<boolean> => {
   return new Promise((resolve) => {
     Modal.confirm({
-      title: '版本已安装',
-      content: `${appName} 的该版本已安装，是否强制重新安装？`,
-      okText: '重新安装',
-      cancelText: '取消',
+      title: translate('hooks.appInstall.alreadyInstalledTitle'),
+      content: translate('hooks.appInstall.alreadyInstalledContent', { appName }),
+      okText: translate('hooks.appInstall.reinstall'),
+      cancelText: translate('common.actions.cancel'),
       centered: true,
       onOk: () => resolve(true),
       onCancel: () => resolve(false),
@@ -101,6 +107,7 @@ export interface VersionInstallState {
 }
 
 export const useAppInstall = () => {
+  const { t, locale } = useI18n()
   const enqueueInstall = useInstallQueueStore((state) => state.enqueueInstall)
   const enqueueBatch = useInstallQueueStore((state) => state.enqueueBatch)
   const isAppInQueue = useInstallQueueStore((state) => state.isAppInQueue)
@@ -117,15 +124,16 @@ export const useAppInstall = () => {
    */
   const handleInstall = useCallback(
     async(app: AppInfo, options?: InstallOptions) => {
+      const appName = getAppDisplayName(app, locale, t('common.fallback.appName'))
       if (!app?.appId) {
         console.error('[useAppInstall] ❌ App ID is missing!')
-        messageApi.error('应用信息不完整')
+        messageApi.error(t('hooks.appInstall.incompleteAppInfo'))
         return
       }
 
       // 检查是否已在队列中
       if (isAppInQueue(app.appId)) {
-        messageApi.warning(`${app.zhName || app.name || app.appId} 已在安装队列中`)
+        messageApi.warning(t('hooks.appInstall.alreadyInQueue', { appName }))
         return
       }
 
@@ -138,7 +146,7 @@ export const useAppInstall = () => {
         const { needForce, installedVersion } = checkNeedForceInstall(version, installedApps, app.appId)
 
         if (needForce && installedVersion && version) {
-          const confirmed = await confirmDowngradeInstall(installedVersion, version)
+          const confirmed = await confirmDowngradeInstall(installedVersion, version, t)
           if (!confirmed) {
             return
           }
@@ -151,11 +159,11 @@ export const useAppInstall = () => {
       console.info(`[useAppInstall] Task enqueued: ${taskId} for app: ${app.appId}`)
 
       messageApi.info({
-        content: `${app.zhName || app.name || app.appId} 开始安装`,
+        content: t('hooks.appInstall.startInstall', { appName }),
         key: `enqueue-${app.appId}`,
       })
     },
-    [enqueueInstall, isAppInQueue, messageApi],
+    [enqueueInstall, isAppInQueue, locale, messageApi, t],
   )
 
   /**
@@ -168,20 +176,20 @@ export const useAppInstall = () => {
       const filteredApps = apps.filter((item) => !isAppInQueue(item.appInfo.appId || ''))
 
       if (filteredApps.length === 0) {
-        messageApi.warning('所有应用都已在安装队列中')
+        messageApi.warning(t('hooks.appInstall.allInQueue'))
         return []
       }
 
       const taskIds = enqueueBatch(filteredApps)
 
       messageApi.info({
-        content: `已将 ${taskIds.length} 个应用加入安装队列`,
+        content: t('hooks.appInstall.batchQueued', { count: taskIds.length }),
         key: 'batch-enqueue',
       })
 
       return taskIds
     },
-    [enqueueBatch, isAppInQueue, messageApi],
+    [enqueueBatch, isAppInQueue, messageApi, t],
   )
 
   /**
@@ -245,14 +253,14 @@ export const useAppInstall = () => {
   const handleRetryWithForce = useCallback(
     async(app: AppInfo, errorMessage: string) => {
       if (isForceRequired(errorMessage)) {
-        const confirmed = await confirmForceInstall(app.zhName || app.name || app.appId || '')
+        const confirmed = await confirmForceInstall(getAppDisplayName(app, locale, t('common.fallback.appName')))
         if (confirmed) {
           // 直接以 force 模式重新入队
           enqueueInstall(app, { force: true })
         }
       }
     },
-    [enqueueInstall],
+    [enqueueInstall, locale, t],
   )
 
   /**

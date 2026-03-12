@@ -7,10 +7,21 @@ import updateA from '@/assets/icons/updateA.svg'
 import classify from '@/assets/icons/classify.svg'
 import classifyA from '@/assets/icons/classifyA.svg'
 
+import type { TranslationKey } from '@/i18n'
 
-export default [
+interface MenuItemConfig {
+  /** 菜单文案统一存 key，避免静态配置再次引入硬编码文案。 */
+  menuNameKey: TranslationKey
+  menuPath: string
+  icon: string
+  activeIcon: string
+  show: boolean
+  index: number
+}
+
+const menuList: MenuItemConfig[] = [
   {
-    menuName: '推荐',
+    menuNameKey: 'layout.sidebar.recommend',
     menuPath: '/',
     icon: recommend,
     activeIcon: recommendActive,
@@ -18,7 +29,7 @@ export default [
     index: 0,
   },
   {
-    menuName: '排行榜',
+    menuNameKey: 'layout.sidebar.ranking',
     menuPath: '/ranking',
     icon: rank,
     activeIcon: rankA,
@@ -26,7 +37,7 @@ export default [
     index: 1,
   },
   {
-    menuName: '分类',
+    menuNameKey: 'layout.sidebar.category',
     menuPath: '/allapps',
     icon: classify,
     activeIcon: classifyA,
@@ -34,7 +45,7 @@ export default [
     index: 2,
   },
   {
-    menuName: '更新',
+    menuNameKey: 'layout.sidebar.update',
     menuPath: '/update_apps',
     icon: update,
     show: true,
@@ -43,3 +54,5 @@ export default [
   },
 
 ]
+
+export default menuList
