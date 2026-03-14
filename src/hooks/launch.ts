@@ -79,7 +79,7 @@ export const useLaunch = (): Hooks.Launch.UseLaunchReturn => {
    */
   const initSystemInfo = useCallback(async() => {
     try {
-      let currentArch = arch()
+      let currentArch = arch() as string
       // 龙芯架构映射：loongarch64 -> loong64
       if (currentArch === 'loongarch64') {
         currentArch = 'loong64'
