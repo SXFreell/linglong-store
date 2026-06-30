@@ -1,5 +1,7 @@
 # 玲珑应用商店社区版
 
+> 本项目已被弃用，现在已全面转入3.0的 flutter框架的开发：https://github.com/HanHan666666/flutter-linglong-store
+
 玲珑应用商店社区版是一个面向 Linux 的桌面客户端，用于浏览、搜索、安装、卸载、升级和启动玲珑应用。项目基于 `Tauri 2 + React 18 + TypeScript + Rust` 构建，前端负责界面与交互，Rust 侧负责本地桥接与 `ll-cli` 调用。
 
 2.x 系列延续了社区版“轻量、本地优先、围绕玲珑生态”的方向，并将桌面容器迁移到 Tauri。 
